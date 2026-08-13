@@ -1,0 +1,25 @@
+/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) {
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * }
+ */
+/**
+ * @param {TreeNode} root
+ * @return {number[]}
+ */
+var inorderTraversal = function(root) {
+    let res = [];
+    var inorder = function(treenode) {
+        if(treenode === null) {
+        return;
+        }
+        inorder(treenode.left);
+        res.push(treenode.val);
+        inorder(treenode.right);
+    }
+    inorder(root);
+    return res;
+};

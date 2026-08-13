@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# 编辑器
+.vscode/
+.idea/
+
+# 依赖 / 日志
+node_modules/
+*.log
