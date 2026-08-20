@@ -18,7 +18,6 @@
  * @return {number}
  */
 function subarraySum(nums, k) {
-  // TODO
 }
 
 // —— 自测 ——

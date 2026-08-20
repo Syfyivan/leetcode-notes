@@ -20,7 +20,6 @@
  * @return {number}
  */
 function maxSubArray(nums) {
-  // TODO
 }
 
 // —— 自测 ——

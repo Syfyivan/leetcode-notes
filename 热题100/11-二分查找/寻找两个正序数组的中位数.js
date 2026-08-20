@@ -21,7 +21,6 @@
  * @return {number}
  */
 function findMedianSortedArrays(nums1, nums2) {
-  // TODO
 }
 
 // —— 自测 ——

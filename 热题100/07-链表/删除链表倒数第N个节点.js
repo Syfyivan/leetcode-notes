@@ -28,7 +28,6 @@ function ListNode(val, next) {
  * @return {ListNode}
  */
 function removeNthFromEnd(head, n) {
-  // TODO
 }
 
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——

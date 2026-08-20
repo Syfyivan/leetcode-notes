@@ -14,7 +14,6 @@
  */
 
 class EventEmitter {
-  // TODO
 }
 
 // —— 自测 ——

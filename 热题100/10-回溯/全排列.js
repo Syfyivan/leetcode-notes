@@ -19,7 +19,6 @@
  * @return {number[][]}
  */
 function permute(nums) {
-  // TODO
 }
 
 // —— 自测 ——

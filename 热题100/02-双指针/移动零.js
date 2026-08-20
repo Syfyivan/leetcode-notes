@@ -20,7 +20,6 @@
  * @return {number[]}   原地修改 nums，此处返回 nums 便于自测打印
  */
 function moveZeroes(nums) {
-  // TODO
 }
 
 // —— 自测 ——

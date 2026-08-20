@@ -18,7 +18,6 @@
  * @return {number}
  */
 function findKthLargest(nums, k) {
-  // TODO
 }
 
 // —— 自测 ——

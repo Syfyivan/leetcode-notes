@@ -21,7 +21,6 @@
  * @return {boolean}
  */
 function canFinish(numCourses, prerequisites) {
-  // TODO
 }
 
 // —— 自测 ——

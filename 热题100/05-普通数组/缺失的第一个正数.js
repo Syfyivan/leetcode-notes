@@ -20,7 +20,6 @@
  * @return {number}
  */
 function firstMissingPositive(nums) {
-  // TODO
 }
 
 // —— 自测 ——

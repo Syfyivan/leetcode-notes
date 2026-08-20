@@ -21,7 +21,6 @@
  * @return {string}
  */
 function decodeString(s) {
-  // TODO
 }
 
 // —— 自测 ——

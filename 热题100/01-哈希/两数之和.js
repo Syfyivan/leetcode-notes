@@ -21,7 +21,6 @@
  * @return {number[]}
  */
 function twoSum(nums, target) {
-  // TODO
 }
 
 // —— 自测 ——

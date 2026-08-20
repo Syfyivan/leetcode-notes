@@ -17,7 +17,6 @@
  * @return {number}
  */
 function trap(height) {
-  // TODO
 }
 
 // —— 自测 ——

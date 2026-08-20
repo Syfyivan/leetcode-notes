@@ -21,7 +21,6 @@
  * @return {boolean}
  */
 function searchMatrix(matrix, target) {
-  // TODO
 }
 
 // —— 自测 ——

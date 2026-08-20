@@ -21,7 +21,6 @@
  * @return {number[]}
  */
 function dailyTemperatures(temperatures) {
-  // TODO
 }
 
 // —— 自测 ——

@@ -20,7 +20,6 @@
  * @return {number[][]}
  */
 function setZeroes(matrix) {
-  // TODO
 }
 
 // —— 自测 ——

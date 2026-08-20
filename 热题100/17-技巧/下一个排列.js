@@ -22,7 +22,6 @@
  * @return {number[]} 原地修改后返回 nums 便于打印
  */
 function nextPermutation(nums) {
-  // TODO
 }
 
 // —— 自测 ——

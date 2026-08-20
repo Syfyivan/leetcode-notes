@@ -17,7 +17,6 @@
  * @return {number[]}
  */
 function spiralOrder(matrix) {
-  // TODO
 }
 
 // —— 自测 ——

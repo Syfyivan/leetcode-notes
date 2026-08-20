@@ -52,7 +52,6 @@ function inorderTraversal(root) {
  * @return {TreeNode}
  */
 function buildTree(preorder, inorder) {
-  // TODO
 }
 
 // —— 自测 ——

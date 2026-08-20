@@ -14,11 +14,9 @@
  */
 
 Function.prototype.myCall = function () {
-  // TODO
 };
 
 Function.prototype.myApply = function () {
-  // TODO
 };
 
 // —— 自测 ——

@@ -39,7 +39,6 @@ function build(arr) {
  * @return {number}
  */
 function maxPathSum(root) {
-  // TODO
 }
 
 // —— 自测 ——

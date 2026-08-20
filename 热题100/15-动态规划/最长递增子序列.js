@@ -20,7 +20,6 @@
  * @return {number}
  */
 function lengthOfLIS(nums) {
-  // TODO
 }
 
 // —— 自测 ——

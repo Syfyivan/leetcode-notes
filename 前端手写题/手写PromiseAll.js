@@ -13,7 +13,6 @@
  */
 
 function promiseAll() {
-  // TODO
 }
 
 // —— 自测 ——

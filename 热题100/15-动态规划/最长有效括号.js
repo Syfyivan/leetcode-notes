@@ -19,7 +19,6 @@
  * @return {number}
  */
 function longestValidParentheses(s) {
-  // TODO
 }
 
 // —— 自测 ——

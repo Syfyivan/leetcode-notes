@@ -36,7 +36,6 @@ function toArray(head) {
  * @return {ListNode}
  */
 function mergeKLists(lists) {
-  // TODO
 }
 
 // —— 自测 ——

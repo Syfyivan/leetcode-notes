@@ -13,7 +13,6 @@
  */
 
 function curry() {
-  // TODO
 }
 
 // —— 自测 ——

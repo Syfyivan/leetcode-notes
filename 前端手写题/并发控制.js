@@ -15,7 +15,6 @@
  */
 
 function concurrencyControl() {
-  // TODO
 }
 
 // —— 自测 ——

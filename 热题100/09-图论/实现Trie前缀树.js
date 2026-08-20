@@ -21,7 +21,6 @@
 
 class Trie {
   constructor() {
-    // TODO
   }
 
   /**
@@ -29,7 +28,6 @@ class Trie {
    * @return {void}
    */
   insert(word) {
-    // TODO
   }
 
   /**
@@ -37,7 +35,6 @@ class Trie {
    * @return {boolean}
    */
   search(word) {
-    // TODO
   }
 
   /**
@@ -45,7 +42,6 @@ class Trie {
    * @return {boolean}
    */
   startsWith(prefix) {
-    // TODO
   }
 }
 

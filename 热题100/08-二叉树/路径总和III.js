@@ -41,7 +41,6 @@ function build(arr) {
  * @return {number}
  */
 function pathSum(root, targetSum) {
-  // TODO
 }
 
 // —— 自测 ——

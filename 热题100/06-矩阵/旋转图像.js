@@ -18,7 +18,6 @@
  * @return {number[][]}
  */
 function rotate(matrix) {
-  // TODO
 }
 
 // —— 自测 ——

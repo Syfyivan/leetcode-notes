@@ -17,7 +17,6 @@
  * @return {number}
  */
 function majorityElement(nums) {
-  // TODO
 }
 
 // —— 自测 ——

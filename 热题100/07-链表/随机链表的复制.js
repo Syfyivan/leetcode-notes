@@ -31,7 +31,6 @@ function Node(val, next, random) {
  * @return {Node}
  */
 function copyRandomList(head) {
-  // TODO
 }
 
 // —— 小工具：由 [val, randomIndex] 数组构造带 random 的链表 ——

@@ -21,7 +21,6 @@
  * @return {number[][]}
  */
 function threeSum(nums) {
-  // TODO
 }
 
 // —— 自测 ——

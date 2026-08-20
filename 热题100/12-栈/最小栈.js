@@ -18,7 +18,6 @@
 
 class MinStack {
   constructor() {
-    // TODO
   }
 
   /**
@@ -26,28 +25,24 @@ class MinStack {
    * @return {void}
    */
   push(val) {
-    // TODO
   }
 
   /**
    * @return {void}
    */
   pop() {
-    // TODO
   }
 
   /**
    * @return {number}
    */
   top() {
-    // TODO
   }
 
   /**
    * @return {number}
    */
   getMin() {
-    // TODO
   }
 }
 

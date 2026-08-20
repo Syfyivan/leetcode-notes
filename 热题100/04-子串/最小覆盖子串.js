@@ -22,7 +22,6 @@
  * @return {string}
  */
 function minWindow(s, t) {
-  // TODO
 }
 
 // —— 自测 ——

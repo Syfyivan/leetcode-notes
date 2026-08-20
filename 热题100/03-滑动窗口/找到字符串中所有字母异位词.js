@@ -21,7 +21,6 @@
  * @return {number[]}
  */
 function findAnagrams(s, p) {
-  // TODO
 }
 
 // —— 自测 ——

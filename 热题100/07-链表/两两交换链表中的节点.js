@@ -36,7 +36,6 @@ function toArray(head) {
  * @return {ListNode}
  */
 function swapPairs(head) {
-  // TODO
 }
 
 // —— 自测 ——

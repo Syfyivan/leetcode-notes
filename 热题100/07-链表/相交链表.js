@@ -29,7 +29,6 @@ function ListNode(val, next) {
  * @return {ListNode}
  */
 function getIntersectionNode(headA, headB) {
-  // TODO
 }
 
 // —— 小工具：build 建普通链表；makeIntersect 造出真正共享尾部的两条链表 ——

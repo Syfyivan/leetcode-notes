@@ -27,7 +27,6 @@ function ListNode(val, next) {
  * @return {ListNode}
  */
 function mergeTwoLists(list1, list2) {
-  // TODO
 }
 
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——

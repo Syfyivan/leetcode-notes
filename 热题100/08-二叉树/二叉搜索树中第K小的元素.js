@@ -39,7 +39,6 @@ function build(arr) {
  * @return {number}
  */
 function kthSmallest(root, k) {
-  // TODO
 }
 
 // —— 自测 ——

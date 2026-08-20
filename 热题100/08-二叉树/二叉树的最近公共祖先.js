@@ -48,7 +48,6 @@ function findNode(root, val) {
  * @return {TreeNode}
  */
 function lowestCommonAncestor(root, p, q) {
-  // TODO
 }
 
 // —— 自测 ——

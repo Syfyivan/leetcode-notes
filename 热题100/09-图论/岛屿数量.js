@@ -29,7 +29,6 @@
  * @return {number}
  */
 function numIslands(grid) {
-  // TODO
 }
 
 // —— 自测 ——

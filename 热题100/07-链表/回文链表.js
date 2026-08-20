@@ -34,7 +34,6 @@ function ListNode(val, next) {
  * @return {boolean}
  */
 function isPalindrome(head) {
-  // TODO
 }
 
 // —— 小工具：数组建链表 ——

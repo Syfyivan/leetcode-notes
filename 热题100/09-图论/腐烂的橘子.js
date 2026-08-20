@@ -25,7 +25,6 @@
  * @return {number}
  */
 function orangesRotting(grid) {
-  // TODO
 }
 
 // —— 自测 ——

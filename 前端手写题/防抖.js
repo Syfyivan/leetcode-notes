@@ -11,7 +11,6 @@
  */
 
 function debounce() {
-  // TODO
 }
 
 // —— 自测（实现后应只打印一次 run 3）——

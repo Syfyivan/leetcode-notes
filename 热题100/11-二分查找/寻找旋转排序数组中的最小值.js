@@ -24,7 +24,6 @@
  * @return {number}
  */
 function findMin(nums) {
-  // TODO
 }
 
 // —— 自测 ——

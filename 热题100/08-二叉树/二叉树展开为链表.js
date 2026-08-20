@@ -54,7 +54,6 @@ function collectRight(root) {
  * @return {void} 不返回任何东西，原地修改 root
  */
 function flatten(root) {
-  // TODO
 }
 
 // —— 自测 ——

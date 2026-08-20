@@ -20,7 +20,6 @@
  * @return {number}
  */
 function lengthOfLongestSubstring(s) {
-  // TODO
 }
 
 // —— 自测 ——

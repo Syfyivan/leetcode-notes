@@ -22,7 +22,6 @@
  * @return {string[][]}
  */
 function groupAnagrams(strs) {
-  // TODO
 }
 
 // —— 自测 ——

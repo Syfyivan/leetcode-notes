@@ -14,7 +14,6 @@
  */
 
 Function.prototype.myBind = function () {
-  // TODO
 };
 
 // —— 自测 ——

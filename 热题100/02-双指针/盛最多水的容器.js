@@ -18,7 +18,6 @@
  * @return {number}
  */
 function maxArea(height) {
-  // TODO
 }
 
 // —— 自测 ——

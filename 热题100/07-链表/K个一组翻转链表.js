@@ -30,7 +30,6 @@ function ListNode(val, next) {
  * @return {ListNode}
  */
 function reverseKGroup(head, k) {
-  // TODO
 }
 
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——

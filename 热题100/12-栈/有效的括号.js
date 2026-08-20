@@ -21,7 +21,6 @@
  * @return {boolean}
  */
 function isValid(s) {
-  // TODO
 }
 
 // —— 自测 ——

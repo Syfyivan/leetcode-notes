@@ -41,7 +41,6 @@ function build(arr) {
  * @return {number[]}
  */
 function rightSideView(root) {
-  // TODO
 }
 
 // —— 自测 ——

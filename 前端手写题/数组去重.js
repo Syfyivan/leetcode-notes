@@ -10,7 +10,6 @@
  */
 
 function unique() {
-  // TODO
 }
 
 // —— 自测 ——

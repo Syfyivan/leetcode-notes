@@ -11,7 +11,6 @@
  */
 
 function flatten() {
-  // TODO
 }
 
 // —— 自测 ——

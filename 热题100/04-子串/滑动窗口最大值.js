@@ -18,7 +18,6 @@
  * @return {number[]}
  */
 function maxSlidingWindow(nums, k) {
-  // TODO
 }
 
 // —— 自测 ——

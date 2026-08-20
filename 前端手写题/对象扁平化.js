@@ -25,7 +25,6 @@ function flattenObject(obj, prefix = '', res = {}) {
 }
 
 function unflattenObject() {
-  // TODO
 }
 
 // —— 自测 ——

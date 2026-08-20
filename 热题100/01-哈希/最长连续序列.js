@@ -20,7 +20,6 @@
  * @return {number}
  */
 function longestConsecutive(nums) {
-  // TODO
 }
 
 // —— 自测 ——

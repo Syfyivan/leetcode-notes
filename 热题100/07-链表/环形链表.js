@@ -32,7 +32,6 @@ function ListNode(val, next) {
  * @return {boolean}
  */
 function hasCycle(head) {
-  // TODO
 }
 
 // —— 小工具：建链表，并可选地让尾节点指向第 pos 个节点（0 起）制造环；pos = -1 表示无环 ——

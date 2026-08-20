@@ -40,7 +40,6 @@ function toArray(head) {
  * @return {ListNode}
  */
 function detectCycle(head) {
-  // TODO
 }
 
 // —— 小工具：建链表并让尾节点指向索引 pos 的节点造环；pos = -1 表示无环 ——

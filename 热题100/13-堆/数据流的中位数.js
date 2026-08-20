@@ -16,7 +16,6 @@
 
 class MedianFinder {
   constructor() {
-    // TODO
   }
 
   /**
@@ -24,14 +23,12 @@ class MedianFinder {
    * @return {void}
    */
   addNum(num) {
-    // TODO
   }
 
   /**
    * @return {number}
    */
   findMedian() {
-    // TODO
   }
 }
 

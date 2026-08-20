@@ -39,7 +39,6 @@ function toArray(head) {
  * @return {ListNode}
  */
 function addTwoNumbers(l1, l2) {
-  // TODO
 }
 
 // —— 自测 ——

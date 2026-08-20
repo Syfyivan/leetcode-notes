@@ -37,7 +37,6 @@ function toArray(head) {
  * @return {ListNode}
  */
 function sortList(head) {
-  // TODO
 }
 
 // —— 自测 ——

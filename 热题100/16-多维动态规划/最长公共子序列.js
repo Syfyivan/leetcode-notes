@@ -22,7 +22,6 @@
  * @return {number}
  */
 function longestCommonSubsequence(text1, text2) {
-  // TODO
 }
 
 // —— 自测 ——

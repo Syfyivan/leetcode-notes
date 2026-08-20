@@ -21,7 +21,6 @@
  * @return {number}
  */
 function singleNumber(nums) {
-  // TODO
 }
 
 // —— 自测 ——

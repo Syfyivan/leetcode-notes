@@ -14,11 +14,9 @@
  */
 
 function promiseRace() {
-  // TODO
 }
 
 function promiseAllSettled() {
-  // TODO
 }
 
 // —— 自测 ——

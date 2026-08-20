@@ -17,7 +17,6 @@
  * @return {number}
  */
 function largestRectangleArea(heights) {
-  // TODO
 }
 
 // —— 自测 ——

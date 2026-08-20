@@ -21,7 +21,6 @@
  * @return {number}
  */
 function findDuplicate(nums) {
-  // TODO
 }
 
 // —— 自测 ——

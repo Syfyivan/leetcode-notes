@@ -18,7 +18,6 @@
  * @return {number}
  */
 function minDistance(word1, word2) {
-  // TODO
 }
 
 // —— 自测 ——

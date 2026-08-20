@@ -26,7 +26,6 @@
  */
 
 class MyLinkedList {
-  // TODO
 }
 
 // —— 自测（对照上面示例，应打印 2, 3）——

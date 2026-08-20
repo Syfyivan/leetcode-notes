@@ -19,7 +19,6 @@
  * @return {string[][]}
  */
 function solveNQueens(n) {
-  // TODO
 }
 
 // —— 自测 ——
