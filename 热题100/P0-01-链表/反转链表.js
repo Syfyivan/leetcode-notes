@@ -36,6 +36,15 @@ function reverseList(head) {
   return newHead;
 }
 
+/**
+ * 迭代法（双指针）
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+function reverseListIterative(head) {
+
+}
+
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——
 function build(arr) {
   const dummy = new ListNode(0);
@@ -54,4 +63,9 @@ console.log(toArray(reverseList(build([1, 2, 3, 4, 5])))); // [5, 4, 3, 2, 1]
 console.log(toArray(reverseList(build([1, 2]))));          // [2, 1]
 console.log(toArray(reverseList(build([]))));              // []
 
-module.exports = { ListNode, reverseList, build, toArray };
+// —— 迭代版自测 ——
+console.log(toArray(reverseListIterative(build([1, 2, 3, 4, 5])))); // [5, 4, 3, 2, 1]
+console.log(toArray(reverseListIterative(build([1, 2]))));          // [2, 1]
+console.log(toArray(reverseListIterative(build([]))));              // []
+
+module.exports = { ListNode, reverseList, reverseListIterative, build, toArray };
