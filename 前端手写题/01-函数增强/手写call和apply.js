@@ -1,6 +1,8 @@
 /**
  * 手写 call / apply
  *
+ * 优先级：前端 P1 · 全栈 P1
+ *
  * 需求：在 Function.prototype 上实现 myCall 和 myApply，行为对齐原生：
  *   - 指定函数运行时的 this；
  *   - myCall 参数逐个传入；myApply 参数以数组传入；

@@ -1,6 +1,8 @@
 /**
  * 手写 bind
  *
+ * 优先级：前端 P1 · 全栈 P1
+ *
  * 需求：在 Function.prototype 上实现 myBind，行为对齐原生 bind：
  *   - 绑定 this；
  *   - 支持预置参数 + 调用时追加参数（柯里化）；

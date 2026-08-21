@@ -1,6 +1,8 @@
 /**
  * 手写 Promise.race / allSettled
  *
+ * 优先级：前端 P2 · 全栈 P1
+ *
  * race：多个 promise 里，谁先敲定（成功或失败）就用谁的结果。
  * allSettled：等所有 promise 都敲定，返回每个的状态与结果
  *   （成功 { status: 'fulfilled', value }，失败 { status: 'rejected', reason }），永不 reject。

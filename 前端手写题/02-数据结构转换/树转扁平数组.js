@@ -1,6 +1,8 @@
 /**
  * 树 → 扁平数组（listToTree 的逆操作）
  *
+ * 优先级：前端 P0 · 全栈 P1
+ *
  * 输入：带 children 字段的嵌套树（根数组 / 森林）。
  * 输出：扁平数组，每项保留 { id, parentId, name }，去掉 children。
  *
