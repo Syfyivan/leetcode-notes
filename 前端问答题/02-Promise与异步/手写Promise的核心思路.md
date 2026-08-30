@@ -30,6 +30,12 @@ then 没传函数要做值穿透：成功原样递，失败再 throw。
 x 是普通值 → resolve。x 是对象或函数 → 取 `x.then`。是函数就当 thenable，`then.call(x, resolvePromise, reject)`，成功回调里继续拆。
 防死循环：`promise2 === x` 直接 `TypeError`。防多次调用：`called` 锁，resolve/reject 只认第一次。取 `x.then` 和调 `then` 都要 try/catch，抛错且没 called 才 reject。
 
+## 延伸
+
+- 相关题：Promise 状态链、微任务、手写 `Promise.all`。
+- 对比题：A+ 测的是 thenable 拆箱和异步回调，不是 async/await 语法糖。
+- 面试加码：`catch` 等于 `then(undefined, fn)`；值穿透的 reject 分支必须 `throw e`，写成 `(e) => e` 会吞错。`resolve` 完整版也要走 resolvePromise。
+
 ## 代码 / 例子
 
 ```js

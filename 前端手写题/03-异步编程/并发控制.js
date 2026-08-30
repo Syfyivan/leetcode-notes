@@ -19,6 +19,27 @@
  *        并发上限 = 2
  * 过程： 先跑 a、b 两个；b 先完成就补 c；a 完成再补 d……
  * 输出： 全部完成后 resolve -> ['a', 'b', 'c', 'd']   （顺序和输入一致）
+ *
+ * ——— 延伸 ———
+ * - 失败策略：现在是一个挂全部挂。也可以记下来继续跑，最后一起交卷。
+ * - 和 Scheduler 的差别：这份吃整表任务，Scheduler.add 是一个一个投。
+ * - 超时：每个任务再 race 一个 sleep reject。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么结果按下标写？
+ * A: 完成顺序和输入顺序不一样。push 会按谁先结束谁排前。下标锁死位置。
+ *
+ * Q: 某个任务 reject 了，已经发出的怎么办？
+ * A: 外层已经失败，发出去的请求停不下来，结果被丢掉。真取消得任务自己吃 AbortSignal。
+ *
+ * Q: 空数组为什么要提前 resolve？
+ * A: n===0 时 while 进不去，done 永远到不了 n，会一直 pending。
+ *
+ * Q: 为什么包一层 Promise.resolve().then(() => tasks[i]())？
+ * A: tasks[i]() 同步 throw 会打到 run 外面。包一下，同步错误也进 catch。
+ *
+ * Q: limit 比任务数还大呢？
+ * A: while 有 next < n，不会凭空多跑。等于没限流。
  */
 
 function concurrencyControl(tasks, limit) {
@@ -26,7 +47,7 @@ function concurrencyControl(tasks, limit) {
     const n = tasks.length;
     if (n === 0) {
       resolve([]);
-      return;
+      return; // 否则 while 进不去，done 到不了 n，一直 pending
     }
     const results = new Array(n);
     let next = 0;
@@ -34,11 +55,11 @@ function concurrencyControl(tasks, limit) {
     let done = 0;
 
     function run() {
-      while (running < limit && next < n) {
+      while (running < limit && next < n) { // 空槽有几补几，第一次进来要填满 limit
         const i = next++;
         running++;
         Promise.resolve()
-          .then(() => tasks[i]())
+          .then(() => tasks[i]()) // 同步 throw 也变成 reject，不会打到 run 外面
           .then((val) => {
             results[i] = val; // 按下标填，谁先完成都不打乱顺序
             running--;

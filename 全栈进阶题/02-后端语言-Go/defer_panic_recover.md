@@ -19,6 +19,12 @@
 
    panic 把当前 G 的 `panic` 链表挂上，跑 defer。defer 里调 `recover()` 清掉 panic，返回 panic 的值。普通函数里调 recover 恒为 nil。recover 之后当前函数返回其返回值（零值或命名返回值），调用方看不出发生过 panic。HTTP 中间件常用 `defer func() { if r := recover(); r != nil { ... } }()` 挡 handler 崩溃。
 
+## 延伸
+
+- 相关题：错误处理与 error 包装。可预期失败走 error，panic 留给 bug，HTTP 入口才 recover。
+- 对比：`os.Exit` 不跑 defer；panic 会跑。进程要关文件、关锁，别走 Exit。
+- 加码：recover 之后把 500 和堆栈打进日志，别把 panic 值直接回给客户端。`defer recover()` 这种写法无效。
+
 ## 代码 / 例子
 
 ```go

@@ -20,6 +20,12 @@ REST 把 URL 当成资源，用 HTTP 动词表达动作：`GET /users/9` 读，`
    分页：offset 简单但深页慢；`?cursor=xxx&limit=20` 稳。返回 `next_cursor`。
    幂等：PUT/DELETE 天生幂等；POST 创建要 `Idempotency-Key`。GET 必须无副作用。
 
+## 延伸
+
+- 相关题：幂等性设计。POST 创建要 `Idempotency-Key`，PUT/DELETE 语义上已经幂等。
+- 对比：offset 分页深页慢，cursor 稳。和 MySQL 深分页是同一类问题。
+- 加码：取消订单用 `POST /orders/88/cancellation` 或 PATCH 状态。少发明 `/cancelOrder`。
+
 ## 代码 / 例子
 
 ```text

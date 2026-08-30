@@ -25,6 +25,12 @@ channel 是带类型的消息管道，也是同步原语。无缓冲 channel 发
    `select` 的 case 必须是发送或接收。编译器会把就绪的 case 做成列表，运行时 `fastrand` 挑一个，避免固定偏向第一个 case。全阻塞又没有 default 就挂起当前 G。有 default 立刻走 default。
    `time.After` 每次 select 都创建一个 timer，循环里要用 `time.NewTimer` 并 `Stop`/`Reset`，否则泄漏 timer。
 
+## 延伸
+
+- 相关题：context 超时与取消。请求链上的超时用 `ctx.Done()`，别每次 `time.After`。
+- 对比：channel 把数据换主人；Mutex 保护一块就地改的内存。同一份数据别上两套同步。
+- 加码：fan-in / fan-out。多个 sender 时用 WaitGroup 等他们结束，再由一个地方 close。
+
 ## 代码 / 例子
 
 ```go

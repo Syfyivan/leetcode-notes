@@ -22,6 +22,12 @@ Session 方案：登录后服务端存会话，浏览器拿 `Set-Cookie: sid=...
 
    标准 JWT 是发后不管。改密码、封号、登出，旧 token 在 exp 前仍可用。续签硬拉 `exp` 等于发一张新票。常见做法：Access Token 15 分钟 + Refresh Token 7 天；刷新时看用户状态；登出把 jti 进 Redis 黑名单直到自然过期。黑名单一加，JWT 又变回「有一点点状态」。
 
+## 延伸
+
+- 相关题：OAuth2。Access + Refresh 和授权码换 token 经常一起出现。
+- 对比：HS256 共享密钥；RS256 网关持公钥验，密钥不用发到每个服务。
+- 加码：Refresh 放 HttpOnly Cookie，Access 放内存。轮转时旧票被用一次视为偷盗，整族踢掉。
+
 ## 代码 / 例子
 
 ```text

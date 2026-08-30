@@ -23,6 +23,12 @@ Vite 预构建用 esbuild（Go）把 node_modules 里的 CJS 转成 ESM，并打
 
 Webpack 5 有持久化缓存、模块联邦，不是「已被淘汰」。大型存量、SSR 深度定制、Module Federation 仍经常是 Webpack。新项目 2024-2026 校招默认 Vite。
 
+## 延伸
+
+- 相关题：ESM、Tree Shaking、依赖预构建。
+- 对比题：冷启动 Webpack 先打整图；Vite 点到哪个编哪个。生产 Vite 默认 Rollup，不是 esbuild。
+- 面试加码：Rolldown 在把开发和生产收成一套。Module Federation、深度 SSR 定制，存量还常是 Webpack。老浏览器加 `@vitejs/plugin-legacy`。
+
 ## 常见追问
 
 - Q: Vite 的「依赖预构建」做了哪两件事？为什么要做？

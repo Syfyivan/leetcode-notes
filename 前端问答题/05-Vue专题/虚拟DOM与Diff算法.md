@@ -32,6 +32,12 @@ Vue2 没有 LIS。那是 Vue3 的。Vue2 四个指针：`oldStart` / `oldEnd` / 
 
 编译器把静态 vnode 提到 render 外面复用。动态 prop 打 PatchFlag，更新时只看 class/style/文本这些位。`cacheHandlers` 让内联事件不每次换新函数。Block 把动态子节点收成扁平列表。带 key 的乱序：先从两端对齐相同前缀后缀，中间那段算 LIS，在 LIS 上的节点不挪，其他的才 insertBefore。
 
+## 延伸
+
+- 相关题：响应式 trigger 之后的更新、React Diff / Fiber。
+- 对比题：同层比，不跨层挪节点。类型不同整棵拆。Vue2 双端，LIS 是 Vue3 的。
+- 面试加码：列表排序、插入必须用稳定 id 当 key。手写简化 `h` + patch 能讲清楚就够。React 也靠 key，坑一样。
+
 ## 代码 / 例子
 
 ```js

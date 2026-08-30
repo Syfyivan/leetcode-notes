@@ -20,6 +20,25 @@
  *
  * 输入： head = []
  * 输出： []
+ *
+ * ——— 延伸 ———
+ * - 自底向上归并：先 1 个一组，再 2、4、8，迭代做，空间真 O(1)。
+ * - 快排也能写，链表换节点比换值麻烦，最坏 O(n²)。
+ * - 数组归并同一套：拆两半、递归、合并。
+ *
+ * ——— 常见追问 ———
+ * Q: 快指针为什么从 head.next 起步？
+ * A: 从 head 起，偶数个时 slow 会停在后半开头，切断位置偏后。
+ *    从 next 起 slow 稳停前半尾。
+ *
+ * Q: 为什么必须 slow.next = null？
+ * A: 不切断两条链还连着，merge 会死循环。
+ *
+ * Q: 递归空间不是常数？
+ * A: 栈是 O(log n)。题目进阶要 O(1) 得改自底向上。
+ *
+ * Q: 时间？
+ * A: 每层 merge O(n)，层数 log n，一共 O(n log n)。
  */
 
 function ListNode(val, next) {
@@ -65,7 +84,7 @@ function sortList(head) {
       }
       cur = cur.next;
     }
-    cur.next = l1 || l2;
+    cur.next = l1 || l2; // 剩下已有序，整段挂上
     return dummy.next;
   };
   return merge(sortList(head), sortList(mid));

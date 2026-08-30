@@ -23,6 +23,12 @@
 
    `http.Request` 自带 `r.Context()`，客户端断开时 net/http 会 cancel。handler 里 `ctx := r.Context()`，`db.QueryContext(ctx, ...)`、`http.NewRequestWithContext(ctx, ...)`。下游超时用 `context.WithTimeout(ctx, 200*time.Millisecond)` 再派生一截，函数返回时 `defer cancel()` 清 timer。gRPC 的 ctx 从 metadata 里来，同一套习惯。
 
+## 延伸
+
+- 相关题：Channel 与 select。取消信号就是被 close 的 `Done` channel。
+- 对比：`r.Context()` 在客户端断开时取消；`WithTimeout` 是截止时间。派生了一截却把父 ctx 传给下游，超时根本没生效。
+- 加码：`go worker()` 不听 `Done`，外层已经 504 了 worker 还堵在 RPC 上。pprof 的 goroutine 能看见成片的 `chan receive`。
+
 ## 代码 / 例子
 
 ```go

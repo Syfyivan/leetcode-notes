@@ -14,15 +14,37 @@
  * ——— 示例 ———
  * 输入： 每 50ms 触发一次，持续触发
  * 输出： 每 interval(=300ms) 才真正执行一次
+ *
+ * ——— 延伸 ———
+ * - trailing：窗口内最后一次被丢掉的，到点再补一刀。滚动停了也要刷一次布局，就靠它。
+ * - leading: false：开头不跑，只在窗口末尾跑。和 trailing 一起才是「延后执行的节流」。
+ * - lodash 默认 leading + trailing 都开：头一次立刻，窗口里的最后一次再补。
+ * - cancel / flush：和防抖一样，组件卸载要清；提交前可以把压着的那次立刻跑掉。
+ *
+ * ——— 常见追问 ———
+ * Q: 防抖和节流差在哪？
+ * A: 防抖等你停手。节流每隔 interval 最多一次。滚动加载用节流，搜索联想用防抖。
+ *
+ * Q: 这份是 leading 还是 trailing？
+ * A: leading。第一次立刻跑，窗口内的丢掉。停手时如果还在窗口内，最后一次不会补。
+ *
+ * Q: 为什么第一次能立刻执行？
+ * A: last 初值是 0，now - 0 一定大于 interval。想开头也等，把 last 设成 Date.now()。
+ *
+ * Q: 时间戳和定时器两种实现差在哪？
+ * A: 时间戳（这份）是 leading。定时器是 trailing，到点才跑。两边都要就两个都记。
+ *
+ * Q: 按钮防连点用哪个？
+ * A: 节流。点下去立刻提交，interval 内再点丢掉。防抖会等到停手才提交，按钮不合适。
  */
 
 function throttle(fn, interval) {
-  let last = 0;
+  let last = 0; // 0 让第一次 now - last 必过间隔
   return function (...args) {
     const now = Date.now();
     if (now - last < interval) return;
-    last = now;
-    fn.apply(this, args);
+    last = now; // 先记时间，避免 fn 里重入又立刻跑一次
+    fn.apply(this, args); // 滚动监听 this 是 DOM
   };
 }
 

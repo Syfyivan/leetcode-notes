@@ -16,6 +16,24 @@
  * 2. 枢轴下标等于目标就返回，偏小往右，偏大往左。
  * 3. 边界：划分把等于枢轴的也归位；只在一侧继续。
  * 复杂度：时间平均 O(n)，最坏 O(n^2)，空间 O(1)
+ *
+ * ——— 延伸 ———
+ * - 大小 k 的小根堆：O(n log k)，最坏也稳。
+ * - 随机枢轴：把有序数组的最坏 n^2 压到期望 O(n)。
+ * - 第 k 小：target 改成 k-1。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么目标下标是 n-k？
+ * A: 升序排完，最大在末尾。第 1 大是 n-1，第 k 大是 n-k。
+ *
+ * Q: 会改原数组吗？
+ * A: 会。partition 原地交换。题目没要求保留原序。
+ *
+ * Q: 有重复值呢？
+ * A: 等于枢轴的归到左边。目标下标仍能落到其中一个重复值上。
+ *
+ * Q: 和排序比？
+ * A: 全排序 O(n log n)。快选每次扔掉一半，平均线性。
  */
 
 /**
@@ -29,8 +47,8 @@ function findKthLargest(nums, k) {
     let right = nums.length - 1;
     while (true) {
         const p = partition(nums, left, right);
-        if (p === target) return nums[p];
-        if (p < target) left = p + 1;
+        if (p === target) return nums[p]; // 枢轴已在最终位置
+        if (p < target) left = p + 1; // 第 k 大在右边，左边可整段扔
         else right = p - 1;
     }
 }

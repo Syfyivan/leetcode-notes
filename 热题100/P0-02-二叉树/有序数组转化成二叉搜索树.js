@@ -11,6 +11,24 @@
  * 2. 每次取中点做根，左边建左子树，右边建右子树。
  * 3. 区间空则返回 null。偶数个时中点取左或右都行。
  * 复杂度：时间 O(n)，空间 O(log n)
+ *
+ * ——— 延伸 ———
+ * - 有序链表建 BST（LC109）：快慢指针找中点，先建左再断开再建右。
+ * - 中点取偏左或偏右都能平衡，差不超过 1。
+ * - 不平衡也是 BST，只是这题要求高度平衡。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么取中点？
+ * A: 左右两边个数差最多 1，高度才平衡。取两端会退化成链。
+ *
+ * Q: l > r 返回 null？
+ * A: 区间空了，没有节点。l===r 时中点就是这个唯一元素。
+ *
+ * Q: >> 1 会不会溢出？
+ * A: JS 位数够这题没事。保险写法 l + ((r-l)>>1)，面试提一句就行。
+ *
+ * Q: 时间空间？
+ * A: 每个元素当一次根 O(n)。递归深度 O(log n)，因为每次对半。
  */
 /**
  * @param {number[]} nums
@@ -18,8 +36,8 @@
  */
 var sortedArrayToBST = function(nums) {
     const build = (l, r) => {
-        if (l > r) return null;
-        const mid = (l + r) >> 1;
+        if (l > r) return null; // 区间空了
+        const mid = (l + r) >> 1; // 中点做根，左右个数差 ≤ 1
         const node = new TreeNode(nums[mid]);
         node.left = build(l, mid - 1);
         node.right = build(mid + 1, r);

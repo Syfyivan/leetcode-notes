@@ -18,11 +18,30 @@
  * 输入： 一个前两次 reject、第三次 resolve('ok') 的 fn
  *        retry(fn, 3, 10)
  * 输出： 最终 resolve -> 'ok'
+ *
+ * ——— 延伸 ———
+ * - 指数退避：delay * 2^n，服务挂了别用固定间隔猛打。
+ * - 可取消：重试前看 AbortSignal，清掉等待的 timer。
+ * - 只对 5xx / 网络错误重试，4xx 没必要。
+ * - times 要说清：这份是「失败后再试 times 次」，总共最多 times+1 次。
+ *
+ * ——— 常见追问 ———
+ * Q: times=3 一共调几次？
+ * A: 最多 4 次。先调一次，失败再试 3 次。开口先问清包不包含第一次。
+ *
+ * Q: 为什么 catch 里要 return Promise.reject？
+ * A: 不 return 的话这条链会变成成功，值是 undefined。调用方会走 then。
+ *
+ * Q: 成功了还会继续重试吗？
+ * A: 不会。resolve 了就进不了 catch，值直接往外传。
+ *
+ * Q: 第一次之前等 delay 吗？
+ * A: 不等。第一次立刻调，失败才睡。先睡再请求是另一回事。
  */
 
 function retry(fn, times, delay) {
   return fn().catch((err) => {
-    if (times <= 0) return Promise.reject(err);
+    if (times <= 0) return Promise.reject(err); // 忘了 return，链会变成 resolve(undefined)
     return new Promise((r) => setTimeout(r, delay)).then(() =>
       retry(fn, times - 1, delay)
     );

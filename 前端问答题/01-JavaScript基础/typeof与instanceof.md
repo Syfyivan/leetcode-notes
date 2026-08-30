@@ -35,6 +35,12 @@
 规范走 `OrdinaryHasInstance`：左边不是对象立刻 false。然后 `obj = obj.[[Prototype]]` 一路往上，直到等于 `Ctor.prototype` 或碰到 null。
 原始值没有 `[[Prototype]]`（装箱只发生在调方法时），所以 `1 instanceof Number` 是 false。`new Number(1) instanceof Number` 才是 true。
 
+## 延伸
+
+- 相关题：原型链。`instanceof` 就是沿 `[[Prototype]]` 找 `Ctor.prototype`。
+- 对比题：`typeof [] === 'object'`，`Array.isArray([])` 才稳。跨 iframe 别用 `instanceof Array`。
+- 面试加码：手写 `instanceof`；`Symbol.hasInstance` 能改 `instanceof` 结果。
+
 ## 代码 / 例子
 
 ```js

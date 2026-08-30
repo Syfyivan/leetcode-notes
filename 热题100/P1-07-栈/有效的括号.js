@@ -20,6 +20,24 @@
  *
  * 输入： s = "(]"
  * 输出： false
+ *
+ * ——— 延伸 ———
+ * - 只含一种括号：计数，左 +1 右 -1，中途 < 0 或结束非 0 就 false。
+ * - 最长有效括号：栈存下标，或 DP。
+ * - 生成有效括号：回溯，左有剩就放左，右比左少就放右。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么用栈不用计数？
+ * A: 三种括号还要配对类型和顺序。([)] 计数过、类型交叉，必须看栈顶。
+ *
+ * Q: 栈空来了右括号？
+ * A: pop 得到 undefined，跟 pair[ch] 对不上，false。
+ *
+ * Q: 扫完栈非空？
+ * A: 有左括号没合上。return stack.length === 0。
+ *
+ * Q: 空串？
+ * A: 有效。循环不进，栈空，true。
  */
 
 /**
@@ -33,10 +51,10 @@ function isValid(s) {
     if (ch === '(' || ch === '[' || ch === '{') {
       stack.push(ch);
     } else {
-      if (stack.pop() !== pair[ch]) return false;
+      if (stack.pop() !== pair[ch]) return false; // 栈空 pop 出 undefined，也算配对失败
     }
   }
-  return stack.length === 0;
+  return stack.length === 0; // 还有左括号没合上
 }
 
 // —— 自测 ——

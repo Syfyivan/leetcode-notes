@@ -31,6 +31,12 @@
 
 三种可以叠，catch 了就不会再进 unhandledrejection。
 
+## 延伸
+
+- 相关题：Promise 三种状态、微任务顺序、`Promise.all`。
+- 对比题：`for` + `await` 真串行；`map` + `all` 才并行。`forEach` 里的 await 拦不住外层。
+- 面试加码：顶层 await 只在 ESM 里；`await` 一个 thenable 也会拆。`return await p` 能被本函数 catch，`return p` 把失败交出去。
+
 ## 代码 / 例子
 
 ```js

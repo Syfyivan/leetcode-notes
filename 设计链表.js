@@ -29,6 +29,24 @@
  * l.get(1);             // 2
  * l.deleteAtIndex(1);   // 链表变为 1 -> 3
  * l.get(1);             // 3
+ *
+ * ——— 延伸 ———
+ * - 尾指针 tail：addAtTail 变 O(1)。删尾时要回退找新尾，单链表这一下仍是 O(n)。
+ * - 双向链表：前驱 O(1) 就能改，LC 707 官方也收双链表写法。
+ * - 下标改成 1-based：面试有时换规则，边界判断一起改，别只改注释。
+ *
+ * ——— 常见追问 ———
+ * Q: 虚拟头干什么用？
+ * A: 头插、删头和中间操作走同一条路，都改 prev.next。没有 dummy，空链表 / 头节点要单独写。
+ *
+ * Q: index === size 为什么能插？
+ * A: 题意规定这时追加到尾部。index > size 才是非法，直接 return。
+ *
+ * Q: 负下标要不要当头插？
+ * A: 不要。题目没这规则。index < 0 一律忽略。
+ *
+ * Q: get 为什么走 prev(index).next？
+ * A: prev 停在目标前驱，再 .next 才是 index 自己。插入删除也要前驱，一个辅助函数三种操作用。
  */
 
 function ListNode(val) {
@@ -38,19 +56,19 @@ function ListNode(val) {
 
 class MyLinkedList {
   constructor() {
-    this.dummy = new ListNode(0);
+    this.dummy = new ListNode(0); // 空门岗，头插/删头不用单独写
     this.size = 0;
   }
 
   prev(index) {
-    let cur = this.dummy;
+    let cur = this.dummy; // dummy 是 -1 号，走 index 步就是目标前驱
     for (let i = 0; i < index; i++) cur = cur.next;
     return cur;
   }
 
   get(index) {
     if (index < 0 || index >= this.size) return -1;
-    return this.prev(index).next.val;
+    return this.prev(index).next.val; // prev 停在前驱，.next 才是目标
   }
 
   addAtHead(val) {
@@ -62,10 +80,10 @@ class MyLinkedList {
   }
 
   addAtIndex(index, val) {
-    if (index < 0 || index > this.size) return;
+    if (index < 0 || index > this.size) return; // = size 是尾插，> size 才丢
     const prev = this.prev(index);
     const node = new ListNode(val);
-    node.next = prev.next;
+    node.next = prev.next; // 先接后面，再让前驱指过来
     prev.next = node;
     this.size++;
   }
@@ -73,7 +91,7 @@ class MyLinkedList {
   deleteAtIndex(index) {
     if (index < 0 || index >= this.size) return;
     const prev = this.prev(index);
-    prev.next = prev.next.next;
+    prev.next = prev.next.next; // 前驱跳过目标，目标不可达
     this.size--;
   }
 

@@ -16,6 +16,24 @@
  *
  * 输入： root = [5,3,6,2,4,null,null,1], k = 3
  * 输出： 3
+ *
+ * ——— 延伸 ———
+ * - 第 k 大：中序反过来，先右后左。
+ * - 节点上记子树大小，就能 O(h) 往左或往右跳，适合频繁查询。
+ * - 迭代中序 + 栈，数到 k 就停，空间还是 O(h)。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么中序？
+ * A: BST 中序正好升序，第 k 个就是第 k 小。
+ *
+ * Q: 找到后还继续走吗？
+ * A: dfs 入口判断 k===0 直接 return，右边不再搜。
+ *
+ * Q: 时间为什么是 O(h+k) 不是 O(n)？
+ * A: 先下到最左 O(h)，再弹出 k 个。最坏还是 O(n)。
+ *
+ * Q: 有重复值？
+ * A: 题目 BST 通常左 < 根 < 右。有重复要先问清定义。
  */
 
 function TreeNode(val, left, right) {
@@ -47,7 +65,7 @@ function build(arr) {
 function kthSmallest(root, k) {
   let ans = 0;
   const dfs = (node) => {
-    if (!node || k === 0) return;
+    if (!node || k === 0) return; // 找到就剪枝，右边不用走
     dfs(node.left);
     if (--k === 0) {
       ans = node.val; // 中序第 k 个

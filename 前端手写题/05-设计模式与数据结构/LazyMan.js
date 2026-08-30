@@ -22,6 +22,23 @@
  *   Hi! This is Tony!
  *   Eat lunch~
  *   Eat dinner~
+ *
+ * ——— 延伸 ———
+ * - 和 Runner 同构。Runner 没有 sleepFirst，多了 wait 写在链中间。
+ * - 改 Promise 链：this.queue = this.queue.then(task)。sleepFirst 不好做，
+ *   因为 then 已经挂上的环摘不下来，还是数组 + unshift 更顺。
+ * - queueMicrotask 替换 setTimeout(0)，启动更贴同步链结束的那一拍。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么 Hi 不能在 constructor 里立刻打印？
+ * A: sleepFirst 要插到 Hi 前面。Hi 若已经打出来，unshift 也救不了。
+ *    所以打招呼也是队列里的第一项，sleepFirst 才能插到它前面。
+ *
+ * Q: sleep 里为什么不 next()？
+ * A: next 会立刻取出下一项。sleep 要先空等，到点再 next，把「交棒」交给定时器。
+ *
+ * Q: 连续两个 sleepFirst 谁先执行？
+ * A: 都是 unshift，后写的睡在更前面。sleepFirst(2).sleepFirst(1) 会先等 1 秒再等 2 秒。
  */
 
 class LazyManClass {
@@ -50,13 +67,13 @@ class LazyManClass {
 
   sleep(sec) {
     this.queue.push(() => {
-      setTimeout(() => this.next(), sec * 1000);
+      setTimeout(() => this.next(), sec * 1000); // 到点才交棒，这里不能立刻 next
     });
     return this;
   }
 
   sleepFirst(sec) {
-    this.queue.unshift(() => {
+    this.queue.unshift(() => { // 插队到最前，排在 Hi 前面
       setTimeout(() => this.next(), sec * 1000);
     });
     return this;

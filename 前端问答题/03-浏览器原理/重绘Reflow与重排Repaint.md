@@ -42,6 +42,12 @@
 - 动画用 `transform` / `opacity`，必要时 `will-change`，用完删掉。
 - 长列表虚拟滚动，别一次插一万个节点。
 
+## 延伸
+
+- 相关题：渲染流程、合成层、Flex/动画性能。
+- 对比题：`visibility` 只重绘；`display:none` 会重排。改 `transform` 往往只走合成。
+- 面试加码：循环里读 `offsetHeight` 会强制同步布局。长列表用虚拟滚动，别一次插一万个节点。
+
 ## 代码 / 例子
 
 ```js

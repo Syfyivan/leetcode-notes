@@ -21,6 +21,12 @@
 
 `sticky` 失效常见原因：没写 `top`（或写 0 以外却忘了）、祖先 `overflow: hidden/auto`、父元素高度刚好等于自己。
 
+## 延伸
+
+- 相关题：居中（absolute + transform）、层叠上下文、fixed 弹窗。
+- 对比题：relative 占坑；absolute / fixed 脱离。sticky 阈值前还在流里。
+- 面试加码：sticky 失效先看祖先 `overflow`。弹窗用 Portal / Teleport 挂到 body，躲开 transform 包含块。`z-index` 只在同一个层叠上下文里比。
+
 ## 常见追问
 
 - Q: 为什么 `position: fixed` 在某些场景下不是相对于视口？（父元素有 transform / perspective / filter 时）

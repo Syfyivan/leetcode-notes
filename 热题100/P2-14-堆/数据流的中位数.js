@@ -18,6 +18,24 @@
  * 2. 新数先进 lo，再把 lo 顶挪到 hi；hi 更长时再挪回 lo，保持 lo 比 hi 多 0 或 1 个。
  * 3. 边界：奇数取 lo 顶，偶数取两顶平均。
  * 复杂度：add O(log n)，查询 O(1)，空间 O(n)
+ *
+ * ——— 延伸 ———
+ * - 动态第 k 小：两堆大小差改成 k，lo 多留 k 个。
+ * - 要支持删除：懒删除配堆，或换平衡树。
+ * - 偶数取平均：注意 JS 除法已经是浮点。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么新数先扔进 lo 再挪到 hi？
+ * A: 先让大根堆消化，再把过大的顶交给小根堆，保证 hi 的数都不小于 lo。
+ *
+ * Q: 两堆大小关系？
+ * A: lo 比 hi 多 0 或 1 个。奇数中位数就是 lo 顶。
+ *
+ * Q: 还没 add 就 find？
+ * A: 题目保证至少有一个数。空堆 peek 是 undefined，面试可加保护。
+ *
+ * Q: JS 没有现成堆怎么办？
+ * A: 自己写二叉堆，或用排序数组二分插入。后者 add 是 O(n)，数据流大会爆。
  */
 
 class Heap {
@@ -85,9 +103,9 @@ class MedianFinder {
    */
   addNum(num) {
     this.lo.push(num);
-    this.hi.push(this.lo.pop()); // 保证 hi 的数都不小于 lo
+    this.hi.push(this.lo.pop()); // 新数可能偏大，经 lo 过滤后再给 hi
     if (this.lo.size() < this.hi.size()) {
-      this.lo.push(this.hi.pop());
+      this.lo.push(this.hi.pop()); // hi 更长时挪回，保持 lo 多 0 或 1
     }
   }
 

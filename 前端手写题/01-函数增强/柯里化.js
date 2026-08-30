@@ -17,15 +17,37 @@
  * 输入： curried(1)(2)(3)   输出： 6
  * 输入： curried(1, 2)(3)   输出： 6
  * 输入： curried(1)(2, 3)   输出： 6
+ *
+ * ——— 延伸 ———
+ * - 占位符：lodash 的 `_` 可以 curry(add)(_, 2)(1)，空位留给下次。
+ * - 无限柯里化：不看 fn.length，碰到空调用 () 才结算。rest 参数只能走这条。
+ * - 反柯里化：把 obj.method 变成 f(obj, ...args)，call / apply 就是在干这事。
+ * - 默认参数、rest 不计入 fn.length。这种函数要自己定元数，否则第一次就执行。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么看 fn.length？
+ * A: 形参个数就是「凑够了」的标准。默认参数、rest 不计入，碰到它们 length 会偏小。
+ *
+ * Q: 和 bind 预置参数有什么关系？
+ * A: 都是部分应用。bind 还冻 this；curry 是分批收参，够数才跑。
+ *
+ * Q: 为什么每次返回新函数还要 apply this？
+ * A: 方法被柯里化后可能当方法调。this 得透传，不然丢。
+ *
+ * Q: (...args) => sum(args) 这种能 curry 吗？
+ * A: length 是 0，第一次调用就会执行。无限柯里化（空调用才结算）才适合 rest。
+ *
+ * Q: 柯里化和偏函数区别？
+ * A: 偏函数预置一批就停，返回的函数元数固定少几个。柯里化一直收，直到凑够原函数的参数个数。
  */
 
 function curry(fn) {
   return function curried(...args) {
-    if (args.length >= fn.length) {
+    if (args.length >= fn.length) { // >=：多传的也交给原函数，它自己忽略或当 rest
       return fn.apply(this, args);
     }
     return function (...rest) {
-      return curried.apply(this, args.concat(rest));
+      return curried.apply(this, args.concat(rest)); // 还可能没凑够，继续走同一道门
     };
   };
 }

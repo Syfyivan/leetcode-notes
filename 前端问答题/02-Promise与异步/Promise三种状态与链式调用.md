@@ -28,6 +28,12 @@ Promise 三个状态：`pending`、`fulfilled`、`rejected`。pending 只能往�
 
 回调里 `throw`，p2 变成 rejected，后续 `.catch` 或 `then` 的第二个参数能接到。已经 return 出去之后再 throw 就跟这条链无关了。`catch` 自己再 throw，后面还得再接一次。
 
+## 延伸
+
+- 相关题：手写 Promise、async/await、微任务输出题。
+- 对比题：链式每环都是新 Promise，不是 return this。`then` 里忘了 return，下一个 then 拿到 `undefined`。
+- 面试加码：`finally` 默认透传 value/reason，它 throw 才会改状态。`Promise.resolve` 对 thenable 会拆箱。
+
 ## 代码 / 例子
 
 ```js

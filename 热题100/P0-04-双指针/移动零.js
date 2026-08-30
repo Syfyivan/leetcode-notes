@@ -19,6 +19,24 @@
  *
  * 输入： nums = [1, 2, 3]
  * 输出： [1, 2, 3]
+ *
+ * ——— 延伸 ———
+ * - 把指定值 val 移到末尾：判断从 !== 0 改成 !== val。
+ * - 删除元素（LC 27）：慢指针覆写，返回新长度，后面不用管。
+ * - 稳定分割：快慢指针把小于 pivot 的挤到左边，快排 partition。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么交换而不是直接覆写？
+ * A: 交换把 0 换到后面，相对顺序也保住。覆写还得第二遍把 slow 后面填 0。
+ *
+ * Q: 相对顺序会乱吗？
+ * A: 不会。fast 从左到右，遇到的非零按出现顺序丢到 slow。
+ *
+ * Q: slow 和 fast 碰上怎么办？
+ * A: 非零时自己跟自己换，等于没动。全非零就是这种情况。
+ *
+ * Q: 能从右往左扫吗？
+ * A: 可以收集 0 到右边，但非零相对顺序不好保。从左扫更直接。
  */
 
 /**
@@ -29,7 +47,7 @@ function moveZeroes(nums) {
   let slow = 0;
   for (let fast = 0; fast < nums.length; fast++) {
     if (nums[fast] !== 0) {
-      [nums[slow], nums[fast]] = [nums[fast], nums[slow]];
+      [nums[slow], nums[fast]] = [nums[fast], nums[slow]]; // 碰上自己换自己，0 被换到后面
       slow++;
     }
   }

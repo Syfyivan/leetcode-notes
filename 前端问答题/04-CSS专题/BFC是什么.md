@@ -34,6 +34,12 @@ Formatting Context 是一套排版规则。BFC 里：块盒从上往下排，垂
 相邻兄弟的垂直 margin 取最大值，不是相加。其中一个包进 BFC（或加 padding/border）就断开折叠。
 左边 `float:left`，右边 `overflow:auto` 开 BFC，右边整块在浮动旁边，不会被文字环绕成狗牙状。
 
+## 延伸
+
+- 相关题：盒模型 margin 折叠、float 两栏、Flex/Grid。
+- 对比题：`overflow:hidden` 能开 BFC 但会裁切弹出层；单纯清浮动用 `flow-root`。flex 项之间不走这块 margin 折叠规则。
+- 面试加码：左边 float、右边 overflow 开 BFC，就是自适应两栏。伪元素 `clear:both` 能清浮动，本身不是 BFC。
+
 ## 代码 / 例子
 
 ```css

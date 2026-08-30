@@ -46,6 +46,12 @@ Vue 默认文本插值会转义，`v-html` 是口子。React JSX 文本转义，
 - Referer / Origin 校验：简单但能被关掉 Referer 的客户端绕过，当辅助。
 - 转账、改密码加验证码或密码二次确认。
 
+## 延伸
+
+- 相关题：Cookie 的 HttpOnly / SameSite、CORS 预检。
+- 对比题：存储型 XSS 写进 DB，DOM 型是前端自己 `innerHTML`。HttpOnly 挡不住 CSRF，浏览器会自己带 cookie。
+- 面试加码：`v-html` / `dangerouslySetInnerHTML` 是框架口子。改数据的接口别用 GET，SameSite=Lax 挡不住「点链接触发 GET 删除」。
+
 ## 常见追问
 
 - Q: SameSite=None 时必须同时开启什么？（Secure，即 HTTPS）

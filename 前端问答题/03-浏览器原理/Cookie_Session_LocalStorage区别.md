@@ -23,6 +23,12 @@ SessionStorage 也大约 5MB，只活在当前标签页，关页就没，适合�
 
 Cookie 每次请求都带，多了会撑请求头。LocalStorage 是同步 API，主线程读大 JSON 会卡。IndexedDB 才是大数据异步方案。
 
+## 延伸
+
+- 相关题：XSS/CSRF、跨域 `credentials`、JWT vs Session。
+- 对比题：会话 Cookie 关浏览器清；SessionStorage 关的是标签页。Cookie 自动随请求走，Web Storage 不会。
+- 面试加码：登录态优先 HttpOnly Cookie。Token 别塞 LocalStorage，XSS 能直接读。大数据用 IndexedDB。
+
 ## 常见追问
 
 - Q: Cookie 的 Domain / Path / Expires / Max-Age 各有什么用？

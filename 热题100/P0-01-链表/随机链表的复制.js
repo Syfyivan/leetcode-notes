@@ -23,6 +23,24 @@
  *
  * 输入： head = [[1,1],[2,1]]
  * 输出： [[1,1],[2,1]]
+ *
+ * ——— 延伸 ———
+ * - 哈希：先扫一遍建 old -> new，再扫一遍接 next / random。空间 O(n)，好写。
+ * - 本题穿插法省掉哈希，面试常要这版。
+ * - 图的深拷贝（LC133）同一套路：map 记「原节点 -> 拷贝」。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么先穿插再接 random？
+ * A: 拷贝就在原节点后面，orig.random.next 就是拷贝的 random。不用哈希也能点到。
+ *
+ * Q: 拆的时候为什么要复原原链表？
+ * A: 题目没说能改原链表。p.next = cur.next 把原节点接回原来的下一个。
+ *
+ * Q: random 是 null？
+ * A: if (p.random) 挡一下，拷贝的 random 保持 null。
+ *
+ * Q: 空间真 O(1)？
+ * A: 不计新链表的话只用几个指针。哈希版额外 O(n)。
  */
 
 // —— 带 random 的节点定义 ——
@@ -44,7 +62,7 @@ function copyRandomList(head) {
   }
   // 2. copy.random = orig.random 的后一个（拷贝）
   for (let p = head; p; p = p.next.next) {
-    if (p.random) p.next.random = p.random.next;
+    if (p.random) p.next.random = p.random.next; // 原 random 后面就是它的拷贝
   }
   // 3. 拆开，原链表 next 复原
   const dummy = new Node(0);
@@ -53,7 +71,7 @@ function copyRandomList(head) {
   while (p) {
     cur.next = p.next;
     cur = cur.next;
-    p.next = cur.next;
+    p.next = cur.next; // 原节点跳过拷贝，接回原来的下一个
     p = p.next;
   }
   return dummy.next;

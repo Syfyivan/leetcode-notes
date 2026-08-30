@@ -42,16 +42,34 @@
  * 3. 边界：最后一个合并段循环结束后还要推进答案。
  * 复杂度：时间 O(n log n)，空间 O(n)
  *
+ * ——— 延伸 ———
+ * - 插入区间（LC 57）：新区间按序插入后再合并。
+ * - 区间覆盖最短段：贪心按右端排。
+ * - 合并后求总覆盖长度：扫一遍减重叠。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么按左端排序？
+ * A: 排完只需跟「当前合并段」比。左端还在段内就重叠，否则可以封口。
+ *
+ * Q: 重叠条件 cmp[1] < cur[0]？
+ * A: 当前段右端够不到新区间左端，断开。相等算重叠（闭区间）。
+ *
+ * Q: 循环结束后为什么还 push？
+ * A: 最后一段没人把它推走，要补一次。
+ *
+ * Q: 原地改行不行？
+ * A: 行，用答案数组当写指针。注意别覆盖还没处理的区间。
+ *
  * @param {number[][]} intervals
  * @return {number[][]}
  */
 var merge = function(intervals) {
-    intervals.sort((a, b) => a[0] - b[0]);
+    intervals.sort((a, b) => a[0] - b[0]); // 按左端排，后面只需跟当前段比
     const res = [];
     let cmp = intervals[0]
     for(let i = 1; i < intervals.length; i++) {
         const cur = intervals[i];
-        if(cmp[1] < cur[0]) {
+        if(cmp[1] < cur[0]) { // 闭区间，相等也算重叠
             res.push(cmp);
             cmp = cur;
             continue;}
@@ -59,6 +77,6 @@ var merge = function(intervals) {
             cmp[1] = Math.max(cur[1], cmp[1]);
         }
     }
-    res.push(cmp);
+    res.push(cmp); // 最后一段没人推，补一次
     return res;
 };

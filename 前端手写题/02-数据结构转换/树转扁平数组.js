@@ -33,6 +33,24 @@
  *
  * 注意：数组里节点的先后顺序取决于你怎么遍历（深度优先 / 逐层），
  * 只要"父节点在前、且 parentId 关系正确"即可，顺序本身不唯一。
+ *
+ * ——— 延伸 ———
+ * - BFS 逐层拍：同层兄弟会挨在一起。DFS 是一条腿走到底。
+ * - parentId 现场生成：遍历时把父 id 当参数传，节点上可以不带这个字段。
+ * - 顺手记 depth：表格缩进、面包屑能直接用。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么先 push 再走 children？
+ * A: 前序。父一定排在子前面。后序的话，回头挂树会找不到父。
+ *
+ * Q: 顺序必须和原来的扁平数组一样吗？
+ * A: 不必须。DFS / BFS 顺序不同，parentId 对、父在子前，就能再转回去。
+ *
+ * Q: 解构为什么丢掉 children？
+ * A: 带着 children 还是树。扁平项只要 id / parentId / name。
+ *
+ * Q: children 是 undefined 会怎样？
+ * A: `for...of undefined` 会抛。入口写成 `node.children || []` 更稳。
  */
 
 // —— 测试数据 ——
@@ -73,7 +91,7 @@ function treeToList(nodes) {
     res.push(reset);
     
     for(const item of node.children) {
-      handleNode(item);
+      handleNode(item); // 先推自己再下钻，父才会排在子前面
     }
   }
    for(const item of nodes) {

@@ -27,6 +27,12 @@ IoC 是控制权交给容器：谁 new、活多久，不由业务类自己决定
 
    四种写法：`ClassProvider`（`useClass`）、`ValueProvider`（`useValue`）、`FactoryProvider`（`useFactory` 可 async）、`ExistingProvider`（`useExisting` 别名）。自定义 token 用 `provide: 'PG_POOL'`。解析发生在模块初始化，`onModuleInit` 时实例已经有了（request 作用域除外）。测试里 `Test.createTestingModule({ providers: [...] }).compile()` 换 mock。
 
+## 延伸
+
+- 相关题：模块与 Provider 作用域。token 对上了但模块没 `imports`，报的仍是 resolve 失败。
+- 对比：Spring 要显式标注注入点；Nest 靠 `design:paramtypes` 推断。关掉 `emitDecoratorMetadata` 类型全变成 `Object`。
+- 加码：单测用 `Test.createTestingModule` 换 mock，别为了测一个 service 去 `new` 整棵 `AppModule`。
+
 ## 代码 / 例子
 
 ```ts

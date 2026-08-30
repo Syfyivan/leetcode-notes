@@ -20,6 +20,24 @@
  *
  * 输入： temperatures = [30,60,90]
  * 输出： [1,1,0]
+ *
+ * ——— 延伸 ———
+ * - 下一个更大元素 I / II：同一单调栈，环形数组就拼一份或取模。
+ * - 股票跨度（LC 901）：下一个更大改成连续小于等于的天数。
+ * - 从右往左扫：先看到后面的天，栈里存「右边的候补」。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么栈里温度递减？
+ * A: 还没等到更高的天。遇到更高就把它们结算掉。递增的话栈顶已经更大，等不到。
+ *
+ * Q: 答案初始为什么填 0？
+ * A: 后面没有更高就保持 0。最后留在栈里的天正好用上。
+ *
+ * Q: 相等温度弹不弹？
+ * A: 不弹。题目要更高，相等不算。用 > 不是 >=。
+ *
+ * Q: 能不能 DP？
+ * A: 能，从后往前跳。最坏还是 O(n^2)。单调栈保证每个下标进出一次。
  */
 
 /**
@@ -31,7 +49,7 @@ function dailyTemperatures(temperatures) {
   const ans = new Array(n).fill(0);
   const stack = []; // 存下标
   for (let i = 0; i < n; i++) {
-    while (stack.length && temperatures[i] > temperatures[stack[stack.length - 1]]) {
+    while (stack.length && temperatures[i] > temperatures[stack[stack.length - 1]]) { // 相等不算更高，不弹
       const idx = stack.pop();
       ans[idx] = i - idx;
     }

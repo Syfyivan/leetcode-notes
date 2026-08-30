@@ -21,11 +21,33 @@
  * 进阶（循环引用）：
  * 输入： const o = { name: 'self' };  o.self = o;
  * 输出： 深拷贝(o).self.name === 'self'   // 不能爆栈
+ *
+ * ——— 延伸 ———
+ * - structuredClone 是平台能力，Date / Map / Set / 循环引用都能搞，函数 / DOM / Symbol 会抛。
+ * - JSON.parse(JSON.stringify) 最省事：函数丢掉、Date 变字符串、undefined 丢键、循环直接抛。
+ * - Object.keys 只拷可枚举自有键，class 实例会丢方法。要的话 getOwnPropertyDescriptors
+ *   + Object.create(proto)。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么用 WeakMap 不用 Map？
+ * A: key 是原对象，WeakMap 不阻止 GC。拷完原对象就能收。Map 会把原对象一直抓住。
+ *
+ * Q: 为什么空壳要先放进 cache？
+ * A: 对象里有自引用。先放空壳，递归回来 cache.get 能拿到正在建的那份，切断循环。
+ *
+ * Q: 函数为什么不拷？
+ * A: 函数一般当共享行为。闭包绑的是原作用域，new Function 也复制不了那份闭包。
+ *
+ * Q: 和 structuredClone 差在哪？
+ * A: structuredClone 碰到函数 / DOM 会抛。这版函数原样返回，DOM 当普通对象遍历。
+ *
+ * Q: 原型上的方法会拷过来吗？
+ * A: 不会。Object.keys 只有自有可枚举键。实例的方法还在原 prototype 上。
  */
 
 function deepClone(value, cache = new WeakMap()) {
-  if (typeof value !== 'object' || value === null) return value;
-  if (cache.has(value)) return cache.get(value);
+  if (typeof value !== 'object' || value === null) return value; // 原始值直接回；null 的 typeof 是 object
+  if (cache.has(value)) return cache.get(value); // 见过就回上次那份，切断循环
 
   if (value instanceof Date) {
     const cloned = new Date(value.getTime());
@@ -39,9 +61,9 @@ function deepClone(value, cache = new WeakMap()) {
   }
   if (value instanceof Map) {
     const cloned = new Map();
-    cache.set(value, cloned);
+    cache.set(value, cloned); // 空壳先放，Map 里可能互指
     value.forEach((v, k) => {
-      cloned.set(deepClone(k, cache), deepClone(v, cache));
+      cloned.set(deepClone(k, cache), deepClone(v, cache)); // key 也可以是对象，一样要拷
     });
     return cloned;
   }

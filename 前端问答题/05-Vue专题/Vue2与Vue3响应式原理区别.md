@@ -30,6 +30,12 @@ Vue3 是懒代理：属性被访问到才递归包一层，初始化更轻。
 
 组件 effect（或 `watchEffect`）运行时，读到的每个响应式属性把当前 effect 记进自己的 dep。数据变了，遍历 dep 重新跑。Vue3 的 `computed` 也是带调度的 effect，懒计算、有缓存。Vue2 是 `Dep` 类 + `Watcher`，思路一样，API 不同。
 
+## 延伸
+
+- 相关题：虚拟 DOM（trigger 之后怎么更新）、nextTick 批量。
+- 对比题：Vue2 新属性要 `$set`，Vue3 直接赋值就行。数组下标赋值是 Vue2 的盲区。
+- 面试加码：解构 `reactive` 要 `toRefs`。`shallowRef` / `markRaw` 跳过深层代理。Proxy 不支持 IE。
+
 ## 常见追问
 
 - Q: Vue3 里 `ref` 和 `reactive` 的区别？各自的响应式是怎么做的？

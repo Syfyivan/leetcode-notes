@@ -20,6 +20,24 @@
  *   - 删的是头节点时怎么办？
  *   - n 非法（比如超过链表长度）怎么办？
  *   - 空链表怎么办？
+ *
+ * ——— 延伸 ———
+ * - 快先走 n 再一起走，找倒数第 k 个、旋转链表也能用。
+ * - 两次遍历：先数长度，再走 length-n。多一遍，更好写。
+ * - 删头时虚拟头兜住，返回 dummy.next。
+ *
+ * ——— 常见追问 ———
+ * Q: 快指针为什么先走 n 步？
+ * A: 快慢隔 n 个。快到尾巴时，慢刚好在待删前一个。单链表删节点必须拿前驱。
+ *
+ * Q: 为什么从 dummy 起步，不从头？
+ * A: n 等于长度时删的是头。slow 停在 dummy 上，next 一跳就删掉头。
+ *
+ * Q: 快先走 n 步时中间空了？
+ * A: n 比长度大。题目保证合法，这里直接返回原头。
+ *
+ * Q: 复杂度？
+ * A: 一遍扫描 O(n)，几个指针 O(1)。
  */
 
 // —— 链表节点定义（模板，别改）——
@@ -45,7 +63,7 @@ function removeNthFromEnd(head, n) {
     fast = fast.next;
     slow = slow.next;
   }
-  slow.next = slow.next.next;
+  slow.next = slow.next.next; // 跳过待删那个
   return dummy.next;
 }
 

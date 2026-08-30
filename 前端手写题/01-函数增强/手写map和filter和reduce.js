@@ -23,12 +23,34 @@
  *
  * 输入： [1, 2, 3, 4].myReduce((a, b) => a + b, 0)
  * 输出： 10
+ *
+ * ——— 延伸 ———
+ * - 稀疏数组：原生 map / filter 跳过 empty slot，这份 for 会把洞当 undefined 喂给回调。
+ * - thisArg：原生 map(fn, thisArg) 能绑回调 this，手写常省。
+ * - reduce 空数组又不传初值，原生抛 TypeError。这份会读到 this[0] 为 undefined 继续跑。
+ * - 链式：map / filter 返回新数组才能接着点。reduce 返回的是累加值，链到这就断。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么不直接改原数组？
+ * A: 这三个都是非破坏性方法。调用方还要用原数组，必须另开一份。
+ *
+ * Q: reduce 不传初值会怎样？
+ * A: 第 0 项当累加器，从下标 1 开始。空数组无初值，原生会抛。
+ *
+ * Q: 为什么回调要传 index 和 array？
+ * A: 原生签名就是 (item, index, array)。有人会用下标或看原数组，缺了行为对不上。
+ *
+ * Q: forEach 和 map 差在哪？
+ * A: forEach 为了副作用，返回 undefined。map 为了映射出新数组，才接得上链式。
+ *
+ * Q: 为什么用 arguments.length 判断初值，不写 initial === undefined？
+ * A: 初值完全可以是 undefined。用参数个数才能区分「没传」和「传了 undefined」。
  */
 
 Array.prototype.myMap = function (fn) {
   const res = [];
   for (let i = 0; i < this.length; i++) {
-    res.push(fn(this[i], i, this));
+    res.push(fn(this[i], i, this)); // 签名对齐原生，三项都给
   }
   return res;
 };
@@ -44,7 +66,7 @@ Array.prototype.myFilter = function (fn) {
 Array.prototype.myReduce = function (fn, initial) {
   let acc = initial;
   let i = 0;
-  if (arguments.length < 2) {
+  if (arguments.length < 2) { // undefined 也是合法初值，不能用 === undefined 判断
     acc = this[0];
     i = 1;
   }

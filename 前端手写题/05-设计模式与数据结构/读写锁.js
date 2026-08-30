@@ -32,6 +32,24 @@
  *   read B end
  *   write start      // 等到两个读都结束才开始
  *   write end
+ *
+ * ——— 延伸 ———
+ * - 锁降级：写锁持有者直接 reading++、writing=false，再 wake。读升写要小心死锁（自己还占着读）。
+ * - 超时：readLock / writeLock 再包 Promise.race，超时从 waiters 里摘掉。
+ * - 写优先：wake 时跳过读去找写。现在是 FIFO，队头是谁就先醒谁。
+ *
+ * ——— 常见追问 ———
+ * Q: 已经有人排队了，为什么新来的读不能直接进？
+ * A: 队头可能是写。读再插进去，写会被源源不断的新读堵住，饿死。
+ *
+ * Q: wake 时队头是读，为什么一口气放完连续的读？
+ * A: 读读可共享。放完这一串，直到碰上写或队列空。后面那个写仍要等这批读结束。
+ *
+ * Q: 写 unlock 后队头还是写，怎么办？
+ * A: 只放这一个。写写互斥，不能连放。
+ *
+ * Q: JS 单线程还要读写锁？
+ * A: 单线程挡不住 await 交错。两个读 await 期间，写可能插进来改数据。锁的是这段异步临界区。
  */
 
 class ReadWriteLock {
@@ -47,7 +65,7 @@ class ReadWriteLock {
         this.reading++;
         resolve();
       };
-      // 有人写、或已经有人在排队，就不要插队
+      // 有人写、或已经有人在排队，就不要插队（写会饿死）
       if (!this.writing && this.waiters.length === 0) grant();
       else this.waiters.push({ kind: 'read', grant });
     });
@@ -75,13 +93,13 @@ class ReadWriteLock {
   }
 
   wake() {
-    if (this.writing || this.waiters.length === 0) return;
+    if (this.writing || this.waiters.length === 0) return; // 写还占着，谁都别醒
     if (this.waiters[0].kind === 'write') {
-      if (this.reading === 0) this.waiters.shift().grant();
-      return;
+      if (this.reading === 0) this.waiters.shift().grant(); // 还有读没完，写继续等
+      return; // 就算现在放不了，也不要去放后面的读
     }
     while (this.waiters.length && this.waiters[0].kind === 'read') {
-      this.waiters.shift().grant();
+      this.waiters.shift().grant(); // 连续的读一起放行
     }
   }
 }

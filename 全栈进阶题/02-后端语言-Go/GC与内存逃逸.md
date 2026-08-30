@@ -27,6 +27,12 @@ Go 用并发三色标记清除，配合写屏障，STW 只在扫根和收尾两�
 
    目标堆 = 存活堆 * (1 + GOGC/100)。GOGC=100 表示活着 100MB 就允许再长 100MB。GOGC=off 关掉自动 GC。`GOMEMLIMIT` 把总内存（含栈、堆外）卡住，接近上限时更积极地收。pprof 的 `heap`、`allocs`，以及 `runtime.ReadMemStats` 的 `PauseTotalNs`、`NumGC` 是观察口。降延迟优先看逃逸和短命大对象，别一上来把 GOGC 拧到 200 掩盖分配。
 
+## 延伸
+
+- 相关题：slice 与 map 底层。小切片长期引用大数组，逃逸分析救不了，要 `copy`。
+- 对比：GOGC 调大少跑 GC，内存会涨。`GOMEMLIMIT` 是硬顶，靠近上限时收得更勤。
+- 加码：热路径上看 `allocs/op` 和 `-gcflags=-m`，把 `interface{}` 装箱干掉。Go 1.18 用类型参数。
+
 ## 代码 / 例子
 
 ```go

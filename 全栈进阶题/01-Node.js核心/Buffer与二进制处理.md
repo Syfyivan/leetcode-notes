@@ -23,6 +23,12 @@ Buffer 是 Node 拿来处理二进制的字节数组，继承 `Uint8Array`，多
 
    `buf.toString('utf8')`、`buf.toString('base64')`、`buf.toString('hex')`。反向 `Buffer.from(s, 'base64')`。`latin1`（binary）是一字节一字符，常拿来在 latin1 字符串和字节之间偷传。`byteOffset` + `length` 可以切 view，不拷贝。注意 `JSON.stringify(buf)` 会变成 `{ type: 'Buffer', data: [...] }`，网络传输一般先改 base64 或直接发 Buffer。
 
+## 延伸
+
+- 相关题：Stream 流与背压。chunk 多半就是 Buffer，背压就是这些块堆在内存里。
+- 对比：浏览器用 `Uint8Array` + `TextEncoder`。Node Buffer 多了 8KB pool、编码、`writeInt*`。
+- 加码：半个 UTF-8 汉字跨两个 chunk，用 `StringDecoder` 拼。再往上，自己用 Buffer 切一个 TLV 协议。
+
 ## 代码 / 例子
 
 ```js

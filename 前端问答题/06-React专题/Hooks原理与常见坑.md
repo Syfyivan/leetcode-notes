@@ -51,6 +51,12 @@ exhaustive-deps 会吵。真要「只挂载一次」又读最新值，把值放 
 
 ref 改 `.current` 不触发渲染。父要调子方法：`forwardRef` + `useImperativeHandle`。量尺寸、同步滚动用 LayoutEffect，避免闪一下。LayoutEffect SSR 会警告，服务端没有 DOM。
 
+## 延伸
+
+- 相关题：Fiber 的 memoizedState 链表、setState 批量、过期闭包。
+- 对比题：`setN(n + 1)` 连写三次可能只 +1；`setN(n => n + 1)` 才 +3。
+- 面试加码：不能写进 if / for，链表顺序一变 state 串门。自定义 Hook 返回新对象每次都是新引用，外层当依赖会把 effect 绕死。
+
 ## 常见追问
 
 - Q: useLayoutEffect 和 useEffect 的执行时机差在哪？（Layout 在 Commit 的 Layout 子阶段，同步阻塞绘制；Effect 在绘制后异步）

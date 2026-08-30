@@ -30,6 +30,12 @@ border-box 下同样声明，占宽就是 200，内容只剩 200-40-20=140。mar
 
 左右各 20，共 40。没写 border 就当 0。内容宽度 60px。高度同理：`padding: 20px` 是四边，内容高度也减 40。
 
+## 延伸
+
+- 相关题：BFC、Flex 算宽、重排（改 padding 会动几何）。
+- 对比题：`width: 100%` 再加 padding，content-box 会溢出。margin 不进 width，还可能折叠。
+- 面试加码：全局 `* { box-sizing: border-box }`。`offsetWidth` 含 border，`clientWidth` 含 padding 不含滚动条，`scrollWidth` 是内容滚动宽。
+
 ## 常见追问
 
 - Q: 外边距折叠（margin collapse）的三种场景 + 解决思路？

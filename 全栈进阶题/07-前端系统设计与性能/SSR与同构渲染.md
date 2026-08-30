@@ -25,6 +25,12 @@ CSR：浏览器拉 JS 再画页面。SSR：服务器跑一遍组件，吐出 HTM
 
    预取要在渲染前结束，或用流式 `Suspense` / `pipeToNodeWritable` 边下边吐。状态：只序列化需要的字段，注意 XSS（`</script>` 转义）。泄漏：把请求级数据挂模块全局、订阅没卸、LRU 无限涨，Node 进程 RSS 只增不减。每请求新建 store，禁止把 `req` 塞进单例。
 
+## 延伸
+
+- 相关题：首屏加载优化。能 SSG 的别 SSR，TTFB 可能比 CSR 还差。
+- 对比：hydration 复用服务端 DOM；CSR 是空白页上现挂。store 做成模块单例，用户 A 的数据会渲到用户 B。
+- 加码：流式 SSR / RSC 边下边吐。整页串行 await 接口会把首字节拖死。
+
 ## 代码 / 例子
 
 ```js

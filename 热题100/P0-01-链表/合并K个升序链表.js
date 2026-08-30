@@ -19,6 +19,24 @@
  *
  * 输入： lists = [[]]
  * 输出： []
+ *
+ * ——— 延伸 ———
+ * - 小顶堆：k 个堆顶比大小，弹出最小再把该链下一个塞回去。也是 O(N log k)。
+ * - 拿第一条当底，循环合剩下的，时间退化成 O(Nk)。
+ * - k=2 就是合并两个有序链表。
+ *
+ * ——— 常见追问 ———
+ * Q: 分治为什么是 O(N log k)？
+ * A: 每一层把所有节点合并一遍 O(N)，层数 log k。跟归并排序一样。
+ *
+ * Q: 为什么不循环合到第一条上？
+ * A: 前几条会反复被扫，总时间接近 O(Nk)。分治每层均摊。
+ *
+ * Q: 空数组、全空链表？
+ * A: lists 空直接 null。某条是 null，mergeTwo 当空链，剩下那条原样返回。
+ *
+ * Q: 空间？
+ * A: 分治递归深度 log k。堆的话堆里 k 个节点，O(k)。
  */
 
 function ListNode(val, next) {
@@ -51,11 +69,11 @@ function mergeKLists(lists) {
       else { cur.next = b; b = b.next; }
       cur = cur.next;
     }
-    cur.next = a || b;
+    cur.next = a || b; // 剩下那条已有序，整段挂上
     return dummy.next;
   };
   const merge = (l, r) => {
-    if (l === r) return lists[l];
+    if (l === r) return lists[l]; // 只剩一条，不用合
     if (l > r) return null;
     const m = (l + r) >> 1;
     return mergeTwo(merge(l, m), merge(m + 1, r));

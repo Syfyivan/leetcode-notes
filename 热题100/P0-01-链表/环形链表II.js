@@ -23,6 +23,25 @@
  *
  * 输入： head = [1], pos = -1
  * 输出： null
+ *
+ * ——— 延伸 ———
+ * - 只判有没有环就是 LC141，相遇即可，不用找入口。
+ * - 头到入口 a、环长 c、相遇时慢走了 a+x：2(a+x)=a+x+kc → a=kc-x，
+ *   所以从头和从相遇点再走，会在入口碰上。
+ * - 哈希记下第一次重复的节点，就是入口。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么相遇后一个要回到头？
+ * A: 慢指针在环里已经走了 x。从头再走 a 步，刚好等于从相遇点走到入口。
+ *
+ * Q: 入口就是头怎么办？
+ * A: p 和 slow 一开始就相等，while 不进，直接返回头。
+ *
+ * Q: 无环？
+ * A: fast 走到空，循环结束返回 null。
+ *
+ * Q: 空间？
+ * A: 几个指针 O(1)。哈希 O(n)。
  */
 
 function ListNode(val, next) {
@@ -52,7 +71,7 @@ function detectCycle(head) {
     slow = slow.next;
     fast = fast.next.next;
     if (slow === fast) {
-      let p = head;
+      let p = head; // 一个放回头，两个再各走 1
       while (p !== slow) { // 头到入口 = 相遇点到入口
         p = p.next;
         slow = slow.next;

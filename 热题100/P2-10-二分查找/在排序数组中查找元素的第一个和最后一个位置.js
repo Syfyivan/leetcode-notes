@@ -10,6 +10,24 @@
  * 2. start 合法且等于 target 才有解；end = 第二次结果 - 1。
  * 3. 边界：先判 start === n，再读 nums[start]，避免越界。
  * 复杂度：时间 O(log n)，空间 O(1)
+ *
+ * ——— 延伸 ———
+ * - 只要左端：一次 find(target) 再判越界，不必找 target+1。
+ * - 出现次数：找到两端后 end - start + 1，没有就 0。
+ * - 旋转数组里带重复：先定位有序段，再对各段套同一套 lower_bound。
+ *
+ * ——— 常见追问 ———
+ * Q: 一次二分能同时拿到两端吗？
+ * A: 不好写。左端要在相等时继续往左，右端要往右，收缩方向反着。拆两次最稳。
+ *
+ * Q: 为什么 right 取 nums.length？
+ * A: 左闭右开，插入位可以是 n。全比 target 小就该返回 n，再减 1 得到最后一格。
+ *
+ * Q: 找不到为什么先看 start === n？
+ * A: start 可能等于长度，先读 nums[start] 会越界。短路写在前面。
+ *
+ * Q: 数组全是 target 呢？
+ * A: find(target) 得到 0，find(target+1) 得到 n，两端就是 [0, n-1]。
  * @param {number[]} nums
  * @param {number} target
  * @return {number[]}

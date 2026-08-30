@@ -34,6 +34,12 @@ TCP 要先握手再传数据，双方都确认对方的发送序号可用。
 
 服务端如果立刻把第二、第三次合并成 FIN+ACK，就变成三次挥手。那要求服务端没有剩余数据，不能当常规。
 
+## 延伸
+
+- 相关题：HTTP/2 仍受 TCP 丢包影响、TLS 叠在握手之后、连接耗时。
+- 对比题：TIME_WAIT 在先发 FIN 的那侧，高并发短连接客户端或反向代理会爆。CLOSE_WAIT 一堆是本端没调 close。
+- 面试加码：ISN 要随机。第三次握手可以带数据（TFO）。状态名字能说全 SYN_SENT / SYN_RCVD / FIN_WAIT / CLOSE_WAIT。
+
 ## 常见追问
 
 - Q: SYN Flood 攻击是什么？怎么防？（SYN Cookies / 缩短 SYN Timeout / 增加 backlog）

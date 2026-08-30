@@ -24,6 +24,12 @@
 
 补充：输入里的非 Promise 会先 `Promise.resolve` 包一层。`all` 失败是 fail-fast，已经发出去的请求不会取消。
 
+## 延伸
+
+- 相关题：手写 `Promise.all` / `race` / `allSettled`。
+- 对比题：超时用 race（timeout 是 reject）；多源择优用 any。空数组 `race` 会永远 pending。
+- 面试加码：`all` fail-fast 取消不了已经发出的请求，要自己 AbortController。结果数组按下标排，不按完成时间。
+
 ## 代码 / 例子
 
 ```js

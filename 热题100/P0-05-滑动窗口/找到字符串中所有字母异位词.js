@@ -19,6 +19,24 @@
  *
  * 输入： s = "abab",  p = "ab"
  * 输出： [0, 1, 2]
+ *
+ * ——— 延伸 ———
+ * - 用 diff 计数代替 26 次比较：窗口恰好匹配时 diff=0，进/出各改一次。
+ * - 字符串排列（LC 567）：只问存不存在，找到一个就 true。
+ * - 最小覆盖子串：窗口长度不固定，覆盖后缩左端。
+ *
+ * ——— 常见追问 ———
+ * Q: 窗口为什么固定长度？
+ * A: 异位词长度必须等于 p。固定滑，每次进一个出一个。
+ *
+ * Q: 为什么 i >= p.length 才弹出？
+ * A: 前 p.length 个是第一扇窗。再往右才需要把左端挤出去。
+ *
+ * Q: same() 每次扫 26 会不会慢？
+ * A: 常数。|s| 到 1e4 完全够。要更快就维护「还差几种」。
+ *
+ * Q: 和分组异位词的区别？
+ * A: 那题按 key 归堆。这题在长串里找短串的排列，滑窗计数。
  */
 
 /**
@@ -41,8 +59,8 @@ function findAnagrams(s, p) {
   const res = [];
   for (let i = 0; i < s.length; i++) {
     win[s.charCodeAt(i) - a]++;
-    if (i >= p.length) win[s.charCodeAt(i - p.length) - a]--; // 窗口超长，弹出左端
-    if (i >= p.length - 1 && same()) res.push(i - p.length + 1);
+    if (i >= p.length) win[s.charCodeAt(i - p.length) - a]--; // 固定窗长，右进一个必须左出一个
+    if (i >= p.length - 1 && same()) res.push(i - p.length + 1); // 窗长凑齐才可能是异位词
   }
   return res;
 }

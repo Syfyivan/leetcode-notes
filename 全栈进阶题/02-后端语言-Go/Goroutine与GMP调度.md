@@ -26,6 +26,12 @@ goroutine 是 Go runtime 调度的用户态协程，初始栈大约 2KB，不够
    P 空了：先看全局队列 → netpoll 就绪的 G → 从别的 P 偷一半本地队列。偷是为了把多核吃满。
    抢占：Go 1.14 之前靠函数入口的 stack check，死循环不调函数就抢不下来。1.14 起 sysmon 发 `SIGURG` 做异步抢占，纯计算循环也能被拆时间片。GC 标记时也会抢占，让所有 P 进入安全点。
 
+## 延伸
+
+- 相关题：context 超时与取消。调度器再强也收不掉你忘了 return 的 G。泄漏几乎都堵在没人关的 channel 上。
+- 对比：网络 I/O 走 netpoll，G 挂起 M 不堵；CGO 和同步 syscall 会占着 M，P 被抢走。
+- 加码：pprof 看 `goroutine` 和 `mutex` 剖面。别只看 CPU。sysmon 的 `SIGURG` 能拆死循环，GC 标记仍要安全点。
+
 ## 代码 / 例子
 
 ```go

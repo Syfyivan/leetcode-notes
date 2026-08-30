@@ -25,6 +25,12 @@ Node 里两套模块：CommonJS 是运行时同步 `require`，导出一份值�
    CJS：遇到 `require` 立刻同步读文件、执行，循环依赖时拿到的是「写到一半」的 `module.exports`。
    ESM：`import` 声明提升，链接阶段就建好导出绑定；`import()` 动态导入返回 Promise。ESM 的导出是引用，源模块改 `export let x`，导入方下次读就是新值。Node 用 `.mjs`、或 `package.json` 的 `"type": "module"` 才走 ESM。CJS 里不能顶层 `import`，反过来 ESM 里 `require` 要靠 `createRequire`。
 
+## 延伸
+
+- 相关题：前端工程化的 TreeShaking。ESM 静态图才能摇，原因在这篇。
+- 对比：Node 的 CJS 缓存按绝对路径；打包器还会把模块并进一个文件。运行时 cache 和构建时 graph 别混成一句。
+- 加码：双模块包怎么写 `"exports": { "import": "...", "require": "..." }`。CJS `require` ESM 默认导出，经常要 `.default`。
+
 ## 代码 / 例子
 
 ```js

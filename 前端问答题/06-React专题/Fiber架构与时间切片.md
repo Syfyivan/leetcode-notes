@@ -37,6 +37,12 @@ Scheduler 用 `MessageChannel` 或 `scheduler.yield` 把任务切成约 5ms 一�
 
 31 个位当 Lane。同步更新走 SyncLane，用户输入 Discrete，过渡更新 Transition，空闲 Idle。高优先级可以打断低优先级的 Render，复用一部分已经算完的节点。`startTransition` 就是把更新标成 Transition Lane。
 
+## 延伸
+
+- 相关题：setState 批处理、Hooks 挂在 Fiber 上、事件循环和帧预算。
+- 对比题：Render 可中断，Commit 不能。时间切片不会把 DOM 改到一半。虚拟 DOM 还在，Fiber 是它的执行单元。
+- 面试加码：`startTransition` / Lane。老 `ReactDOM.render` 没有完整并发，要 `createRoot`。
+
 ## 常见追问
 
 - Q: React 18 的并发模式和 Fiber 的关系？

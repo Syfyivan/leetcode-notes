@@ -16,11 +16,29 @@
  * ——— 示例 ———
  * 输入： shuffle([1, 2, 3, 4, 5])
  * 输出： 原数组元素的一个随机排列，如 [3, 1, 5, 2, 4]
+ *
+ * ——— 延伸 ———
+ * - 不想改原数组就先 slice 再洗。lodash.shuffle 就是浅拷再洗。
+ * - 只要随机抽 k 个：只洗前 k 步然后 slice(0, k)，部分 Fisher-Yates。
+ * - Math.random 不够随机时换 crypto.getRandomValues。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么从后往前？
+ * A: i 这个位置从 [0, i] 里抽人换上来，前缀还是未确定区。从前往后也行，区间改成 [i, n)。
+ *
+ * Q: 为什么是 (i + 1) 不是 i？
+ * A: 要包含 i 自己，允许「不换」。写成 i 就永远跟前面换，最后一位永远到不了原位。
+ *
+ * Q: sort(() => Math.random() - 0.5) 为啥不行？
+ * A: 比较函数必须稳定给出正负。随机正负让排序假设崩掉，有的排列概率明显更大。
+ *
+ * Q: 原地改还是返回新数组？
+ * A: 这版原地，面试说清楚。lodash.shuffle 是浅拷再洗。
  */
 
 function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+  for (let i = arr.length - 1; i > 0; i--) { // i=0 只剩自己，不用换
+    const j = Math.floor(Math.random() * (i + 1)); // [0, i] 闭区间，含 i 自己才能等概率
     const tmp = arr[i];
     arr[i] = arr[j];
     arr[j] = tmp;

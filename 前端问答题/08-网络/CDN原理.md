@@ -36,6 +36,12 @@ CDN 把静态资源缓存在离用户近的边缘节点，用户就近下载，�
 
 带 hash 的 js/css 可以 `s-maxage=31536000, immutable`。HTML 入口 `s-maxage=60` 或 `no-cache`。Set-Cookie 的响应默认很多 CDN 不缓存。`Vary: Accept-Encoding` 常见。
 
+## 延伸
+
+- 相关题：缓存头、DNS、HTTPS、输入 URL 全过程。
+- 对比题：用户始终打边缘，由边缘回源。改源站文件、URL 又没变，要等 TTL 或 purge。
+- 面试加码：带 hash 的 js/css 给一年 `s-maxage` + `immutable`。带登录态的动态 JSON 必须 `private` / `no-store`，不然会串用户。
+
 ## 常见追问
 
 - Q: CDN 的 GSLB 怎么选节点？（DNS 解析 + Anycast IP + HTTP 302 重定向 等调度方式）

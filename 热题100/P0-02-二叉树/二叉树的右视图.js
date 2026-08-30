@@ -19,6 +19,24 @@
  *
  * 输入： root = []
  * 输出： []
+ *
+ * ——— 延伸 ———
+ * - DFS：先右后左，每层第一次碰到的就是最右。比 BFS 少一个队列。
+ * - 左视图：每层第一个，或 DFS 先左后右。
+ * - 层序遍历骨架一样，只是每层只留最后一个。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么每层最后一个就是右视图？
+ * A: 层序从左往右入队，队尾就是这层最右，站在右边能看见的那个。
+ *
+ * Q: 左子树比右子树深？
+ * A: 更深的那些层没有右边挡着，左子树的节点会入答案。例：[1,2] 右视图是 [1,2]。
+ *
+ * Q: 空树？
+ * A: 直接 []。
+ *
+ * Q: BFS 空间？
+ * A: 最宽一层 O(n)。DFS 是 O(h)。
  */
 
 function TreeNode(val, left, right) {
@@ -51,7 +69,7 @@ function rightSideView(root) {
   const res = [];
   const queue = [root];
   while (queue.length) {
-    const n = queue.length;
+    const n = queue.length; // 先拍板本层人数，循环中还会往队尾加下一层
     for (let i = 0; i < n; i++) {
       const node = queue.shift();
       if (i === n - 1) res.push(node.val); // 本层最后一个就是右视图

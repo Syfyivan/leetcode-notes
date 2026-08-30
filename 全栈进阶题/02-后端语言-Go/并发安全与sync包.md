@@ -22,6 +22,12 @@
 
    `atomic.AddInt64`、`CompareAndSwap`、`Load/StorePointer` 在硬件上一条指令或 CAS 循环。单变量计数、关停标志用它。涉及两个变量的不变式，还是 Mutex。`atomic.Value` 可以无锁读配置快照。Go 1.19 的 `atomic.Int64` 封装更不容易用错对齐。
 
+## 延伸
+
+- 相关题：Goroutine 与 GMP。锁等待会把 G 挂起；CGO / 阻塞 syscall 才真占 M。
+- 对比：`sync.Pool` 给 GC 减负，不能当连接池。GC 时会丢掉缓存对象。
+- 加码：`go test -race` 是底线。锁从「一把包住结构体」开始，别一上来分段锁。
+
 ## 代码 / 例子
 
 ```go

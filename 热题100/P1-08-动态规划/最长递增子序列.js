@@ -19,6 +19,24 @@
  *
  * 输入： nums = [7,7,7,7,7,7,7]
  * 输出： 1
+ *
+ * ——— 延伸 ———
+ * - O(n log n)：tails 数组 + 二分，tails[len] = 长度 len+1 的最小尾。
+ * - 最长递增子序列的个数（LC 673）：再记 cnt[i]。
+ * - 还原序列：记下 pred[i]，从 best 的下标倒推。
+ *
+ * ——— 常见追问 ———
+ * Q: 初值为什么全 1？
+ * A: 自己一个数就是长度 1 的递增子序列。
+ *
+ * Q: 严格递增还是非降？
+ * A: 题目严格，用 <。非降改 <=。
+ *
+ * Q: 为什么答案不是 dp[n-1]？
+ * A: LIS 不一定以最后一个数结尾。要全局 max。
+ *
+ * Q: 能改成子数组吗？
+ * A: 连续的话不需要 dp[j]，遇到不增就重开。
  */
 
 /**
@@ -27,13 +45,13 @@
  */
 function lengthOfLIS(nums) {
   const n = nums.length;
-  const dp = new Array(n).fill(1);
+  const dp = new Array(n).fill(1); // 单元素本身就是长度 1
   let best = 1;
   for (let i = 1; i < n; i++) {
     for (let j = 0; j < i; j++) {
       if (nums[j] < nums[i]) dp[i] = Math.max(dp[i], dp[j] + 1);
     }
-    best = Math.max(best, dp[i]);
+    best = Math.max(best, dp[i]); // LIS 不一定以最后一个数结尾
   }
   return best;
 }

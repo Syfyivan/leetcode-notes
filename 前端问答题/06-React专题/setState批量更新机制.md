@@ -29,6 +29,12 @@ React 16 在事件插件里包了 `batchedUpdates`。出了这个范围，`isBat
 
 批处理下多次读取闭包里的 state 都是同一份快照。函数式更新从 queue 里拿上一条结果。对象合并在 class 是浅合并，函数组件是整份替换，别把 `setUser({ name })` 当成还会保留 age。
 
+## 延伸
+
+- 相关题：Fiber Lane、Hooks dispatch、合成事件（16 只在合成事件里批量）。
+- 对比题：类组件 `setState` 浅合并；函数组件替换整份 state。`setUser({ name })` 会把 age 盖掉。
+- 面试加码：`flushSync` 只在必须同步读 DOM 时用。`startTransition` 和点击更新不在同一批。值相同 `Object.is` 会 bail out。
+
 ## 代码 / 例子
 
 ```js

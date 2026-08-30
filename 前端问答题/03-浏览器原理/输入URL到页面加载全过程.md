@@ -58,6 +58,12 @@ HTML 一边收一边解析。CSS 下完建成 CSSOM。两者合成 Render Tree�
 `DOMContentLoaded`：HTML 解析完 + defer/module 跑完，不等图片、不等 stylesheet 本身（但 stylesheet 后面的同步脚本会等 CSS）。
 `load`：这个文档依赖的图片、样式、子 iframe 都加载完。性能指标现在更看 LCP，不一定等 load。
 
+## 延伸
+
+- 相关题：缓存、DNS/CDN、TCP 握手、HTTPS、渲染流程。这题是拼盘，每段都有专题。
+- 对比题：`DOMContentLoaded` 等 HTML + defer；`load` 还要等图片。301 浏览器会记住，302 偏临时。
+- 面试加码：hash 不发给服务器。强缓存命中根本不会去 DNS。进程模型至少能说出浏览器 / 网络 / 渲染 / GPU。性能现在看 LCP。
+
 ## 自己的易错点 / 之前答崩过的地方
 
 我以前把 DNS、TCP、TLS 顺序说反，或漏掉缓存这一步。缓存命中根本不会去 DNS。

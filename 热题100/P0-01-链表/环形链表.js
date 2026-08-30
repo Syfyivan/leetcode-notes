@@ -25,6 +25,24 @@
  *
  * 输入： 空链表（null）
  * 输出： false
+ *
+ * ——— 延伸 ———
+ * - 环形链表 II：相遇后再把一个指针放回头，同步走，第二次相遇是入口。
+ * - 哈希记下见过的节点，再遇到就是环。空间 O(n)，好写。
+ * - 找环长度：相遇后让 fast 再走一圈回到 slow，计步数。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么快走 2 慢走 1 一定相遇？
+ * A: 有环时快的会在环里套圈。相对速度 1，每轮靠近一格，必碰上。
+ *
+ * Q: 快走 3 行不行？
+ * A: 可能永远错开，不保证相遇。2 最稳。
+ *
+ * Q: while 为什么看 fast && fast.next？
+ * A: 要迈两步。fast 或 fast.next 空说明到尾巴了，无环。
+ *
+ * Q: 单节点自环？
+ * A: slow 走一步、fast 走两步都回到自己，相遇，true。
  */
 
 // —— 链表节点定义（模板，别改）——
@@ -40,10 +58,10 @@ function ListNode(val, next) {
 function hasCycle(head) {
   let slow = head;
   let fast = head;
-  while (fast && fast.next) {
+  while (fast && fast.next) { // 迈两步前确认 fast.next 还在
     slow = slow.next;
     fast = fast.next.next; // 快走 2 步
-    if (slow === fast) return true;
+    if (slow === fast) return true; // 碰上就是有环
   }
   return false;
 }

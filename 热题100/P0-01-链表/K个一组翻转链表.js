@@ -22,6 +22,25 @@
  *
  * 输入： 1 -> 2 -> 3 -> 4 -> 5,  k = 1
  * 输出： 1 -> 2 -> 3 -> 4 -> 5
+ *
+ * ——— 延伸 ———
+ * - 最后不足 k 也翻：探路那步去掉，剩多少翻多少。
+ * - k=2 就是两两交换。这题是它的通用版。
+ * - 递归：翻前 k 个，剩下的递归接上。栈是 O(n/k)。
+ * - 反转区间 [left, right]（LC92）同一套指针，只翻一段。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么先数 k 个再翻？
+ * A: 不够 k 要保持原样。先探路，不够直接返回，翻过的不用还原。
+ *
+ * Q: 翻这一段时 p 为什么一开始等于 next？
+ * A: 这段新尾巴要接下一段。每个节点翻的时候就指向后面，翻完自然接上。
+ *
+ * Q: prev 为什么要挪到 newTail（原头）？
+ * A: 翻完原头变成这段的尾巴，下一组的前驱就是它。还停在 dummy 会接错。
+ *
+ * Q: 时间空间？
+ * A: 每段走两遍（数 + 翻），一共 O(n)。几个指针 O(1)。递归版栈 O(n/k)。
  */
 
 // —— 链表节点定义（模板，别改）——
@@ -44,9 +63,9 @@ function reverseKGroup(head, k) {
       tail = tail.next;
       if (!tail) return dummy.next; // 不够 k 个，不翻
     }
-    const next = tail.next;
+    const next = tail.next; // 下一段头，翻完尾巴要接它
     let curr = prev.next;
-    let p = next;
+    let p = next; // 从后往前翻，一开始就指向下一段
     while (curr !== next) {
       const nxt = curr.next;
       curr.next = p;
@@ -54,7 +73,7 @@ function reverseKGroup(head, k) {
       curr = nxt;
     }
     const newTail = prev.next; // 原头变尾
-    prev.next = tail;
+    prev.next = tail; // 前驱接到这段新头
     prev = newTail;
   }
 }

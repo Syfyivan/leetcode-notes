@@ -14,10 +14,28 @@
  * ——— 示例 ———
  * 输入： [1, 1, 2, 3, 3, 3, 4]      输出： [1, 2, 3, 4]
  * 输入： ['a', 'b', 'a', 'c']       输出： ['a', 'b', 'c']
+ *
+ * ——— 延伸 ———
+ * - 对象去重：Map + JSON.stringify 当 key，或 iteratee 抽 id。Set 只认引用。
+ * - filter + indexOf 也能做，NaN 对不上（indexOf 用 ===）。
+ * - 按字段去重用 lodash.uniqBy，iteratee 返回值当唯一键。
+ *
+ * ——— 常见追问 ———
+ * Q: 两个长得一样的 {} 为啥不去掉一个？
+ * A: Set 按 SameValueZero，对象比引用。每次字面量都是新地址。
+ *
+ * Q: NaN 能去重吗？
+ * A: 能。Set 里 NaN 等于 NaN。indexOf 那套 === 就不行。
+ *
+ * Q: +0 和 -0？
+ * A: Set 当成同一个。Object.is 才分得开。
+ *
+ * Q: 为啥能保住第一次出现的顺序？
+ * A: ES6 起 Set 按插入序迭代。后到的重复项根本插不进去。
  */
 
 function unique(arr) {
-  return [...new Set(arr)];
+  return [...new Set(arr)]; // Set 按插入序去重，展开才是新数组
 }
 
 // —— 自测 ——

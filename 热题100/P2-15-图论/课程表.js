@@ -19,6 +19,24 @@
  * 2. 拓扑弹出一门，邻接课入度减一，减到 0 再入队。
  * 3. 边界：弹出数量等于课程数则可修完，否则有环。
  * 复杂度：时间 O(n+e)，空间 O(n+e)
+ *
+ * ——— 延伸 ———
+ * - 课程表 II：弹出顺序就是一种合法修课顺序。
+ * - DFS 三色：访问中再碰到自己，说明有环。
+ * - 队列换成栈：拓扑序不同，能不能修完结论一样。
+ *
+ * ——— 常见追问 ———
+ * Q: 入度 0 是什么？
+ * A: 没有先修，现在就能学。作为拓扑起点。
+ *
+ * Q: 有环怎么看出来？
+ * A: 环上的点入度永远减不完，出队数量小于课程数。
+ *
+ * Q: 没有先修课？
+ * A: 所有课入度 0，一次性全进队，taken == n，返回 true。
+ *
+ * Q: 多门课同时可修？
+ * A: 入度 0 的可以按任意顺序出队。本题只问能不能修完，不问并行学期数。
  */
 
 /**
@@ -30,7 +48,7 @@ function canFinish(numCourses, prerequisites) {
     const graph = Array.from({ length: numCourses }, () => []);
     const indeg = new Array(numCourses).fill(0);
     for (const [ai, bi] of prerequisites) {
-        graph[bi].push(ai); // bi → ai，先修 bi
+        graph[bi].push(ai); // 边方向：先修 bi 指向后修 ai
         indeg[ai]++;
     }
     const q = [];

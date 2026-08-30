@@ -27,6 +27,12 @@ OAuth2 解决「让第三方在不拿到用户密码的前提下访问我的资�
 
    `state` 是随机串，存在 session 或前端 cookie，回调必须对上，否则攻击者拿自己的 code 绑到受害者账号。`redirect_uri` 必须白名单精确匹配。code 一次性、短 TTL。PKCE（S256）给公钥客户端（APP、SPA）防 code 拦截。token 存 HttpOnly，注意 `scope` 最小化。
 
+## 延伸
+
+- 相关题：鉴权 JWT 与 Session。OIDC 的 ID Token 常常就是 JWT。
+- 对比：CAS 靠中心跳转发 ticket；同主域可以共享 Cookie，跨主域必须跳 `sso.com`。
+- 加码：PKCE 给 SPA 防 code 被拦。`client_secret` 不能打进前端包。OAuth2 管授权，你是谁是 OIDC 那一层。
+
 ## 代码 / 例子
 
 ```text

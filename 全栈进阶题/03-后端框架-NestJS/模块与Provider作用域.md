@@ -26,6 +26,12 @@ Nest 用 `@Module({ imports, controllers, providers, exports })` 划边界。pro
 
    `@Global()` 加在模块上，export 的 provider 到处能注入，不必每个模块 import。适合 `ConfigModule`、`LoggerModule`。滥用会让依赖关系在图上看不见。`APP_GUARD` 这类全局 token 用 `provide: APP_GUARD, useClass: RolesGuard` 注册，不必 Global 模块。
 
+## 延伸
+
+- 相关题：依赖注入与 IoC。两个模块的 `providers` 都写同一份 service，容器会造两份单例。
+- 对比：动态模块 `forRoot` 传配置，`forFeature` 注册局部实体。别把连接和实体揉进一个 `forRoot`。
+- 加码：request 作用域注入到单例拦截器会炸，要用 `ModuleRef` 按请求解析。WebSocket 里 REQUEST 语义和 HTTP 也不一样。
+
 ## 代码 / 例子
 
 ```ts

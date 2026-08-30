@@ -27,6 +27,12 @@ Vue2.5 之后优先 `Promise.then`。没有 Promise 再 `MutationObserver`，再
 
 通常可以。拿不到的情况：回调里又改了数据，下一轮更新还在路上；子组件是异步组件 / `Suspense`，这轮还没挂上；`Teleport` 到外部，时序不同；自己用 `v-if` 刚切出来，子组件的 onMounted 可能在同一轮后面。这种再 `await nextTick()` 一次，或放到 `onMounted`。
 
+## 延伸
+
+- 相关题：事件循环、Vue 生命周期 updated、响应式批量更新。
+- 对比题：同一轮多次改 data 只刷一次 DOM。改完立刻读 `$el` 还是旧的。
+- 面试加码：`watch` 默认 pre，量 DOM 要 `{ flush: 'post' }`。异步组件 / `v-if` 刚切出来，可能还要再 `await nextTick()` 一次。
+
 ## 代码 / 例子
 
 ```js

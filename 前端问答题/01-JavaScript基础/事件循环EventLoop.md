@@ -30,6 +30,12 @@ Node 不按「宏/微」两层切，是 libuv 六个阶段，阶段之间先清 
 有空闲且需要画，就走 rAF → 样式计算 → 布局 → 绘制。
 再从宏任务队列取一个（最早到期的 timer 或事件），进入下一轮。
 
+## 延伸
+
+- 相关题：微任务宏任务执行顺序、async/await。输出题经常三连问。
+- 对比题：浏览器两层队列 vs Node 六个阶段 + `process.nextTick`。
+- 面试加码：`requestAnimationFrame` 挂在画帧前；`queueMicrotask` 和 `then` 同层。
+
 ## 代码 / 例子
 
 ```js

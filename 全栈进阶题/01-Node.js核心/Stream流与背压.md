@@ -23,6 +23,12 @@ Stream 把数据切成 chunk 边读边处理，避免一次性进内存。四种
 
    Readable 默认 **paused**：你调 `read()` 才吐数据，或监听 `'readable'` 再 `read()`。一旦 `on('data')` 或 `resume()`，切到 **flowing**，数据主动推给 `'data'` 回调。`pause()` 回到 paused。`readableFlowing === null` 表示还没选定。现代写法更常用 `for await (const chunk of readable)`，它按 paused / 内部 pull 走，背压由 async iterator 带上。
 
+## 延伸
+
+- 相关题：Buffer 与二进制处理。`highWaterMark` 的单位、chunk 截断汉字，都在那篇。
+- 对比：`pipe` 中间流出错不会拆整条链；`pipeline` 会把上下游一起销毁。生产用后者。
+- 加码：自己写一个 Transform，按行拆包，跨 chunk 的半行要留在内部缓冲里。
+
 ## 代码 / 例子
 
 ```js

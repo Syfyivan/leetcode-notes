@@ -36,6 +36,12 @@ webpack 的 `usedExports` 在图上标哪些导出被用。minify 阶段看到 `
 
 还有：`import _ from 'lodash'` 默认入口是 CJS；babel 把 ESM 转 CJS 太早；`Object.keys(mod)` 动态访问；re-export 写成 `export * from` 有的打包器分析不全。
 
+## 延伸
+
+- 相关题：ESM 静态结构、Vite 生产 Rollup、包体积。
+- 对比题：CJS / TS 过早编成 CommonJS 就摇不动。`export default { A, B }` 再 `UI.Button` 会把整份打进来。
+- 面试加码：lodash 用 `lodash-es` 或按文件导入。`/*#__PURE__*/` 给压缩器。dev 模式常常不 minify，要看 production bundle。
+
 ## 常见追问
 
 - Q: Webpack 里 `usedExports` 和 `sideEffects` 分别控制什么？

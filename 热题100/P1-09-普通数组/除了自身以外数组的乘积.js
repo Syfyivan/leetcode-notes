@@ -22,13 +22,31 @@
  * 3. 边界：不能用除法，数组里可能有 0。prefix[0] 和 suffix[n-1] 是 1。
  * 复杂度：时间 O(n)，空间 O(n)
  *
+ * ——— 延伸 ———
+ * - 空间 O(1)（不计答案）：答案数组先当 prefix，再一个变量扫后缀。
+ * - 允许除法：总积 / nums[i]。有 0 要特判，两个 0 则全 0。
+ * - 除了自身的和：同样左右各扫。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么不能除法？
+ * A: 题目禁用。有 0 时除法还要特判。前缀后缀不踩这个坑。
+ *
+ * Q: prefix[0] = 1？
+ * A: 左边没有元素，乘积约定为 1。否则 nums[0] 的答案会乘上一个不存在的数。
+ *
+ * Q: 为什么最后单独写 res[len-1]？
+ * A: 后缀循环从 len-2 起，最后一个位置没进循环。suffix[len-1] 已经是 1。
+ *
+ * Q: 有 0 怎么办？
+ * A: 0 所在位置前缀/后缀会变成 0。只有一个 0 时，它自己的答案是其余积，别的位置都是 0。
+ *
  * @param {number[]} nums
  * @return {number[]}
  */
 var productExceptSelf = function(nums) {
     // const map = new Map();
     const res = [];
-    const prefix = [1];
+    const prefix = [1]; // 左边空积约定为 1
      const len = nums.length;
     const suffix = Array(len).fill(1)
     for(let i = 1; i < len; i++) {
@@ -38,6 +56,6 @@ var productExceptSelf = function(nums) {
         suffix[j] = suffix[j + 1] * nums[j + 1];
         res[j] = suffix[j] * prefix[j]
     }
-    res[len - 1] = suffix[len - 1] * prefix[len - 1];
+    res[len - 1] = suffix[len - 1] * prefix[len - 1]; // 后缀循环没覆盖最后一位
     return res;
 };

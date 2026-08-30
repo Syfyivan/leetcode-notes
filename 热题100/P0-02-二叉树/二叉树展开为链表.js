@@ -21,6 +21,24 @@
  *
  * 输入： root = [0]
  * 输出： [0]
+ *
+ * ——— 延伸 ———
+ * - 先序遍历放到数组，再串 right。好写，空间 O(n)。
+ * - 迭代：先把右孩子存起来，左子树接到 right，再把原右孩子接到左子树尾巴。O(1) 额外空间。
+ * - Morris 也能摊，指针改来改去，面试够呛。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么用反先序（右-左-根）？
+ * A: 先把后面串好，prev 就是当前节点该接的下一个。正先序走会把右子树指针改掉，后面丢了。
+ *
+ * Q: 为什么 left 置 null？
+ * A: 题目要求摊成只有 right 的链表。不置空会残留左孩子。
+ *
+ * Q: 空树 / 单节点？
+ * A: dfs 直接 return，或只把 left 置空，right 本来就是 null。
+ *
+ * Q: 原地？
+ * A: 不新建节点，只改指针。返回 void。
  */
 
 function TreeNode(val, left, right) {
@@ -66,7 +84,7 @@ function flatten(root) {
     dfs(node.right);
     dfs(node.left);
     node.right = prev; // 反先序从尾巴往前接，顺序正好是先序
-    node.left = null;
+    node.left = null;  // 题目要求摊完只留 right
     prev = node;
   };
   dfs(root);

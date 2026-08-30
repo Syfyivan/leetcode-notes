@@ -21,6 +21,24 @@
  *
  * 输入： s = "2[abc]3[cd]ef"
  * 输出： "abcabccdcdcdef"
+ *
+ * ——— 延伸 ———
+ * - 只一层括号：不必栈，扫到 ] 把当前段 repeat。
+ * - 递归下降：遇数字读 k，遇 [ 递归解码到 ]。
+ * - 嵌套 HTML / XML：同一套栈，遇到闭标签弹开标签。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么两个栈？
+ * A: 倍数和字符串不是一类。一层 [ 同时记下「外面已写好的串」和「这一层重复几次」。
+ *
+ * Q: 多位数怎么拼？
+ * A: num = num * 10 + ch。遇 [ 才把 num 入栈并清零。
+ *
+ * Q: 为什么遇 [ 要把 cur 入栈并清空？
+ * A: [ 开启新一层。外层已写的串先存着，里层从空白拼，] 时再拼回去。
+ *
+ * Q: 空括号 3[]？
+ * A: 题目保证合法。cur 是空串，repeat 还是空。
  */
 
 /**
@@ -37,13 +55,13 @@ function decodeString(s) {
       num = num * 10 + Number(ch); // 倍数可能多位
     } else if (ch === '[') {
       numStack.push(num);
-      strStack.push(cur);
+      strStack.push(cur); // 外层已写好的串先压住，里层从空白重开
       num = 0;
       cur = '';
     } else if (ch === ']') {
       const times = numStack.pop();
       const prev = strStack.pop();
-      cur = prev + cur.repeat(times);
+      cur = prev + cur.repeat(times); // 拼回外层：prev + 本层重复 times 次
     } else {
       cur += ch;
     }

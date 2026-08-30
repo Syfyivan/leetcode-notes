@@ -21,6 +21,24 @@
  *
  * 输入： l1 = [9,9,9,9,9,9,9], l2 = [9,9,9,9]
  * 输出： [8,9,9,9,0,0,0,1]
+ *
+ * ——— 延伸 ———
+ * - 数字正序存（LC445）：先压栈再加，或先反转再套这题。
+ * - 字符串大数加法同一套路：从尾往前加，维护进位。
+ * - 相乘（LC43）也是按位 + 进位，结果数组更长。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么 while 还要看 carry？
+ * A: 最后可能多出一位，5+5=10。进位还在就要再挂一个节点。
+ *
+ * Q: 一长一短怎么办？
+ * A: 短的当 0。走完的那边不再前进，条件写成 l1 ? l1.val : 0。
+ *
+ * Q: 虚拟头干什么？
+ * A: 第一位也可能有，不知道新头是谁。dummy 垫着，返回 dummy.next。
+ *
+ * Q: 为什么不先转成数字再加？
+ * A: 链表可能很长，超过 Number.MAX_SAFE_INTEGER 会丢精度。
  */
 
 function ListNode(val, next) {
@@ -45,13 +63,13 @@ function toArray(head) {
  * @return {ListNode}
  */
 function addTwoNumbers(l1, l2) {
-  const dummy = new ListNode(0);
+  const dummy = new ListNode(0); // 不知道新头是谁，垫一格
   let cur = dummy;
   let carry = 0;
-  while (l1 || l2 || carry) {
+  while (l1 || l2 || carry) { // 进位还在也要多挂一位
     const sum = (l1 ? l1.val : 0) + (l2 ? l2.val : 0) + carry;
     carry = Math.floor(sum / 10);
-    cur.next = new ListNode(sum % 10);
+    cur.next = new ListNode(sum % 10); // 只留个位，十位进到下一轮
     cur = cur.next;
     if (l1) l1 = l1.next;
     if (l2) l2 = l2.next;

@@ -22,6 +22,12 @@ HTTP/3 把 TCP 换成 QUIC（跑在 UDP 上）。流之间独立，丢包只伤�
 
 1.1 还有 keep-alive、管道化（基本被废弃，因为队头阻塞）。2 的 Server Push Chrome 2022 就摘了，别当卖点。3 在 CDN 边缘已经很常见（Cloudflare、阿里云都开）。
 
+## 延伸
+
+- 相关题：TCP 队头阻塞、TLS 握手 RTT、CDN 已开 h3。
+- 对比题：同源 6 个连接是浏览器限制，RFC 没写死。HTTP/3 不是「HTTP/2 跑在 UDP 上」，帧格式和 QPACK 都不一样。
+- 面试加码：Server Push 别当卖点，Chrome 已摘。防火墙拦 UDP 会降级到 h2。切网靠 Connection ID。
+
 ## 常见追问
 
 - Q: 什么是队头阻塞？HTTP/2 在哪些层面还存在队头阻塞？

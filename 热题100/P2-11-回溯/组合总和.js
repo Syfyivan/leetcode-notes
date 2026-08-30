@@ -14,6 +14,24 @@ candidates 中的 同一个 数字可以 无限制重复被选取 。如果至�
 2. sum > target 剪枝；sum === target 收一份拷贝。
 3. 边界：必须传 i 不能传 i+1，否则无法重复选。
 复杂度：时间 O(n^{T/m})，空间 O(T/m)，T 为目标，m 为最小候选
+
+——— 延伸 ———
+- 组合总和 II：每个数只能用一次，同层相同值要跳过。
+- 组合总和 III：k 个数凑 n，多一个剩余个数约束。
+- 先排序再剪枝：candidates[i] 已经大于剩余额度，后面更大，直接 break。
+
+——— 常见追问 ———
+Q: 为什么递归传 i 不传 i+1？
+A: 同一个数能反复选。传 i+1 就变成组合总和 II 的「每人一次」。
+
+Q: 和子集差在哪？
+A: 子集每个节点都收。这里有额度，凑够才收，超了剪掉。
+
+Q: 必须拷贝 path 吗？
+A: 必须。path 是共享的，后面还要 pop。
+
+Q: 无解返回什么？
+A: 空数组。dfs 收不到任何一份，res 保持 []。
 */
 
 /**
@@ -26,7 +44,7 @@ var combinationSum = function(candidates, target) {
     const path = [];
 
     const dfs = (start, sum) => {
-        if(sum > target) return;
+        if(sum > target) return; // 再往下只更大，剪掉
         if(sum === target) {
             res.push([...path]);
             return;

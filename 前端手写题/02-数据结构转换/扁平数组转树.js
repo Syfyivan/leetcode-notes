@@ -36,6 +36,27 @@
  *
  * 注意：返回的是"根节点数组"。为什么是数组而不是单个对象？
  * 因为可能有多个 parentId 为 null 的节点（多棵树 = 森林），所以统一用数组装。
+ *
+ * ——— 延伸 ———
+ * - parent 找不到：孤儿进 roots，或直接丢掉。开口问清再写。
+ * - 同层排序：挂完 children 再按 sort 字段排一下。
+ * - 一遍扫描：孩子先出现就先暂存，父出现再一次性 push。两遍更稳。
+ *
+ * ——— 常见追问 ———
+ * Q: 为什么必须两遍？
+ * A: 父可能排在子后面。一遍扫到孩子时父还不在 Map 里。先建完再挂。
+ *
+ * Q: 为什么 spread 复制？
+ * A: 直接改 item.children 会污染原数组。面试常要求纯函数。
+ *
+ * Q: parent 不存在会怎样？
+ * A: `parent.children` 读 undefined，直接抛。可以说丢进 roots，或跳过。
+ *
+ * Q: 为什么用 === null 判断根？
+ * A: parentId 为 0 时，!parentId 为 true，会误判成根。0 是合法 id。
+ *
+ * Q: Map 和普通对象当字典差在哪？
+ * A: 对象会把数字 key 转成字符串。Map 原样存，查找不用操心类型。
  */
 
 // —— 测试数据 ——
@@ -58,11 +79,11 @@ function listToTree(list) {
     const roots = [];
 
     for(const item of list) {
-      map.set(item.id, {...item, children: []}); // 先建完所有节点，第二遍随便挂
+      map.set(item.id, {...item, children: []}); // spread 出新对象；先建完所有节点，第二遍随便挂
     }
     for(const item of list) {
       const node = map.get(item.id);
-      if(item.parentId === null) {
+      if(item.parentId === null) { // 0 是合法 id，!parentId 会把 0 当成根
         roots.push(node);
       } else {
         const parent = map.get(item.parentId);

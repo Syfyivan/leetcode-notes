@@ -24,6 +24,12 @@ Node 的异步 I/O 通知大多挂在 `EventEmitter` 上：`on` 注册，`emit` 
 
    `defaultMaxListeners = 10`。同一 event 超过 10 个，`process` 打警告。常见原因：HTTP 请求里每次 `socket.on('data', ...)` 却不在结束时 `off`；或者热重载重复 `on`。`setMaxListeners(0)` 等于关掉保险丝，排查清楚再改。监听器闭包如果抓着大对象，emitter 活多久，那些对象就活多久。
 
+## 延伸
+
+- 相关题：异步错误处理。没人听 `error` 会同步 throw，和 `uncaughtException` 连着考。
+- 对比：DOM 有捕获、冒泡、`Event` 对象；EventEmitter 只是按名字排的函数数组，参数你随便传。
+- 加码：手写带 `once`、`off`、最大监听数的 mini EventEmitter。`emit` 期间 `on`/`off` 要先拷一份列表再调。
+
 ## 代码 / 例子
 
 ```js

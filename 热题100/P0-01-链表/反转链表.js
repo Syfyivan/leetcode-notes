@@ -20,6 +20,24 @@
  * 输出： 空链表（null）
  *
  * 迭代、递归都可以，自己挑一种先写，写完再换另一种。
+ *
+ * ——— 延伸 ———
+ * - 反转区间 [left, right]（LC92）：走到 left 前一个，只翻一段。
+ * - K 个一组翻、两两交换都是这题加分组。
+ * - 迭代省栈，递归好写。面试两种都要会。
+ *
+ * ——— 常见追问 ———
+ * Q: 递归为什么必须 head.next = null？
+ * A: 不切断的话原头还指着后继，后继又指回来，成环。新尾巴必须变成 null。
+ *
+ * Q: 迭代里 next 为什么先存？
+ * A: curr.next 马上改成 prev，不存就丢后面整串。
+ *
+ * Q: 空链表 / 单节点？
+ * A: 递归入口直接返回。迭代 while 不进，prev 停在 null 或那个单节点。
+ *
+ * Q: 复杂度？
+ * A: 都是 O(n)。递归栈 O(n)，迭代 O(1)，空间敏感用迭代。
  */
 
 // —— 链表节点定义（模板，别改）——
@@ -51,7 +69,7 @@ function reverseListIterative(head) {
   let prev = null;
   let curr = head;
   while (curr) {
-    const next = curr.next;
+    const next = curr.next; // 下一步要走这里，先存
     curr.next = prev;
     prev = curr;
     curr = next;

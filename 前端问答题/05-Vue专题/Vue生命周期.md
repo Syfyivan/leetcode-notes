@@ -41,6 +41,12 @@ created / setup 发请求，回来赋值即可。图表、`addEventListener`、`
 销毁：父 beforeDestroy → 子 beforeDestroy → 子 destroyed → 父 destroyed。Vue3 名字换成 Unmount。
 记忆：挂载时父等子完成再宣布自己 mounted；销毁时父先说要走，再让子走。
 
+## 延伸
+
+- 相关题：nextTick、keep-alive、SSR 数据预取。
+- 对比题：created 能发请求、没有 DOM；mounted 才能碰图表。keep-alive 切走走 deactivated，不是 destroyed。
+- 面试加码：挂载时父等子 mounted 再宣布自己；销毁反过来。Vue3 `setup` 早于 beforeCreate。`onErrorCaptured` 知道就行。
+
 ## 常见追问
 
 - Q: 为什么请求数据放在 created 而不是 mounted？（能早则早，SSR 场景 mounted 不执行）

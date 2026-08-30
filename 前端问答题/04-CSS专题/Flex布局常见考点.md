@@ -43,6 +43,12 @@ basis 是 0 时，剩余空间按 grow 比例分，跟内容宽度无关，三�
 
 `space-between` 子项自身太宽会溢出，给子项 `min-width: 0` 并允许换行。最后一行左对齐：不要用 between，用 `gap` + `flex-start`，或伪元素占位，或改 grid。等分：子项 `flex: 1` + 容器 `gap: 16px`，别用 margin 硬凑。
 
+## 延伸
+
+- 相关题：垂直水平居中、Grid 九宫格、盒模型。
+- 对比题：`justify-content` 管主轴，`align-items` 管交叉轴。`align-content` 只对多行有效。
+- 面试加码：`gap` 替代子项 margin。`order` 只改视觉顺序，键盘顺序不变。粘性页脚：column + main `flex: 1`。
+
 ## 代码 / 例子
 
 ```css

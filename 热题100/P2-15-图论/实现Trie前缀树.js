@@ -23,6 +23,24 @@
  * 2. insert 沿字符建节点，末尾打 isEnd。
  * 3. 边界：search 必须走到 isEnd；startsWith 走到即可。
  * 复杂度：时间 O(L)，空间 O(节点数)
+ *
+ * ——— 延伸 ———
+ * - 删除单词：节点加计数，删到 0 再收空枝。
+ * - 通配符 '.'：当前层 DFS 26 个儿子。
+ * - 字符集大：用 Map 代替对象字段。
+ *
+ * ——— 常见追问 ———
+ * Q: search 和 startsWith 差在哪？
+ * A: 都要走到对应节点。search 还要求 isEnd，否则只是别人的前缀。
+ *
+ * Q: 为什么需要 isEnd？
+ * A: 插了 apple，app 这条路径存在，但 app 还不成词。没标记就会误判。
+ *
+ * Q: 空串？
+ * A: insert("") 会在 root 打 isEnd。search("") 看 root.isEnd。
+ *
+ * Q: 空间怎么估？
+ * A: 最坏每个字符新建节点，O(所有单词长度之和)。前缀共享会少很多。
  */
 
 class Trie {
@@ -40,7 +58,7 @@ class Trie {
       if (!node[ch]) node[ch] = {};
       node = node[ch];
     }
-    node.isEnd = true;
+    node.isEnd = true; // 路径在不代表成词，末尾必须打标
   }
 
   _walk(s) {

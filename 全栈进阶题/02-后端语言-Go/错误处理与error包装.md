@@ -18,6 +18,12 @@ Go 的 error 是接口：`type error interface { Error() string }`。可预期�
 
    文件不存在、用户输入非法、下游 500，都是 error，调用方必须看见。nil 指针、数组越界、不变式被破坏，才 panic。库代码尽量不 panic。`Must*` 只适合 `main` 启动期，配置都读不出来进程不该活。HTTP handler 里 recover 只挡 panic，把 500 吐给客户端，业务校验失败走 error。
 
+## 延伸
+
+- 相关题：接口与鸭子类型。error 的 typed nil 会让 `if err != nil` 永远为真。
+- 对比：每层都 log 一次会刷屏。只在有足够上下文的边界打一条。
+- 加码：`errors.Join` 合多个错误，Unwrap 变成切片，`Is` 仍能挖到其中任意一个。
+
 ## 代码 / 例子
 
 ```go

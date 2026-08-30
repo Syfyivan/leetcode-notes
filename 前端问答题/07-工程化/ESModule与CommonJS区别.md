@@ -23,6 +23,12 @@ Tree Shaking 靠 ESM 的静态结构。CJS 分析不出来谁被用到。
 CJS 的 `require` 有缓存，同一个路径只执行一次，之后拿 `module.exports` 快照。ESM 模块也是单例，但导出是实时绑定。
 对象导出在 CJS 里是引用，改属性两边都看见；改的是绑定本身才看拷贝差异。别笼统说「CJS 全是拷贝」。
 
+## 延伸
+
+- 相关题：Tree Shaking、Vite 预构建要把 CJS 转 ESM。
+- 对比题：CJS 基本类型导出是拷贝，ESM 是 live binding。对象属性两边都能改，别笼统说「CJS 全是拷贝」。
+- 面试加码：CJS 加载 ESM 只能 `import()`。Node 里 `.js` 默认 CJS，要 `"type": "module"` 或 `.mjs`。循环依赖两边都恶心，ESM 稍可预期一点。
+
 ## 代码 / 例子
 
 ```js
