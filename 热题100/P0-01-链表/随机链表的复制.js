@@ -11,6 +11,12 @@
  * 每个节点用 [val, random_index] 表示，random_index 为 random 指向节点的下标
  * （从 0 开始），若不指向任何节点则为 null。
  *
+ * 思路：
+ * 1. 深拷贝带 random 指针的链表。
+ * 2. 三步：原节点后穿插拷贝、按原 random 接拷贝的 random、把拷贝拆出来。
+ * 3. 空链表返回 null。拆的时候要把原链表 next 复原。
+ * 复杂度：时间 O(n)，空间 O(1) 不计新链表
+ *
  * ——— 示例 ———
  * 输入： head = [[7,null],[13,0],[11,4],[10,2],[1,0]]
  * 输出： [[7,null],[13,0],[11,4],[10,2],[1,0]]
@@ -31,6 +37,26 @@ function Node(val, next, random) {
  * @return {Node}
  */
 function copyRandomList(head) {
+  if (!head) return null;
+  // 1. A -> A' -> B -> B'
+  for (let p = head; p; p = p.next.next) {
+    p.next = new Node(p.val, p.next, null);
+  }
+  // 2. copy.random = orig.random 的后一个（拷贝）
+  for (let p = head; p; p = p.next.next) {
+    if (p.random) p.next.random = p.random.next;
+  }
+  // 3. 拆开，原链表 next 复原
+  const dummy = new Node(0);
+  let cur = dummy;
+  let p = head;
+  while (p) {
+    cur.next = p.next;
+    cur = cur.next;
+    p.next = cur.next;
+    p = p.next;
+  }
+  return dummy.next;
 }
 
 // —— 小工具：由 [val, randomIndex] 数组构造带 random 的链表 ——

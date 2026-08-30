@@ -16,6 +16,12 @@
  * 提示：
  *   1 <= s.length <= 1000
  *   s 仅由数字和英文字母组成
+ *
+ * 思路：
+ * 1. dp[i][j] 表示 s[i..j] 是否回文。
+ * 2. 先处理长度 1 和 2，再按长度递增：两端相同且内部是回文。
+ * 3. 边界：长度必须从小到大填，内部区间才已经算过。
+ * 复杂度：时间 O(n^2)，空间 O(n^2)
  */
 
 /**
@@ -38,7 +44,7 @@ var longestPalindrome = function(s) {
             end = i + 1;
             };
     }
-    for(let len = 3; len <= dpLen; len++ ) {
+    for(let len = 3; len <= dpLen; len++ ) { // 按长度递增，保证 dp[i+1][j-1] 已填
         for(let i = 0; i <= dpLen - len; i++) {
             let j = i + len - 1;
             if(dp[i + 1][j - 1] === false) {

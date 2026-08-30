@@ -18,12 +18,29 @@
  *
  * 输入： nums = [11,13,15,17]
  * 输出： 11
+ *
+ * 思路：
+ * 1. 最小值在旋转断点。拿 nums[mid] 和 nums[right] 比。
+ * 2. mid 落在左段（nums[mid] > nums[right]）则断点在右侧，left = mid + 1。
+ * 3. 边界：nums[mid] < nums[right] 时 mid 可能就是最小，right = mid，不能 mid-1。
+ * 复杂度：时间 O(log n)，空间 O(1)
  */
 /**
  * @param {number[]} nums
  * @return {number}
  */
 function findMin(nums) {
+    let left = 0;
+    let right = nums.length - 1;
+    while (left < right) {
+        const mid = Math.floor((left + right) / 2);
+        if (nums[mid] > nums[right]) {
+            left = mid + 1; // mid 在较大那段，最小在 mid 右边
+        } else {
+            right = mid; // mid 可能就是最小
+        }
+    }
+    return nums[left];
 }
 
 // —— 自测 ——

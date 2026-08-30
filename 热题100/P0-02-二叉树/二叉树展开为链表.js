@@ -6,6 +6,12 @@
  * 而左子指针 left 始终为 null 。
  * 展开后的单链表应该与二叉树 先序遍历 顺序相同。
  *
+ * 思路：
+ * 1. 先序顺序把树摊成只有 right 的链表，left 全置空。
+ * 2. 反先序（右-左-根）走，用 prev 从尾巴往前接。
+ * 3. 空节点不管。原地改，不返回。
+ * 复杂度：时间 O(n)，空间 O(h)
+ *
  * ——— 示例 ———
  * 输入： root = [1,2,5,3,4,null,6]
  * 输出： [1,null,2,null,3,null,4,null,5,null,6]
@@ -54,6 +60,16 @@ function collectRight(root) {
  * @return {void} 不返回任何东西，原地修改 root
  */
 function flatten(root) {
+  let prev = null;
+  const dfs = (node) => {
+    if (!node) return;
+    dfs(node.right);
+    dfs(node.left);
+    node.right = prev; // 反先序从尾巴往前接，顺序正好是先序
+    node.left = null;
+    prev = node;
+  };
+  dfs(root);
 }
 
 // —— 自测 ——

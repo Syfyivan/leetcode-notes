@@ -14,6 +14,12 @@
  *
  * 输入： text1 = "abc", text2 = "def"
  * 输出： 0
+ *
+ * 思路：
+ * 1. dp[i][j] 表示 text1 前 i 个与 text2 前 j 个的 LCS 长度。
+ * 2. 末尾相同则 dp[i-1][j-1]+1，否则取 max(跳过一侧)。
+ * 3. 边界：i=0 或 j=0 时为 0。
+ * 复杂度：时间 O(mn)，空间 O(mn)
  */
 
 /**
@@ -22,6 +28,19 @@
  * @return {number}
  */
 function longestCommonSubsequence(text1, text2) {
+    const m = text1.length;
+    const n = text2.length;
+    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (text1[i - 1] === text2[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+    }
+    return dp[m][n];
 }
 
 // —— 自测 ——

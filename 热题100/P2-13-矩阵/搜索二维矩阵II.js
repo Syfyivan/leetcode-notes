@@ -13,6 +13,12 @@
  *
  * 输入： 同上矩阵, target = 20
  * 输出： false
+ *
+ * 思路：
+ * 1. 从右上角出发：当前值太大往左，太小往下。
+ * 2. 每步排除一行或一列。
+ * 3. 边界：走出矩阵即找不到。
+ * 复杂度：时间 O(m+n)，空间 O(1)
  */
 
 /**
@@ -21,6 +27,17 @@
  * @return {boolean}
  */
 function searchMatrix(matrix, target) {
+    if (!matrix.length) return false;
+    const m = matrix.length;
+    const n = matrix[0].length;
+    let i = 0;
+    let j = n - 1; // 右上角：左边更小、下边更大
+    while (i < m && j >= 0) {
+        if (matrix[i][j] === target) return true;
+        if (matrix[i][j] > target) j--;
+        else i++;
+    }
+    return false;
 }
 
 // —— 自测 ——

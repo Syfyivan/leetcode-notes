@@ -8,6 +8,12 @@
  *   top() 获取栈顶元素；
  *   getMin() 获取栈中的最小元素。
  *
+ * 思路：
+ * 1. 主栈存全部元素。辅助栈同步存「当前栈内最小值」。
+ * 2. push 时辅助栈压 min(val, 栈内最小)。pop 两个栈一起弹。
+ * 3. 边界：题目保证 pop / top / getMin 在非空时调用。
+ * 复杂度：时间 O(1) 每操作，空间 O(n)
+ *
  * ——— 示例 ———
  * 输入：
  *   ["MinStack","push","push","push","getMin","pop","top","getMin"]
@@ -18,6 +24,8 @@
 
 class MinStack {
   constructor() {
+    this.stack = [];
+    this.minStack = [];
   }
 
   /**
@@ -25,24 +33,33 @@ class MinStack {
    * @return {void}
    */
   push(val) {
+    this.stack.push(val);
+    const min = this.minStack.length === 0
+      ? val
+      : Math.min(val, this.minStack[this.minStack.length - 1]);
+    this.minStack.push(min);
   }
 
   /**
    * @return {void}
    */
   pop() {
+    this.stack.pop();
+    this.minStack.pop();
   }
 
   /**
    * @return {number}
    */
   top() {
+    return this.stack[this.stack.length - 1];
   }
 
   /**
    * @return {number}
    */
   getMin() {
+    return this.minStack[this.minStack.length - 1];
   }
 }
 

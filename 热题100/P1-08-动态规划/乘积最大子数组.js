@@ -9,18 +9,24 @@
 // 解释: 子数组 [2,3] 有最大乘积 6。
 
 /**
+ * 思路：
+ * 1. 负数会让最大变最小、最小变最大，所以同时维护以 i 结尾的最大乘积和最小乘积。
+ * 2. maxF / minF 都从「自己、乘上一段最大、乘上一段最小」里取。
+ * 3. 边界：遇到 0 会把连续乘积切断，从当前元素重新开始。
+ * 复杂度：时间 O(n)，空间 O(1)
+ *
  * @param {number[]} nums
  * @return {number}
  */
 var maxProduct = function(nums) {
     let maxF = nums[0];   // 以当前元素结尾的最大乘积
-    let minF = nums[0]; 
+    let minF = nums[0];
     let res = nums[0];
     const len = nums.length;
 
     for(let i = 1; i < len; i++) {
        const x = nums[i];
-       const prevMax = maxF, prevMin = minF;
+       const prevMax = maxF, prevMin = minF; // 先拷一份，避免 maxF 改完 minF 用到新值
        maxF = Math.max(x, prevMax * x, prevMin * x);
        minF = Math.min(x, prevMax * x, prevMin * x);
        res = Math.max(res, maxF);

@@ -1,6 +1,12 @@
 /**
  * @param {number[]} prices
  * @return {number}
+ *
+ * 思路：
+ * 1. 扫一遍，维护迄今最低价。
+ * 2. 每天当卖出日，更新最大差价。
+ * 3. 边界：最低价初值 Infinity；只交易一次。
+ * 复杂度：时间 O(n)，空间 O(1)
  */
 var maxProfit = function (prices) {
     let best = 0;

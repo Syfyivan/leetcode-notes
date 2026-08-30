@@ -5,6 +5,12 @@
  * 最近公共祖先的定义为：对于有根树 T 的两个节点 p、q，最近公共祖先表示为一个节点 x，
  * 满足 x 是 p、q 的祖先且 x 的深度尽可能大（一个节点也可以是它自己的祖先）。
  *
+ * 思路：
+ * 1. 找 p、q 最近的公共祖先。
+ * 2. 后序：左右都找到说明当前节点就是 LCA；只在一边则返回那一边。
+ * 3. 一个节点可以是自己的祖先。命中 p 或 q 就向上返回。
+ * 复杂度：时间 O(n)，空间 O(h)
+ *
  * ——— 示例 ———
  * 输入： root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1
  * 输出： 3
@@ -48,6 +54,11 @@ function findNode(root, val) {
  * @return {TreeNode}
  */
 function lowestCommonAncestor(root, p, q) {
+  if (!root || root === p || root === q) return root;
+  const left = lowestCommonAncestor(root.left, p, q);
+  const right = lowestCommonAncestor(root.right, p, q);
+  if (left && right) return root; // 分居两侧，当前就是 LCA
+  return left || right;
 }
 
 // —— 自测 ——

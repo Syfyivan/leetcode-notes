@@ -7,12 +7,25 @@
  *   要点：从后往前遍历，每次在 [0, i] 里随机挑一个下标和 i 交换，
  *   这样每种排列出现概率相等（别用 sort(() => Math.random()-0.5)，不均匀）。
  *
+ * 思路：
+ * 1. 从后往前，i 从 n-1 走到 1。每次在 [0, i] 里随机一个下标，和 i 交换。
+ * 2. 每个位置被抽中的概率都是 1/n，排列均匀。
+ * 3. 这里原地改原数组，然后把原数组返回。
+ * 4. 边界 / 易错：别写成 sort(() => Math.random() - 0.5)，分布不均。
+ *
  * ——— 示例 ———
  * 输入： shuffle([1, 2, 3, 4, 5])
  * 输出： 原数组元素的一个随机排列，如 [3, 1, 5, 2, 4]
  */
 
-function shuffle() {
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+  return arr;
 }
 
 // —— 自测（多次运行结果应不同，且元素齐全）——

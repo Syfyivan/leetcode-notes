@@ -5,6 +5,11 @@
 
 输入：nums = [5,7,7,8,8,10], target = 8
 输出：[3,4]
+ * 思路：
+ * 1. 两次 lower_bound：第一次找 target，第二次找 target+1。
+ * 2. start 合法且等于 target 才有解；end = 第二次结果 - 1。
+ * 3. 边界：先判 start === n，再读 nums[start]，避免越界。
+ * 复杂度：时间 O(log n)，空间 O(1)
  * @param {number[]} nums
  * @param {number} target
  * @return {number[]}

@@ -2,11 +2,16 @@
 
 ## 核心回答（面试口述版，1 分钟能讲完）
 
-TODO
+按语义：GET 是读，幂等，多次打和一次效果一样。POST 是提交，不幂等，打两次可能建两条数据。
+GET 参数放 URL，能缓存、能收藏、进历史。POST 参数放 body，默认不缓存，刷新会弹「重新提交」。
+长度限制不是 HTTP 规定的，是浏览器和网关的实现，常见 2KB～8KB。POST body 也有网关上限，只是大得多。
+传输上都是明文，安全靠 HTTPS，别觉得 body 里就看不见。
+REST 里改资源用 PUT/PATCH，PUT 幂等（整份替换），POST 更像「在集合下新建」。
+幂等接口才能安全重试，这是比「参数放哪」更该先说的点。
 
 ## 展开
 
-**语义层（RFC 规范）**：GET 是**幂等**的读操作；POST 是非幂等的写操作。这是最本质的区别。
+**语义层（RFC 规范）**：GET 是**幂等**的读操作；POST 是非幂等的写操作。先把这条讲清楚，再谈参数放哪。
 
 **表现层（面试常考清单）**：
 
@@ -21,16 +26,21 @@ TODO
 | 浏览器刷新 / 后退 | 无害 | **浏览器会弹确认框**：数据可能被重新提交 |
 | Content-Type | 不需要 | x-www-form-urlencoded / multipart/form-data / application/json |
 
+补充：GET 也可以被 CDN 缓存，这是静态接口用 GET 的原因。删除用 GET 会被爬虫、预加载点掉，必须用 POST/DELETE 并做 CSRF 防护。
+
 ## 常见追问
 
 - Q: GET 能不能带 body？（RFC 没禁止，但客户端 / 服务端框架默认不处理，工程上强烈不建议）
-  A:
+  A: RFC 7231 说 GET 的 body 没有定义语义。axios 能塞，很多网关、缓存、代理会丢掉。Elasticsearch 早期用 GET + body 查 DSL，后来也兼容 POST。新接口别这么干。
+
 - Q: URL 长度限制到底是谁定的？（不是 HTTP 协议，是浏览器 / 服务器的实现）
-  A:
+  A: HTTP 没写死。IE 老版本约 2083，Chrome 实际很长，Nginx 默认 `large_client_header_buffers`，常见踩坑是 8K。超了表现为 414 URI Too Long。所以「GET 2KB 限制」是口误，要说「看实现」。
+
 - Q: PUT 和 POST 的区别？（PUT 也是写，但**幂等**，语义是「整体替换」；POST 是「新增」）
-  A:
+  A: PUT `/users/1` 带完整资源，发 1 次和 10 次结果同一份。POST `/users` 每次新建 id 不同。PATCH 是部分更新，幂等与否看你怎么实现。幂等还要靠业务：同样的 POST 加 Idempotency-Key 也能做成可重试。
 
 ## 自己的易错点 / 之前答崩过的地方
 
-TODO
-</content>
+我开口就说「GET 参数在 URL，POST 在 body」，面试官问幂等我就补不上。应该先说语义。
+把 POST 当加密。Charles 一抓什么都有，只有 HTTPS 才挡中间人。
+删除接口做成 GET `/delete?id=`，浏览器预加载把数据删了。这是真事。

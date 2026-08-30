@@ -7,6 +7,12 @@
  *
  * 进阶：只能用常数额外空间。
  *
+ * 思路：
+ * 1. 每 k 个节点翻一段，不够 k 个保持原样。
+ * 2. 虚拟头。每次先数 k 个，够就翻转这一段，前驱接到新头。
+ * 3. k=1 或空链表直接返回。翻转后原头变成尾，下一组从它后面接。
+ * 复杂度：时间 O(n)，空间 O(1)
+ *
  * ——— 示例 ———
  * 输入： 1 -> 2 -> 3 -> 4 -> 5,  k = 2
  * 输出： 2 -> 1 -> 4 -> 3 -> 5
@@ -30,6 +36,27 @@ function ListNode(val, next) {
  * @return {ListNode}
  */
 function reverseKGroup(head, k) {
+  const dummy = new ListNode(0, head);
+  let prev = dummy;
+  while (true) {
+    let tail = prev;
+    for (let i = 0; i < k; i++) {
+      tail = tail.next;
+      if (!tail) return dummy.next; // 不够 k 个，不翻
+    }
+    const next = tail.next;
+    let curr = prev.next;
+    let p = next;
+    while (curr !== next) {
+      const nxt = curr.next;
+      curr.next = p;
+      p = curr;
+      curr = nxt;
+    }
+    const newTail = prev.next; // 原头变尾
+    prev.next = tail;
+    prev = newTail;
+  }
 }
 
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——

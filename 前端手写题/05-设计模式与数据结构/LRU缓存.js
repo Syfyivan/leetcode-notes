@@ -8,6 +8,12 @@
  *   - put(key, value)：写入/更新；若超出容量，淘汰"最久未使用"的那个 key。
  *   - get 和 put 都算一次"使用"，会刷新该 key 的新鲜度。
  *
+ * 思路：
+ * 1. 用 Map。它按插入顺序排列，队头是最早插入、也就是最久没刷新的。
+ * 2. get / put 命中时先 delete 再 set，这条记录会被挪到最末尾，变成最近使用。
+ * 3. put 新 key 且已满：keys().next() 取出队头删掉，再 set 新的。
+ * 4. 边界 / 易错：更新已有 key 也要先删再设，否则顺序不会变，稍后可能误删它。
+ *
  * ——— 示例（容量 = 2）———
  * put(1, 1)              缓存: {1=1}
  * put(2, 2)              缓存: {1=1, 2=2}
@@ -29,6 +35,7 @@ class LRUCache {
   get(key) {
     if(!this.cache.has(key)) return -1;
     const value = this.cache.get(key);
+    // Map 按插入顺序排，删掉再 set 就会排到最末尾
     this.cache.delete(key);
     this.cache.set(key, value);
     return value;
@@ -38,6 +45,7 @@ class LRUCache {
     if(this.cache.has(key)) {
       this.cache.delete(key);
     } else if(this.cache.size >= this.capacity) {
+      // keys() 的第一个就是最久没被刷新的
       const oldestKey = this.cache.keys().next().value;
       this.cache.delete(oldestKey)
     } 

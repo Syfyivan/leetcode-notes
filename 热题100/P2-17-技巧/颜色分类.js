@@ -11,6 +11,12 @@
  *
  * 输入： nums = [2,0,1]
  * 输出： [0,1,2]
+ *
+ * 思路：
+ * 1. 荷兰国旗三指针：p0 写 0，p2 写 2，i 扫描。
+ * 2. 遇 0 与 p0 交换，遇 2 与 p2 交换，遇 1 只 i++。
+ * 3. 边界：换 2 后 i 不能立刻 +1，新换来的还没看；循环条件 i <= p2。
+ * 复杂度：时间 O(n)，空间 O(1)
  */
 
 /**
@@ -18,6 +24,26 @@
  * @return {number[]} 原地修改后返回 nums 便于打印
  */
 function sortColors(nums) {
+    let p0 = 0;
+    let i = 0;
+    let p2 = nums.length - 1;
+    while (i <= p2) {
+        if (nums[i] === 0) {
+            const t = nums[i];
+            nums[i] = nums[p0];
+            nums[p0] = t;
+            p0++;
+            i++;
+        } else if (nums[i] === 2) {
+            const t = nums[i];
+            nums[i] = nums[p2];
+            nums[p2] = t;
+            p2--; // 换来的可能是 0/1/2，i 停住再看
+        } else {
+            i++;
+        }
+    }
+    return nums;
 }
 
 // —— 自测 ——

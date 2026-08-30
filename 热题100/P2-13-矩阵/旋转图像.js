@@ -11,6 +11,12 @@
  *
  * 输入： matrix = [[5,1,9,11],[2,4,8,10],[13,3,6,7],[15,14,12,16]]
  * 输出： [[15,13,2,5],[14,3,4,1],[12,6,8,9],[16,7,10,11]]
+ *
+ * 思路：
+ * 1. 先按主对角线转置，再左右翻转每一行，得到顺时针 90 度。
+ * 2. 转置只交换 i < j，避免换两次。
+ * 3. 边界：原地交换，n 为奇数时中心元素不动。
+ * 复杂度：时间 O(n^2)，空间 O(1)
  */
 
 /**
@@ -18,6 +24,18 @@
  * @return {number[][]}
  */
 function rotate(matrix) {
+    const n = matrix.length;
+    for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) { // i<j，只换上三角
+            const tmp = matrix[i][j];
+            matrix[i][j] = matrix[j][i];
+            matrix[j][i] = tmp;
+        }
+    }
+    for (let i = 0; i < n; i++) {
+        matrix[i].reverse();
+    }
+    return matrix;
 }
 
 // —— 自测 ——

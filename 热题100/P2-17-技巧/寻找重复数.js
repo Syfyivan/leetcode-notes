@@ -14,6 +14,12 @@
  *
  * 输入： nums = [3,3,3,3,3]
  * 输出： 3
+ *
+ * 思路：
+ * 1. 下标到值看成链表，重复数是环入口。
+ * 2. 快慢指针相遇后，慢指针回起点再同步走，交点即入口。
+ * 3. 边界：值域是 [1,n]，不会走到 0 以外的死路。
+ * 复杂度：时间 O(n)，空间 O(1)
  */
 
 /**
@@ -21,6 +27,18 @@
  * @return {number}
  */
 function findDuplicate(nums) {
+    let slow = nums[0];
+    let fast = nums[0];
+    do {
+        slow = nums[slow];
+        fast = nums[nums[fast]];
+    } while (slow !== fast);
+    slow = nums[0]; // 相遇后再从起点走，第二次相遇是环入口
+    while (slow !== fast) {
+        slow = nums[slow];
+        fast = nums[fast];
+    }
+    return slow;
 }
 
 // —— 自测 ——

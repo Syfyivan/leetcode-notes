@@ -14,6 +14,12 @@
  *   - writeLock()   申请写锁（独占，需等所有读/写结束）
  *   - writeUnlock() 释放写锁
  *
+ * 思路：
+ * 1. 记当前读计数和是否有写。申请失败就把 resolve 推进等待队列。
+ * 2. 读锁：没人写、队列也空着，就可以和别的读共存。
+ * 3. 写锁：读计数为 0 且没人写才能拿。释放时按队列唤醒，队头是读就连着放一批读，是写就放一个写。
+ * 4. 边界 / 易错：写已经在排队时别再放新的读，否则写可能一直拿不到。
+ *
  * ——— 示例 ———
  * 场景：先并发发起 2 个读（各耗时 100ms），紧接着发起 1 个写。
  *   - 两个读应能"同时"进行（读读共享）；
@@ -29,7 +35,55 @@
  */
 
 class ReadWriteLock {
-  
+  constructor() {
+    this.reading = 0;
+    this.writing = false;
+    this.waiters = [];
+  }
+
+  readLock() {
+    return new Promise((resolve) => {
+      const grant = () => {
+        this.reading++;
+        resolve();
+      };
+      // 有人写、或已经有人在排队，就不要插队
+      if (!this.writing && this.waiters.length === 0) grant();
+      else this.waiters.push({ kind: 'read', grant });
+    });
+  }
+
+  writeLock() {
+    return new Promise((resolve) => {
+      const grant = () => {
+        this.writing = true;
+        resolve();
+      };
+      if (!this.writing && this.reading === 0 && this.waiters.length === 0) grant();
+      else this.waiters.push({ kind: 'write', grant });
+    });
+  }
+
+  readUnlock() {
+    this.reading--;
+    this.wake();
+  }
+
+  writeUnlock() {
+    this.writing = false;
+    this.wake();
+  }
+
+  wake() {
+    if (this.writing || this.waiters.length === 0) return;
+    if (this.waiters[0].kind === 'write') {
+      if (this.reading === 0) this.waiters.shift().grant();
+      return;
+    }
+    while (this.waiters.length && this.waiters[0].kind === 'read') {
+      this.waiters.shift().grant();
+    }
+  }
 }
 
 // —— 自测（实现后应按上面"期望执行顺序"打印）——

@@ -9,8 +9,15 @@
  *   - run(step)         按顺序执行一步，打印 执行「step」
  *   - wait(sec)         等待 sec 秒再继续下一步
  *   所有方法返回 this，支持链式调用。
- *   考点：和 LazyMan 同构——任务入队，用 setTimeout(0) 把启动推到下一轮，
- *         让同步的链式调用先把队列排完，再按顺序执行。
+ *   考点：和 LazyMan 同构。
+ *
+ * 思路：
+ * 1. new Runner().run().wait().run() 这串会同步跑完。wait 却要真等几秒，
+ *    所以不能在调用当下执行，先把每一步推进队列。
+ * 2. constructor 里用 setTimeout(0) 把"开始跑队列"推到下一轮宏任务，
+ *    等同步链把 run/wait 都入队之后，再 next。
+ * 3. run 入队：打印完立刻 next。wait 入队：setTimeout 到点再 next。
+ * 4. 每个方法都 return this，链才能接下去。
  *
  * ——— 示例 ———
  * 输入：
@@ -30,13 +37,34 @@
  */
 
 class Runner {
-  constructor() {
+  constructor(name) {
+    this.queue = [];
+    this.queue.push(() => {
+      console.log(`开始任务「${name}」`);
+      this.next();
+    });
+    // 同步链还没排完，先把启动推到下一轮
+    setTimeout(() => this.next(), 0);
   }
 
-  run() {
+  next() {
+    const task = this.queue.shift();
+    if (task) task();
   }
 
-  wait() {
+  run(step) {
+    this.queue.push(() => {
+      console.log(`执行「${step}」`);
+      this.next();
+    });
+    return this;
+  }
+
+  wait(sec) {
+    this.queue.push(() => {
+      setTimeout(() => this.next(), sec * 1000);
+    });
+    return this;
   }
 }
 

@@ -22,6 +22,12 @@
  *   ["0","0","0","1","1"]
  * ]
  * 输出： 3
+ *
+ * 思路：
+ * 1. 碰到 '1' 计数 +1，DFS 把连通陆地改成 '0' 沉岛。
+ * 2. 四方向扩散。
+ * 3. 边界：越界或已是水就停。
+ * 复杂度：时间 O(mn)，空间 O(mn)
  */
 
 /**
@@ -29,6 +35,26 @@
  * @return {number}
  */
 function numIslands(grid) {
+    const m = grid.length;
+    const n = grid[0].length;
+    const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+    const dfs = (i, j) => {
+        if (i < 0 || i >= m || j < 0 || j >= n || grid[i][j] !== '1') return;
+        grid[i][j] = '0'; // 沉岛，兼作 vis
+        for (const [di, dj] of dirs) dfs(i + di, j + dj);
+    };
+
+    let count = 0;
+    for (let i = 0; i < m; i++) {
+        for (let j = 0; j < n; j++) {
+            if (grid[i][j] === '1') {
+                count++;
+                dfs(i, j);
+            }
+        }
+    }
+    return count;
 }
 
 // —— 自测 ——

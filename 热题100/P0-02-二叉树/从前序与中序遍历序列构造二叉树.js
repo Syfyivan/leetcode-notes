@@ -4,6 +4,12 @@
  * 给定两个整数数组 preorder 和 inorder ，其中 preorder 是二叉树的先序遍历，
  * inorder 是同一棵树的中序遍历，请构造二叉树并返回其根节点。
  *
+ * 思路：
+ * 1. 用前序和中序还原整棵树。
+ * 2. 前序第一个是根，中序里根左边是左子树、右边是右子树。用下标切区间递归。
+ * 3. 区间空返回 null。值不重复，用 map 定位根在中序的位置。
+ * 复杂度：时间 O(n)，空间 O(n)
+ *
  * ——— 示例 ———
  * 输入： preorder = [3,9,20,15,7], inorder = [9,3,15,20,7]
  * 输出： [3,9,20,null,null,15,7]
@@ -52,6 +58,19 @@ function inorderTraversal(root) {
  * @return {TreeNode}
  */
 function buildTree(preorder, inorder) {
+  const idx = new Map();
+  inorder.forEach((v, i) => idx.set(v, i));
+  let pre = 0;
+  const build = (l, r) => {
+    if (l > r) return null;
+    const val = preorder[pre++];
+    const node = new TreeNode(val);
+    const m = idx.get(val);
+    node.left = build(l, m - 1);  // 先左后右，配合 pre 递增
+    node.right = build(m + 1, r);
+    return node;
+  };
+  return build(0, inorder.length - 1);
 }
 
 // —— 自测 ——

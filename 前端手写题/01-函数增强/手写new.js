@@ -8,13 +8,22 @@
  *   2）以新对象为 this 执行构造函数；
  *   3）构造函数若返回对象就用它，否则返回新对象。
  *
+ * 思路：
+ * 1. Object.create 把新对象的原型接到 Ctor.prototype。
+ * 2. apply 把 this 指过去执行构造函数。
+ * 3. 构造函数返回对象或函数就用返回值，否则用新对象。
+ *
  * ——— 示例 ———
  * function Person(name) { this.name = name; }
  * 输入： myNew(Person, '小明')
  * 输出： { name: '小明' }（且 instanceof Person 为 true）
  */
 
-function myNew() {
+function myNew(Ctor, ...args) {
+  const obj = Object.create(Ctor.prototype);
+  const result = Ctor.apply(obj, args);
+  // null instanceof Object 为 false，基本类型也会走 obj
+  return result instanceof Object ? result : obj;
 }
 
 // —— 自测 ——

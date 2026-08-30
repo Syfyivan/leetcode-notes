@@ -4,6 +4,12 @@
  * 给定一个未排序的整数数组 nums，请找出其中没有出现的最小的正整数。
  * 请实现时间复杂度为 O(n) 并且只使用常数级别额外空间的解决方案。
  *
+ * 思路：
+ * 1. 答案一定在 [1, n+1] 里。把值为 x 的数放到下标 x-1 上，原地哈希。
+ * 2. 再扫一遍，第一个 nums[i] !== i+1 的位置，答案就是 i+1。
+ * 3. 边界：全在位则答案是 n+1。交换时若目标位已经是 x，要停，否则死循环。
+ * 复杂度：时间 O(n)，空间 O(1)
+ *
  * ——— 示例 ———
  * 输入： nums = [1, 2, 0]
  * 输出： 3        （范围 [1, 2] 都出现了，缺失的最小正数是 3）
@@ -20,6 +26,21 @@
  * @return {number}
  */
 function firstMissingPositive(nums) {
+  const n = nums.length;
+  for (let i = 0; i < n; i++) {
+    while (
+      nums[i] > 0 &&
+      nums[i] <= n &&
+      nums[nums[i] - 1] !== nums[i] // 目标位已是 x 就停，避免重复值死循环
+    ) {
+      const j = nums[i] - 1;
+      [nums[i], nums[j]] = [nums[j], nums[i]];
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    if (nums[i] !== i + 1) return i + 1;
+  }
+  return n + 1;
 }
 
 // —— 自测 ——

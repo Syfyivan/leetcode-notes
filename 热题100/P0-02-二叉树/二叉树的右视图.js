@@ -4,6 +4,12 @@
  * 给定一个二叉树的根节点 root ，想象自己站在它的右侧，
  * 按照从顶部到底部的顺序，返回从右侧所能看到的节点值。
  *
+ * 思路：
+ * 1. 从右边看，每层只看到最右那个节点。
+ * 2. BFS 层序，每层最后一个入答案。
+ * 3. 空树返回 []。
+ * 复杂度：时间 O(n)，空间 O(n)
+ *
  * ——— 示例 ———
  * 输入： root = [1,2,3,null,5,null,4]
  * 输出： [1,3,4]
@@ -41,6 +47,19 @@ function build(arr) {
  * @return {number[]}
  */
 function rightSideView(root) {
+  if (!root) return [];
+  const res = [];
+  const queue = [root];
+  while (queue.length) {
+    const n = queue.length;
+    for (let i = 0; i < n; i++) {
+      const node = queue.shift();
+      if (i === n - 1) res.push(node.val); // 本层最后一个就是右视图
+      if (node.left) queue.push(node.left);
+      if (node.right) queue.push(node.right);
+    }
+  }
+  return res;
 }
 
 // —— 自测 ——

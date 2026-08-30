@@ -6,6 +6,11 @@
  * 输入：带 children 字段的嵌套树（根数组 / 森林）。
  * 输出：扁平数组，每项保留 { id, parentId, name }，去掉 children。
  *
+ * 思路：
+ * 1. DFS 先推当前节点，再走 children。
+ * 2. 解构丢掉 children，留下 id / parentId / name。
+ * 3. 父节点一定在子节点前面。
+ *
  * ——— 示例 ———
  * 输入（嵌套树，下级装在上级的 children 里）：
  *   [
@@ -64,7 +69,7 @@ function treeToList(nodes) {
   const res = [];
  
   function handleNode(node) {
-    const {children, ...reset} = node;
+    const {children, ...reset} = node; // 丢掉 children，扁平项不再嵌套
     res.push(reset);
     
     for(const item of node.children) {

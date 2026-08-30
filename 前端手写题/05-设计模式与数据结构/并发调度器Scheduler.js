@@ -8,16 +8,44 @@
  *   - 任意任务完成后，立刻从等待队列取下一个补位。
  *   批量请求限流的经典压轴题，字节 / 阿里 / 腾讯高频（出现率 ~90%）。
  *
+ * 思路：
+ * 1. add 把任务包成"执行完再补位"的函数，推进等待队列，返回一个 Promise。
+ * 2. running < max 就立刻取出执行，否则留在队列里。
+ * 3. 任务 finally 里 running--，再拉下一个。
+ * 4. 边界 / 易错：add 返回的 Promise 要接到任务本身的结果上；max 从 constructor 参数读。
+ *
  * ——— 示例 ———
  * 输入： max = 2，依次 add 4 个耗时分别为 1000/500/300/400ms 的任务
  * 输出： 完成顺序 2 → 3 → 1 → 4（任意时刻并发不超过 2）
  */
 
 class Scheduler {
-  constructor() {
+  constructor(max) {
+    this.max = max;
+    this.running = 0;
+    this.queue = [];
   }
 
-  add() {
+  add(task) {
+    return new Promise((resolve, reject) => {
+      this.queue.push(() => {
+        this.running++;
+        Promise.resolve()
+          .then(task)
+          .then(resolve, reject)
+          .finally(() => {
+            this.running--;
+            this.next();
+          });
+      });
+      this.next();
+    });
+  }
+
+  next() {
+    if (this.running >= this.max) return;
+    const job = this.queue.shift();
+    if (job) job();
   }
 }
 

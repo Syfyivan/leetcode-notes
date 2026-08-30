@@ -6,13 +6,24 @@
  * 需求：事件被频繁触发时，只在"停止触发 delay 毫秒后"才真正执行一次。
  * 典型场景：搜索框输入联想、窗口 resize。
  *
+ * 思路：
+ * 1. 每次触发先清掉上一个 timer，重新计时。
+ * 2. 停够 delay 才真正跑，所以只执行最后一次。
+ * 3. 闭包里把 this / args 存下来，定时器回调会丢 this。
+ *
  * ——— 示例 ———
  * 输入： 连续快速调用 3 次（间隔 < delay）
  *        log(1); log(2); log(3);
  * 输出： 只在最后一次之后 delay 毫秒执行一次 -> run 3
  */
 
-function debounce() {
+function debounce(fn, delay) {
+  let timer = null;
+  return function (...args) {
+    const ctx = this;
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(ctx, args), delay);
+  };
 }
 
 // —— 自测（实现后应只打印一次 run 3）——

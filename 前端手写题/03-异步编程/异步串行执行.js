@@ -8,6 +8,11 @@
  *   - 返回一个 Promise，resolve 出按顺序排列的结果数组。
  *   和 Promise.all 的"并发"相对，这是"串行"，常用于有依赖的接口链。
  *
+ * 思路：
+ * 1. for 循环里 await 每一个任务，前一个结束才启动下一个。
+ * 2. 结果按顺序推进数组。
+ * 3. 中途 reject 会直接抛出去，后面的不再跑。
+ *
  * ——— 示例 ———
  * 输入： [ () => 延迟30ms后 resolve(1),
  *          () => 延迟10ms后 resolve(2),
@@ -15,7 +20,12 @@
  * 输出： 依次执行后 resolve -> [1, 2, 3]
  */
 
-function runSerial() {
+async function runSerial(tasks) {
+  const results = [];
+  for (const task of tasks) {
+    results.push(await task());
+  }
+  return results;
 }
 
 // —— 自测 ——

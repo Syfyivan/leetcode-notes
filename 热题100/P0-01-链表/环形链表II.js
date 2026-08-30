@@ -8,6 +8,12 @@
  *
  * 进阶：能否只用常量额外空间完成？
  *
+ * 思路：
+ * 1. 找环的入口节点，无环返回 null。
+ * 2. Floyd 相遇后，一个指针回到头，两个再各走 1 步，再次相遇就是入口。
+ * 3. 空链表或无环返回 null。
+ * 复杂度：时间 O(n)，空间 O(1)
+ *
  * ——— 示例 ———
  * 输入： head = [3,2,0,-4], pos = 1
  * 输出： 返回索引为 1 的节点（值为 2）
@@ -40,6 +46,21 @@ function toArray(head) {
  * @return {ListNode}
  */
 function detectCycle(head) {
+  let slow = head;
+  let fast = head;
+  while (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+    if (slow === fast) {
+      let p = head;
+      while (p !== slow) { // 头到入口 = 相遇点到入口
+        p = p.next;
+        slow = slow.next;
+      }
+      return p;
+    }
+  }
+  return null;
 }
 
 // —— 小工具：建链表并让尾节点指向索引 pos 的节点造环；pos = -1 表示无环 ——

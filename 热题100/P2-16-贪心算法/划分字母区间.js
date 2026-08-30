@@ -19,6 +19,12 @@
  * 示例 2：
  * 输入：s = "eccbbbbdec"
  * 输出：[10]
+ *
+ * 思路：
+ * 1. 先记下每个字母最后出现位置。
+ * 2. 从左扫，用 end 扩到当前字母的最后位置；i === end 就切一刀。
+ * 3. 边界：切完 start = i+1；同一字母必须落在同一段。
+ * 复杂度：时间 O(n)，空间 O(1)
  */
 
 /**
@@ -36,24 +42,10 @@ var partitionLabels = function (s) {
   const res = [];
   for(let i = 0; i < s.length; i++) {
     end = Math.max(end, last[s[i]]);
-    if(end === i) {
+    if(end === i) { // 走到当前段覆盖右端才能切
       res.push(i - start + 1)
       start = i + 1; 
     }
   }
   return res;
-
-};
-
-
-/**
- * @param {number} n
- * @return {number}
- */
-var climbStairs = function(n) {
-    const dp = [0, 1];
-    for(let i = 2; i <= n; i++) {
-      dp[i] = dp[i - 1] + dp[i - 2];
-    }
-    return dp[n];
 };

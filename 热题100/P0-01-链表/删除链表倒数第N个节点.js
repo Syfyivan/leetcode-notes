@@ -3,6 +3,12 @@
  *
  * 给定一个链表，删除链表的倒数第 n 个节点，返回头节点。
  *
+ * 思路：
+ * 1. 删掉倒数第 n 个节点，返回新头。
+ * 2. 虚拟头 + 快指针先走 n 步，再和慢指针一起走，慢停在待删前驱。
+ * 3. 删头时虚拟头兜住。n 超出长度则不删。
+ * 复杂度：时间 O(n)，空间 O(1)
+ *
  * ——— 示例 ———
  * 输入： 链表 1 -> 2 -> 3 -> 4 -> 5,  n = 2
  * 输出： 1 -> 2 -> 3 -> 5           （删掉倒数第 2 个，即节点 4）
@@ -28,6 +34,19 @@ function ListNode(val, next) {
  * @return {ListNode}
  */
 function removeNthFromEnd(head, n) {
+  const dummy = new ListNode(0, head); // 虚拟头，删头时不用特判
+  let fast = dummy;
+  let slow = dummy;
+  for (let i = 0; i < n; i++) {
+    if (!fast.next) return head; // n 超出长度，不删
+    fast = fast.next;
+  }
+  while (fast.next) {
+    fast = fast.next;
+    slow = slow.next;
+  }
+  slow.next = slow.next.next;
+  return dummy.next;
 }
 
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——

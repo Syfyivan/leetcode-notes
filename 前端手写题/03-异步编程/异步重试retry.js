@@ -9,13 +9,24 @@
  *   - 任意一次成功就 resolve；耗尽次数仍失败则 reject 最后一次原因。
  *   接口请求失败自动重试是后端 / 全栈常见诉求。
  *
+ * 思路：
+ * 1. 先调一次 fn，成功就返回。
+ * 2. 失败则等 delay，times 减 1 再调自己。
+ * 3. times 耗尽还失败，把最后一次原因 reject 出去。
+ *
  * ——— 示例 ———
  * 输入： 一个前两次 reject、第三次 resolve('ok') 的 fn
  *        retry(fn, 3, 10)
  * 输出： 最终 resolve -> 'ok'
  */
 
-function retry() {
+function retry(fn, times, delay) {
+  return fn().catch((err) => {
+    if (times <= 0) return Promise.reject(err);
+    return new Promise((r) => setTimeout(r, delay)).then(() =>
+      retry(fn, times - 1, delay)
+    );
+  });
 }
 
 // —— 自测 ——

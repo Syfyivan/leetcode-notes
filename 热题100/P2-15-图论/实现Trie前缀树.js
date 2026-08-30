@@ -17,10 +17,17 @@
  *   t.startsWith("app");  // 返回 true
  *   t.insert("app");
  *   t.search("app");      // 返回 true
+ *
+ * 思路：
+ * 1. 每个节点挂 26 叉子节点，isEnd 标记是否成词。
+ * 2. insert 沿字符建节点，末尾打 isEnd。
+ * 3. 边界：search 必须走到 isEnd；startsWith 走到即可。
+ * 复杂度：时间 O(L)，空间 O(节点数)
  */
 
 class Trie {
   constructor() {
+    this.root = {};
   }
 
   /**
@@ -28,6 +35,21 @@ class Trie {
    * @return {void}
    */
   insert(word) {
+    let node = this.root;
+    for (const ch of word) {
+      if (!node[ch]) node[ch] = {};
+      node = node[ch];
+    }
+    node.isEnd = true;
+  }
+
+  _walk(s) {
+    let node = this.root;
+    for (const ch of s) {
+      if (!node[ch]) return null;
+      node = node[ch];
+    }
+    return node;
   }
 
   /**
@@ -35,6 +57,8 @@ class Trie {
    * @return {boolean}
    */
   search(word) {
+    const node = this._walk(word);
+    return !!node && !!node.isEnd; // 前缀在不代表单词在
   }
 
   /**
@@ -42,6 +66,7 @@ class Trie {
    * @return {boolean}
    */
   startsWith(prefix) {
+    return !!this._walk(prefix);
   }
 }
 

@@ -13,6 +13,12 @@
  *
  * 输入： numCourses = 2, prerequisites = [[1,0],[0,1]]
  * 输出： false
+ *
+ * 思路：
+ * 1. 建图并统计入度，入度为 0 的课入队。
+ * 2. 拓扑弹出一门，邻接课入度减一，减到 0 再入队。
+ * 3. 边界：弹出数量等于课程数则可修完，否则有环。
+ * 复杂度：时间 O(n+e)，空间 O(n+e)
  */
 
 /**
@@ -21,6 +27,27 @@
  * @return {boolean}
  */
 function canFinish(numCourses, prerequisites) {
+    const graph = Array.from({ length: numCourses }, () => []);
+    const indeg = new Array(numCourses).fill(0);
+    for (const [ai, bi] of prerequisites) {
+        graph[bi].push(ai); // bi → ai，先修 bi
+        indeg[ai]++;
+    }
+    const q = [];
+    for (let i = 0; i < numCourses; i++) {
+        if (indeg[i] === 0) q.push(i);
+    }
+    let taken = 0;
+    let head = 0;
+    while (head < q.length) {
+        const cur = q[head++];
+        taken++;
+        for (const nxt of graph[cur]) {
+            indeg[nxt]--;
+            if (indeg[nxt] === 0) q.push(nxt);
+        }
+    }
+    return taken === numCourses; // 少了说明有环
 }
 
 // —— 自测 ——

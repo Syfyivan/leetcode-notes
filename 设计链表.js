@@ -15,6 +15,12 @@
  *     （比如"负下标按头插处理"这种额外行为，题目没说就别加）。
  *   - 可以考虑用虚拟头节点 + 尾指针来简化边界 / 优化 addAtTail，但这是你的选择。
  *
+ * 思路：
+ * 1. 虚拟头节点，get / 插入 / 删除都从 dummy 走到 index 的前驱。
+ * 2. addAtIndex：index === size 是尾插，index > size 或 index < 0 直接 return。
+ * 3. 记 size，get 和 delete 用它判断越界。
+ * 4. 边界 / 易错：index 为负不要当头插，题目没这规则。
+ *
  * ——— 示例 ———
  * const l = new MyLinkedList();
  * l.addAtHead(1);
@@ -25,7 +31,61 @@
  * l.get(1);             // 3
  */
 
+function ListNode(val) {
+  this.val = val;
+  this.next = null;
+}
+
 class MyLinkedList {
+  constructor() {
+    this.dummy = new ListNode(0);
+    this.size = 0;
+  }
+
+  prev(index) {
+    let cur = this.dummy;
+    for (let i = 0; i < index; i++) cur = cur.next;
+    return cur;
+  }
+
+  get(index) {
+    if (index < 0 || index >= this.size) return -1;
+    return this.prev(index).next.val;
+  }
+
+  addAtHead(val) {
+    this.addAtIndex(0, val);
+  }
+
+  addAtTail(val) {
+    this.addAtIndex(this.size, val);
+  }
+
+  addAtIndex(index, val) {
+    if (index < 0 || index > this.size) return;
+    const prev = this.prev(index);
+    const node = new ListNode(val);
+    node.next = prev.next;
+    prev.next = node;
+    this.size++;
+  }
+
+  deleteAtIndex(index) {
+    if (index < 0 || index >= this.size) return;
+    const prev = this.prev(index);
+    prev.next = prev.next.next;
+    this.size--;
+  }
+
+  forEach(callbackFn) {
+    let cur = this.dummy.next;
+    let i = 0;
+    while (cur) {
+      callbackFn(cur.val, i);
+      cur = cur.next;
+      i++;
+    }
+  }
 }
 
 // —— 自测（对照上面示例，应打印 2, 3）——

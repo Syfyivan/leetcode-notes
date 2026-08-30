@@ -5,6 +5,12 @@
  * 同一个节点在一条路径序列中 至多出现一次 。该路径 至少包含一个 节点，且不一定经过根节点。
  * 路径和 是路径中各节点值的总和。给你一个二叉树的根节点 root ，返回其 最大路径和 。
  *
+ * 思路：
+ * 1. 任意路径（不一定过根）的最大节点值和。
+ * 2. 后序：当拐点时左右都能带；向上只带一边。负贡献丢掉。
+ * 3. 单节点路径也算。全局用 -Infinity 起步。
+ * 复杂度：时间 O(n)，空间 O(h)
+ *
  * ——— 示例 ———
  * 输入： root = [1,2,3]
  * 输出： 6
@@ -39,6 +45,16 @@ function build(arr) {
  * @return {number}
  */
 function maxPathSum(root) {
+  let ans = -Infinity;
+  const dfs = (node) => {
+    if (!node) return 0;
+    const left = Math.max(0, dfs(node.left));   // 负的不带
+    const right = Math.max(0, dfs(node.right));
+    ans = Math.max(ans, node.val + left + right); // 当拐点
+    return node.val + Math.max(left, right);      // 向上只选一边
+  };
+  dfs(root);
+  return ans;
 }
 
 // —— 自测 ——

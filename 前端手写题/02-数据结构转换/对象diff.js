@@ -11,6 +11,11 @@
  *   - 新增的 key、删除的 key 也算变化（两边 key 要合并起来一起看）。
  *   - 基本类型 / 其中一边不是对象时，直接比值（!==）。
  *
+ * 思路：
+ * 1. 两边的 key 并到一个 Set 里，新增、删除都能扫到。
+ * 2. 两边都是对象就带着前缀递归，只报叶子路径。
+ * 3. 一边不是对象就 !== 比较。嵌套路径用点拼。
+ *
  * ——— 示例 ———
  * 输入：
  *   newObj = { a: 1, b: { c: 2, d: 3 }, e: 5 }
@@ -45,8 +50,8 @@ function diff(newObj, oldObj, prefix = '') {
 
     if(isObj(newItem) && isObj(oldItem)) {
       res.push(...diff(newItem, oldItem, path))
-    } else {
-      if(newItem !== oldItem) res.push(path);
+    } else if(newItem !== oldItem) {
+      res.push(path); // 新增 / 删除 / 叶子值变了，都落在这一支
     }
    }
    return res;

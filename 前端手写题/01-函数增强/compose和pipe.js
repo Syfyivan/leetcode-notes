@@ -8,6 +8,11 @@
  *   - pipe(f, g, h)(x) 等价于 h(g(f(x)))，从左往右执行。
  *   redux 的 applyMiddleware、rxjs 的 pipe 都是这个套路。
  *
+ * 思路：
+ * 1. compose 从右往左喂值，pipe 从左往右。
+ * 2. 返回一个函数，reduceRight / reduce 把上一轮结果传给下一个。
+ * 3. 一个函数都不传时，reduce 有初值，入参原样回来。
+ *
  * ——— 示例 ———
  * const add1 = x => x + 1;
  * const double = x => x * 2;
@@ -18,10 +23,16 @@
  * 输出： 12
  */
 
-function compose() {
+function compose(...fns) {
+  return function (x) {
+    return fns.reduceRight((v, fn) => fn(v), x);
+  };
 }
 
-function pipe() {
+function pipe(...fns) {
+  return function (x) {
+    return fns.reduce((v, fn) => fn(v), x);
+  };
 }
 
 // —— 自测 ——

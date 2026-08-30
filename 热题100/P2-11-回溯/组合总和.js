@@ -8,6 +8,12 @@ candidates 中的 同一个 数字可以 无限制重复被选取 。如果至�
 输出：[[2,2,3],[7]]
 解释：2 和 3 可以形成一组候选，2 + 2 + 3 = 7 。注意 2 可以使用多次。
      7 也是一个候选， 7 = 7 。仅有这两种组合。
+
+思路：
+1. 从 start 往后选，同一数字可复用，递归仍传 i。
+2. sum > target 剪枝；sum === target 收一份拷贝。
+3. 边界：必须传 i 不能传 i+1，否则无法重复选。
+复杂度：时间 O(n^{T/m})，空间 O(T/m)，T 为目标，m 为最小候选
 */
 
 /**
@@ -27,7 +33,7 @@ var combinationSum = function(candidates, target) {
         }
         for(let i = start; i < candidates.length; i++) {
             path.push(candidates[i]);
-            dfs(i, sum + (candidates[i])); 
+            dfs(i, sum + (candidates[i])); // start=i 可复用当前数
             path.pop();
         }
     }

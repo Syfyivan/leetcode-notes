@@ -7,6 +7,12 @@
  *
  * 注意：不要用改节点值 / 加标记的取巧办法，正经判环。
  *
+ * 思路：
+ * 1. 判断链表有没有环。
+ * 2. Floyd 快慢指针：慢走 1、快走 2，能相遇就有环。
+ * 3. 空链表或单节点无环。快走前先看 fast.next，避免空引用。
+ * 复杂度：时间 O(n)，空间 O(1)
+ *
  * ——— 示例 ———
  * 输入： 3 -> 2 -> 0 -> -4，且 -4 的 next 指回节点 2（成环）
  * 输出： true
@@ -32,6 +38,14 @@ function ListNode(val, next) {
  * @return {boolean}
  */
 function hasCycle(head) {
+  let slow = head;
+  let fast = head;
+  while (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next; // 快走 2 步
+    if (slow === fast) return true;
+  }
+  return false;
 }
 
 // —— 小工具：建链表，并可选地让尾节点指向第 pos 个节点（0 起）制造环；pos = -1 表示无环 ——

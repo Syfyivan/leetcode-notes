@@ -6,6 +6,12 @@
  * 请将两个数相加，并以相同形式返回一个表示和的链表。
  * 可以假设除了数字 0 之外，这两个数都不会以 0 开头。
  *
+ * 思路：
+ * 1. 两个逆序存的数字相加，结果也用逆序链表返回。
+ * 2. 虚拟头，同步走两个链表，把进位一起加。
+ * 3. 一长一短时短的当 0。最后还有进位要再挂一个节点。
+ * 复杂度：时间 O(max(m,n))，空间 O(1) 不计结果链表
+ *
  * ——— 示例 ———
  * 输入： l1 = [2,4,3], l2 = [5,6,4]  （表示 342 + 465）
  * 输出： [7,0,8]  （表示 807）
@@ -39,6 +45,18 @@ function toArray(head) {
  * @return {ListNode}
  */
 function addTwoNumbers(l1, l2) {
+  const dummy = new ListNode(0);
+  let cur = dummy;
+  let carry = 0;
+  while (l1 || l2 || carry) {
+    const sum = (l1 ? l1.val : 0) + (l2 ? l2.val : 0) + carry;
+    carry = Math.floor(sum / 10);
+    cur.next = new ListNode(sum % 10);
+    cur = cur.next;
+    if (l1) l1 = l1.next;
+    if (l2) l2 = l2.next;
+  }
+  return dummy.next;
 }
 
 // —— 自测 ——

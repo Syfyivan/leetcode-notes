@@ -3,6 +3,12 @@
  *
  * 给定单链表的头节点 head，反转链表，返回反转后的头节点。
  *
+ * 思路：
+ * 1. 每个 next 改指前一个节点，原头变尾。
+ * 2. 递归先翻后面，再让后继指回自己。迭代用 prev / curr 逐个改指针。
+ * 3. 空链表或单节点直接返回。递归必须切断 head.next，否则成环。
+ * 复杂度：时间 O(n)，空间 递归 O(n) / 迭代 O(1)
+ *
  * ——— 示例 ———
  * 输入： 1 -> 2 -> 3 -> 4 -> 5
  * 输出： 5 -> 4 -> 3 -> 2 -> 1
@@ -30,8 +36,8 @@ function reverseList(head) {
   if(!head || !head.next) return head;
 
   const newHead = reverseList(head.next);
-  head.next.next = head;
-  head.next = null;
+  head.next.next = head; // 后继指回来
+  head.next = null;      // 切断原指向，否则成环
 
   return newHead;
 }
@@ -42,7 +48,15 @@ function reverseList(head) {
  * @return {ListNode}
  */
 function reverseListIterative(head) {
-
+  let prev = null;
+  let curr = head;
+  while (curr) {
+    const next = curr.next;
+    curr.next = prev;
+    prev = curr;
+    curr = next;
+  }
+  return prev;
 }
 
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——

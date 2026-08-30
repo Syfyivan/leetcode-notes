@@ -4,6 +4,12 @@
  * 给定一个二叉搜索树的根节点 root ，和一个整数 k ，
  * 请你设计一个算法查找其中第 k 个最小元素（从 1 开始计数）。
  *
+ * 思路：
+ * 1. BST 里找第 k 小（1 起）。
+ * 2. 中序正好升序，边走边计数，数到 k 就记下。
+ * 3. 找到后提前停。k 保证合法。
+ * 复杂度：时间 O(h+k)，空间 O(h)
+ *
  * ——— 示例 ———
  * 输入： root = [3,1,4,null,2], k = 1
  * 输出： 1
@@ -39,6 +45,18 @@ function build(arr) {
  * @return {number}
  */
 function kthSmallest(root, k) {
+  let ans = 0;
+  const dfs = (node) => {
+    if (!node || k === 0) return;
+    dfs(node.left);
+    if (--k === 0) {
+      ans = node.val; // 中序第 k 个
+      return;
+    }
+    dfs(node.right);
+  };
+  dfs(root);
+  return ans;
 }
 
 // —— 自测 ——

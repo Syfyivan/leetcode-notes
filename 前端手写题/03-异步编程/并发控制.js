@@ -9,6 +9,11 @@
  *
  * 面试超高频（批量上传、批量请求限流都用它）。
  *
+ * 思路：
+ * 1. 同时跑的任务不超过 limit，完成一个再补一个。
+ * 2. 结果按下标写入，保证和输入顺序一致。
+ * 3. 空数组直接 resolve []。某个任务 reject 就整单失败。
+ *
  * ——— 示例 ———
  * 输入： 任务 = [耗时300ms产出'a', 耗时100ms产出'b', 耗时200ms产出'c', 耗时100ms产出'd']
  *        并发上限 = 2
@@ -16,7 +21,37 @@
  * 输出： 全部完成后 resolve -> ['a', 'b', 'c', 'd']   （顺序和输入一致）
  */
 
-function concurrencyControl() {
+function concurrencyControl(tasks, limit) {
+  return new Promise((resolve, reject) => {
+    const n = tasks.length;
+    if (n === 0) {
+      resolve([]);
+      return;
+    }
+    const results = new Array(n);
+    let next = 0;
+    let running = 0;
+    let done = 0;
+
+    function run() {
+      while (running < limit && next < n) {
+        const i = next++;
+        running++;
+        Promise.resolve()
+          .then(() => tasks[i]())
+          .then((val) => {
+            results[i] = val; // 按下标填，谁先完成都不打乱顺序
+            running--;
+            done++;
+            if (done === n) resolve(results);
+            else run();
+          })
+          .catch(reject);
+      }
+    }
+
+    run();
+  });
 }
 
 // —— 自测 ——

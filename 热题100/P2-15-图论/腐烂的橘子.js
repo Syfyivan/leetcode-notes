@@ -18,6 +18,12 @@
  *
  * 输入： grid = [[0,2]]
  * 输出： 0
+ *
+ * 思路：
+ * 1. 所有烂橘同时入队，多源 BFS。
+ * 2. 每层分钟 +1，把相邻鲜橘变烂。
+ * 3. 边界：一开始没有鲜橘返回 0；结束还有鲜橘返回 -1。
+ * 复杂度：时间 O(mn)，空间 O(mn)
  */
 
 /**
@@ -25,6 +31,37 @@
  * @return {number}
  */
 function orangesRotting(grid) {
+    const m = grid.length;
+    const n = grid[0].length;
+    const q = [];
+    let fresh = 0;
+    for (let i = 0; i < m; i++) {
+        for (let j = 0; j < n; j++) {
+            if (grid[i][j] === 2) q.push([i, j]);
+            else if (grid[i][j] === 1) fresh++;
+        }
+    }
+    if (fresh === 0) return 0;
+
+    const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    let minutes = 0;
+    let head = 0;
+    while (head < q.length && fresh) {
+        const size = q.length - head;
+        minutes++; // 还有鲜橘才进入下一分钟
+        for (let s = 0; s < size; s++) {
+            const [x, y] = q[head++];
+            for (const [dx, dy] of dirs) {
+                const nx = x + dx;
+                const ny = y + dy;
+                if (nx < 0 || nx >= m || ny < 0 || ny >= n || grid[nx][ny] !== 1) continue;
+                grid[nx][ny] = 2;
+                fresh--;
+                q.push([nx, ny]);
+            }
+        }
+    }
+    return fresh === 0 ? minutes : -1;
 }
 
 // —— 自测 ——

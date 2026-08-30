@@ -7,6 +7,12 @@
  * “相交”指的是两个链表从某个节点开始，之后的节点完全共享（是同一批节点对象），
  * 不是节点值相等而已。相交后不会再分开。
  *
+ * 思路：
+ * 1. 找两条链表第一个公共节点，没有就返回 null。
+ * 2. 双指针各走完自己再接对方的头，路程 a+b = b+a，交点处相遇。
+ * 3. 无交点时两人同时走到 null。
+ * 复杂度：时间 O(m+n)，空间 O(1)
+ *
  * ——— 示例 ———
  * 输入： listA = 4 -> 1 -> 8 -> 4 -> 5
  *        listB = 5 -> 6 -> 1 -> 8 -> 4 -> 5
@@ -29,6 +35,13 @@ function ListNode(val, next) {
  * @return {ListNode}
  */
 function getIntersectionNode(headA, headB) {
+  let a = headA;
+  let b = headB;
+  while (a !== b) {
+    a = a ? a.next : headB; // 走完 A 接 B，抹平长度差
+    b = b ? b.next : headA;
+  }
+  return a;
 }
 
 // —— 小工具：build 建普通链表；makeIntersect 造出真正共享尾部的两条链表 ——

@@ -6,6 +6,12 @@
  * 路径不需要从根节点开始，也不需要在叶子节点结束，
  * 但是路径方向必须是向下的（只能从父节点到子节点）。
  *
+ * 思路：
+ * 1. 向下的路径有多少条节点值和等于 targetSum，起点任意。
+ * 2. 前缀和：走到当前节点时，前缀和 - target 在 map 里出现几次就多几条。
+ * 3. 回溯时把当前前缀和减回去。空树返回 0。
+ * 复杂度：时间 O(n)，空间 O(n)
+ *
  * ——— 示例 ———
  * 输入： root = [10,5,-3,3,2,null,11,3,-2,null,1], targetSum = 8
  * 输出： 3
@@ -41,6 +47,18 @@ function build(arr) {
  * @return {number}
  */
 function pathSum(root, targetSum) {
+  const map = new Map();
+  map.set(0, 1); // 从根出发刚好等于 target
+  const dfs = (node, prefix) => {
+    if (!node) return 0;
+    prefix += node.val;
+    let cnt = map.get(prefix - targetSum) || 0;
+    map.set(prefix, (map.get(prefix) || 0) + 1);
+    cnt += dfs(node.left, prefix) + dfs(node.right, prefix);
+    map.set(prefix, map.get(prefix) - 1); // 回溯，别污染兄弟分支
+    return cnt;
+  };
+  return dfs(root, 0);
 }
 
 // —— 自测 ——

@@ -6,12 +6,24 @@
  * 需求：事件被频繁触发时，每隔 interval 毫秒最多执行一次。
  * 典型场景：滚动加载、按钮防连点。
  *
+ * 思路：
+ * 1. 记下上次真正执行的时间戳。
+ * 2. 距上次不足 interval 就丢掉这次。
+ * 3. 第一次立刻执行。this / args 用 apply 带过去。
+ *
  * ——— 示例 ———
  * 输入： 每 50ms 触发一次，持续触发
  * 输出： 每 interval(=300ms) 才真正执行一次
  */
 
-function throttle() {
+function throttle(fn, interval) {
+  let last = 0;
+  return function (...args) {
+    const now = Date.now();
+    if (now - last < interval) return;
+    last = now;
+    fn.apply(this, args);
+  };
 }
 
 // —— 自测（实现后每 300ms 打印一次；观察几秒后手动结束）——

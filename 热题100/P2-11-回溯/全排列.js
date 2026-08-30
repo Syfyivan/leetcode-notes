@@ -13,12 +13,37 @@
  *
  * 输入： nums = [1]
  * 输出： [[1]]
+ *
+ * 思路：
+ * 1. 每层从没用过的数里挑一个放进 path。
+ * 2. used 标记选过的下标，选时打标，回溯擦掉。
+ * 3. 边界：path 长度等于 n 才收；本题无重复值，按下标防重即可。
+ * 复杂度：时间 O(n * n!)，空间 O(n)
  */
 /**
  * @param {number[]} nums
  * @return {number[][]}
  */
 function permute(nums) {
+    const res = [];
+    const path = [];
+    const used = new Array(nums.length).fill(false);
+    const dfs = () => {
+        if (path.length === nums.length) {
+            res.push([...path]);
+            return;
+        }
+        for (let i = 0; i < nums.length; i++) {
+            if (used[i]) continue;
+            used[i] = true;
+            path.push(nums[i]);
+            dfs();
+            path.pop();
+            used[i] = false;
+        }
+    };
+    dfs();
+    return res;
 }
 
 // —— 自测 ——

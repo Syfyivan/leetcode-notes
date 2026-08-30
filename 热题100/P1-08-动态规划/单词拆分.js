@@ -11,6 +11,12 @@
 // 解释: 返回 true 因为 "leetcode" 可以由 "leet" 和 "code" 拼接成。
 
 /**
+ * 思路：
+ * 1. dp[i] = s 的前 i 个字符能不能被字典拼出来。
+ * 2. 枚举切点 j，dp[j] 为真且 s[j..i) 在字典里，则 dp[i] 为真。
+ * 3. 边界：dp[0]=true，空前缀默认能拼。字典放进 Set 方便查。
+ * 复杂度：时间 O(n^2 * k)，空间 O(n + 字典)，k 是单词平均长度
+ *
  * @param {string} s
  * @param {string[]} wordDict
  * @return {boolean}
@@ -30,5 +36,4 @@ var wordBreak = function(s, wordDict) {
         }
     }
     return dp[len];
-    
 };

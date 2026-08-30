@@ -15,6 +15,12 @@
  *
  * 输入： nums = [1,1,5]
  * 输出： [1,5,1]
+ *
+ * 思路：
+ * 1. 从右找第一个下降点 i（nums[i] < nums[i+1]）。
+ * 2. 再从右找第一个 > nums[i] 的 j，交换后把 i+1 到末尾反转。
+ * 3. 边界：整个数组降序则直接反转成升序。
+ * 复杂度：时间 O(n)，空间 O(1)
  */
 
 /**
@@ -22,6 +28,25 @@
  * @return {number[]} 原地修改后返回 nums 便于打印
  */
 function nextPermutation(nums) {
+    let i = nums.length - 2;
+    while (i >= 0 && nums[i] >= nums[i + 1]) i--; // 找第一个变小的
+    if (i >= 0) {
+        let j = nums.length - 1;
+        while (nums[j] <= nums[i]) j--; // 右侧刚好比 nums[i] 大的
+        const t = nums[i];
+        nums[i] = nums[j];
+        nums[j] = t;
+    }
+    let l = i + 1;
+    let r = nums.length - 1;
+    while (l < r) {
+        const t = nums[l];
+        nums[l] = nums[r];
+        nums[r] = t;
+        l++;
+        r--;
+    }
+    return nums;
 }
 
 // —— 自测 ——

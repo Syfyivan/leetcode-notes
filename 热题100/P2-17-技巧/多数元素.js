@@ -10,6 +10,12 @@
  *
  * 输入： nums = [2,2,1,1,1,2,2]
  * 输出： 2
+ *
+ * 思路：
+ * 1. Boyer-Moore：相同 count++，不同 count--。
+ * 2. count 掉到 0 就换候选人。
+ * 3. 边界：题保证多数一定存在，最后候选即答案。
+ * 复杂度：时间 O(n)，空间 O(1)
  */
 
 /**
@@ -17,6 +23,13 @@
  * @return {number}
  */
 function majorityElement(nums) {
+    let cand = 0;
+    let count = 0;
+    for (const x of nums) {
+        if (count === 0) cand = x;
+        count += x === cand ? 1 : -1;
+    }
+    return cand;
 }
 
 // —— 自测 ——

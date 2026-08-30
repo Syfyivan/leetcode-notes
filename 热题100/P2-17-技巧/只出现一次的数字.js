@@ -14,6 +14,12 @@
  *
  * 输入： nums = [1]
  * 输出： 1
+ *
+ * 思路：
+ * 1. 全部异或，成对的抵消成 0。
+ * 2. 剩下的就是只出现一次的数。
+ * 3. 边界：单个元素直接返回。
+ * 复杂度：时间 O(n)，空间 O(1)
  */
 
 /**
@@ -21,6 +27,9 @@
  * @return {number}
  */
 function singleNumber(nums) {
+    let x = 0;
+    for (const n of nums) x ^= n;
+    return x;
 }
 
 // —— 自测 ——

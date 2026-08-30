@@ -9,6 +9,11 @@
  *   - myReduce(fn, initial)：从左往右累加，无初值时用第 0 项打底。
  *   三个回调都接收 (item, index, array)。
  *
+ * 思路：
+ * 1. 自己 for 循环，回调吃 (item, index, array)。
+ * 2. map / filter 都返回新数组，不改原数组。
+ * 3. reduce 没初值时拿第 0 项当累加器，从下标 1 开始跑。
+ *
  * ——— 示例 ———
  * 输入： [1, 2, 3].myMap(x => x * 2)
  * 输出： [2, 4, 6]
@@ -20,13 +25,33 @@
  * 输出： 10
  */
 
-Array.prototype.myMap = function () {
+Array.prototype.myMap = function (fn) {
+  const res = [];
+  for (let i = 0; i < this.length; i++) {
+    res.push(fn(this[i], i, this));
+  }
+  return res;
 };
 
-Array.prototype.myFilter = function () {
+Array.prototype.myFilter = function (fn) {
+  const res = [];
+  for (let i = 0; i < this.length; i++) {
+    if (fn(this[i], i, this)) res.push(this[i]);
+  }
+  return res;
 };
 
-Array.prototype.myReduce = function () {
+Array.prototype.myReduce = function (fn, initial) {
+  let acc = initial;
+  let i = 0;
+  if (arguments.length < 2) {
+    acc = this[0];
+    i = 1;
+  }
+  for (; i < this.length; i++) {
+    acc = fn(acc, this[i], i, this);
+  }
+  return acc;
 };
 
 // —— 自测 ——

@@ -6,6 +6,11 @@
  * 输入：每项形如 { id, parentId, name }，根节点 parentId 为 null。
  * 输出：带 children 字段的嵌套树（可能有多棵，返回森林 / 根数组）。
  *
+ * 思路：
+ * 1. 先一遍建 Map，id 指向带 children 的节点。
+ * 2. 再一遍：parentId 为 null 进 roots，否则推进父节点的 children。
+ * 3. 两遍是为了父节点后出现也能挂上。spread 复制，不改原数组。
+ *
  * ——— 示例 ———
  * 输入（扁平数组，每个节点靠 parentId 记住"我上级是谁"）：
  *   [
@@ -53,7 +58,7 @@ function listToTree(list) {
     const roots = [];
 
     for(const item of list) {
-      map.set(item.id, {...item, children: []});
+      map.set(item.id, {...item, children: []}); // 先建完所有节点，第二遍随便挂
     }
     for(const item of list) {
       const node = map.get(item.id);

@@ -5,6 +5,12 @@
  *
  * 进阶：能否在 O(n log n) 时间复杂度和常数级空间复杂度下完成？
  *
+ * 思路：
+ * 1. 链表按升序排。
+ * 2. 归并：快慢指针拆成两半，递归排完再合并。
+ * 3. 空或单节点已经有序。拆的时候要把前半的尾 next 置空。
+ * 复杂度：时间 O(n log n)，空间 O(log n) 递归栈
+ *
  * ——— 示例 ———
  * 输入： head = [4,2,1,3]
  * 输出： [1,2,3,4]
@@ -37,6 +43,32 @@ function toArray(head) {
  * @return {ListNode}
  */
 function sortList(head) {
+  if (!head || !head.next) return head;
+  let slow = head;
+  let fast = head.next; // 从 next 起，保证 slow 停在前半尾
+  while (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+  }
+  const mid = slow.next;
+  slow.next = null; // 切断，否则归并死循环
+  const merge = (l1, l2) => {
+    const dummy = new ListNode(0);
+    let cur = dummy;
+    while (l1 && l2) {
+      if (l1.val <= l2.val) {
+        cur.next = l1;
+        l1 = l1.next;
+      } else {
+        cur.next = l2;
+        l2 = l2.next;
+      }
+      cur = cur.next;
+    }
+    cur.next = l1 || l2;
+    return dummy.next;
+  };
+  return merge(sortList(head), sortList(mid));
 }
 
 // —— 自测 ——
