@@ -33,11 +33,6 @@
  *   write start      // 等到两个读都结束才开始
  *   write end
  *
- * ——— 延伸 ———
- * - 锁降级：写锁持有者直接 reading++、writing=false，再 wake。读升写要小心死锁（自己还占着读）。
- * - 超时：readLock / writeLock 再包 Promise.race，超时从 waiters 里摘掉。
- * - 写优先：wake 时跳过读去找写。现在是 FIFO，队头是谁就先醒谁。
- *
  * ——— 常见追问 ———
  * Q: 已经有人排队了，为什么新来的读不能直接进？
  * A: 队头可能是写。读再插进去，写会被源源不断的新读堵住，饿死。
@@ -83,11 +78,13 @@ class ReadWriteLock {
   }
 
   readUnlock() {
+    if (this.reading <= 0) throw new Error('当前没有可释放的读锁');
     this.reading--;
     this.wake();
   }
 
   writeUnlock() {
+    if (!this.writing) throw new Error('当前没有可释放的写锁');
     this.writing = false;
     this.wake();
   }
@@ -101,6 +98,104 @@ class ReadWriteLock {
     while (this.waiters.length && this.waiters[0].kind === 'read') {
       this.waiters.shift().grant(); // 连续的读一起放行
     }
+  }
+
+  /**
+   * 延伸 1：自动释放 withRead / withWrite
+   *
+   * 需求：接收一个异步临界区函数，不论它成功还是抛错都自动释放锁。
+   *
+   * 思路：await 拿锁后用 try/finally 包住 task，避免调用方漏写 unlock 造成永久死锁。
+   *
+   * ——— 示例 ———
+   * 输入：lock.withWrite(async () => { data.value++ })
+   * 输出：任务结束或报错后，写锁都会释放
+   */
+  async withRead(task) {
+    await this.readLock();
+    try {
+      return await task();
+    } finally {
+      this.readUnlock();
+    }
+  }
+
+  async withWrite(task) {
+    await this.writeLock();
+    try {
+      return await task();
+    } finally {
+      this.writeUnlock();
+    }
+  }
+
+  /**
+   * 延伸 2：写锁降级为读锁
+   *
+   * 需求：持有写锁的任务更新完数据后，继续以读锁身份查看数据，期间允许其他读者进入。
+   *
+   * 思路：先把 reading 加一，再释放 writing，整个切换没有无锁空窗；随后 wake 连续读者。
+   */
+  downgrade() {
+    if (!this.writing) throw new Error('只有写锁持有者才能降级');
+    this.reading++;
+    this.writing = false;
+    this.wake();
+  }
+}
+
+/**
+ * 延伸 3：带超时的锁申请
+ *
+ * 需求：等待超过 timeout 毫秒就拒绝，并把 waiter 从队列删除，不能留下稍后误获锁的幽灵请求。
+ *
+ * 思路：超时回调用 indexOf 找到自己的 waiter 并 splice；grant 时清 timer 并正常计数。
+ */
+class ReadWriteLockWithTimeout extends ReadWriteLock {
+  _lockWithTimeout(kind, timeout) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      let timer;
+      const waiter = {
+        kind,
+        grant: () => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          if (kind === 'read') this.reading++;
+          else this.writing = true;
+          resolve();
+        },
+      };
+
+      const canRead = kind === 'read' && !this.writing && this.waiters.length === 0;
+      const canWrite = kind === 'write' && !this.writing
+        && this.reading === 0 && this.waiters.length === 0;
+      if (canRead || canWrite) {
+        waiter.grant();
+        return;
+      }
+
+      this.waiters.push(waiter);
+      timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        const index = this.waiters.indexOf(waiter);
+        if (index >= 0) this.waiters.splice(index, 1);
+        const error = new Error(`等待${kind === 'read' ? '读' : '写'}锁超时`);
+        error.name = 'TimeoutError';
+        reject(error);
+        this.wake();
+      }, timeout);
+    });
+  }
+
+  readLockWithTimeout(timeout) {
+    return this._lockWithTimeout('read', timeout);
+  }
+
+  writeLockWithTimeout(timeout) {
+    return this._lockWithTimeout('write', timeout);
   }
 }
 
@@ -132,4 +227,4 @@ async function demo() {
 
 demo();
 
-module.exports = { ReadWriteLock };
+module.exports = { ReadWriteLock, ReadWriteLockWithTimeout };

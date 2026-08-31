@@ -15,12 +15,6 @@
  * 输入： 每 50ms 触发一次，持续触发
  * 输出： 每 interval(=300ms) 才真正执行一次
  *
- * ——— 延伸 ———
- * - trailing：窗口内最后一次被丢掉的，到点再补一刀。滚动停了也要刷一次布局，就靠它。
- * - leading: false：开头不跑，只在窗口末尾跑。和 trailing 一起才是「延后执行的节流」。
- * - lodash 默认 leading + trailing 都开：头一次立刻，窗口里的最后一次再补。
- * - cancel / flush：和防抖一样，组件卸载要清；提交前可以把压着的那次立刻跑掉。
- *
  * ——— 常见追问 ———
  * Q: 防抖和节流差在哪？
  * A: 防抖等你停手。节流每隔 interval 最多一次。滚动加载用节流，搜索联想用防抖。
@@ -48,6 +42,104 @@ function throttle(fn, interval) {
   };
 }
 
+/**
+ * 延伸 1：尾部执行 throttleTrailing
+ *
+ * 需求：第一次触发不立刻执行。一个时间窗内不管触发多少次，只在窗口末尾执行最后一次。
+ * 典型场景：滚动停止前至少再更新一次位置，不能丢掉窗口里的最后一个坐标。
+ *
+ * 思路：
+ * 1. timer 存在说明当前窗口已安排任务，直接更新 lastCtx / lastArgs。
+ * 2. timer 不存在时安排 interval 后执行。
+ * 3. 到点使用最后一次参数，并把 timer 清空，允许下一窗口重新排队。
+ *
+ * ——— 示例 ———
+ * 输入：0ms、50ms、100ms 连续传入 1、2、3，interval=300
+ * 输出：约 300ms 执行一次，参数是 3
+ */
+function throttleTrailing(fn, interval) {
+  let timer = null;
+  let lastCtx = null;
+  let lastArgs = null;
+
+  return function (...args) {
+    lastCtx = this;
+    lastArgs = args;
+    if (timer) return;
+    timer = setTimeout(() => {
+      timer = null;
+      fn.apply(lastCtx, lastArgs);
+    }, interval);
+  };
+}
+
+/**
+ * 延伸 2：leading / trailing / cancel / flush
+ *
+ * 需求：用 options 控制窗口开头和末尾是否执行，并提供 cancel、flush。
+ * 默认 leading、trailing 都开启，行为与 lodash 的常用配置一致。
+ *
+ * 思路：
+ * 1. previous 记录上次执行时间，remaining 算本窗口还剩多久。
+ * 2. 窗口外且允许 leading 就立刻执行；窗口内且允许 trailing 就只留一个定时器。
+ * 3. cancel 清掉全部状态；flush 立即执行仍在等待的尾调用。
+ *
+ * ——— 示例 ———
+ * 输入：throttleWithOptions(fn, 300, { leading: false, trailing: true })
+ * 输出：窗口开头不执行，约 300ms 后使用最后一次参数执行
+ */
+function throttleWithOptions(fn, interval, options = {}) {
+  const leading = options.leading !== false;
+  const trailing = options.trailing !== false;
+  let timer = null;
+  let previous = 0;
+  let lastCtx = null;
+  let lastArgs = null;
+
+  function invoke(time) {
+    previous = leading ? time : 0;
+    timer = null;
+    const ctx = lastCtx;
+    const args = lastArgs;
+    lastCtx = null;
+    lastArgs = null;
+    return fn.apply(ctx, args);
+  }
+
+  function wrapped(...args) {
+    if (!leading && !trailing) return undefined;
+    const now = Date.now();
+    if (!previous && !leading) previous = now;
+    const remaining = interval - (now - previous);
+    lastCtx = this;
+    lastArgs = args;
+
+    if (remaining <= 0 || remaining > interval) {
+      if (timer) clearTimeout(timer);
+      return invoke(now);
+    }
+    if (!timer && trailing) {
+      timer = setTimeout(() => invoke(Date.now()), remaining);
+    }
+  }
+
+  wrapped.cancel = function () {
+    if (timer) clearTimeout(timer);
+    timer = null;
+    previous = 0;
+    lastCtx = null;
+    lastArgs = null;
+  };
+
+  wrapped.flush = function () {
+    if (!timer) return undefined;
+    clearTimeout(timer);
+    return invoke(Date.now());
+  };
+
+  return wrapped;
+}
+
 // —— 自测（实现后每 300ms 打印一次；观察几秒后手动结束）——
 const log = throttle((x) => console.log('run', x), 300);
 let n = 0;
@@ -56,4 +148,4 @@ const timer = setInterval(() => {
   if (++n > 40) clearInterval(timer); // 跑 2 秒自动停
 }, 50);
 
-module.exports = { throttle };
+module.exports = { throttle, throttleTrailing, throttleWithOptions };

@@ -21,12 +21,6 @@
  * 输入： myInstanceof(1, Number)
  * 输出： false      （基本类型不在原型链上）
  *
- * ——— 延伸 ———
- * - Symbol.hasInstance：原生 instanceof 会先调这个，手写一般只走原型链。
- * - 跨 iframe：两边的 Array 不是同一个构造函数，instanceof 为 false，Array.isArray 能过。
- * - Object.create(null) 没有原型，永远 false。
- * - 右边必须能取出 prototype。原生遇到非对象会 TypeError。
- *
  * ——— 常见追问 ———
  * Q: 为什么 1 instanceof Number 是 false？
  * A: instanceof 只认对象。1 是基本类型，没有原型链。new Number(1) 才是 true。
@@ -57,9 +51,72 @@ function myInstanceof(obj, Ctor) {
   return false;
 }
 
+/**
+ * 延伸 1：补上右值校验和 Symbol.hasInstance
+ *
+ * 需求：更接近原生 instanceof：
+ *   - 右值不是对象时抛 TypeError；
+ *   - 右值定义了 Symbol.hasInstance 时，优先交给它判断；
+ *   - 普通函数仍沿原型链查找。
+ *
+ * 思路：
+ * 1. 先校验 Ctor，避免读 null.prototype 时报出含糊错误。
+ * 2. 自有的 Symbol.hasInstance 可完全接管规则。
+ * 3. 默认 Function.prototype[Symbol.hasInstance] 不能直接调用本函数，否则会递归；
+ *    没有自定义规则时继续手动走原型链。
+ *
+ * ——— 示例 ———
+ * 输入：instanceOf(4, { [Symbol.hasInstance]: x => Number.isInteger(x) })
+ * 输出：true
+ */
+function instanceOf(value, Ctor) {
+  const type = typeof Ctor;
+  if (Ctor == null || (type !== 'object' && type !== 'function')) {
+    throw new TypeError('instanceof 右值必须是对象');
+  }
+
+  const hasInstance = Ctor[Symbol.hasInstance];
+  const isDefaultFunctionRule = typeof Ctor === 'function'
+    && hasInstance === Function.prototype[Symbol.hasInstance];
+  if (hasInstance !== undefined && !isDefaultFunctionRule) {
+    if (typeof hasInstance !== 'function') {
+      throw new TypeError('Symbol.hasInstance 必须是函数');
+    }
+    return Boolean(hasInstance.call(Ctor, value));
+  }
+  if (typeof Ctor !== 'function') {
+    throw new TypeError('右值不可调用且未实现 Symbol.hasInstance');
+  }
+  if (typeof Ctor.prototype !== 'object' || Ctor.prototype === null) {
+    throw new TypeError('构造函数 prototype 必须是对象');
+  }
+  return myInstanceof(value, Ctor);
+}
+
+/**
+ * 延伸 2：防御被代理对象制造的原型环
+ *
+ * 需求：普通对象的原型链按规范不会成环，但 Proxy 的 getPrototypeOf 可以返回异常结构。
+ *       面试里若要求健壮性，可以用 Set 防止循环卡死。
+ *
+ * 思路：每走到一个 proto 就记入 visited，再次遇到同一引用时返回 false。
+ */
+function myInstanceofSafe(obj, Ctor) {
+  if (obj == null || (typeof obj !== 'object' && typeof obj !== 'function')) return false;
+  const visited = new Set();
+  let proto = Object.getPrototypeOf(obj);
+  while (proto && !visited.has(proto)) {
+    if (proto === Ctor.prototype) return true;
+    visited.add(proto);
+    proto = Object.getPrototypeOf(proto);
+  }
+  return false;
+}
+
 // —— 自测 ——
 console.log(myInstanceof([], Array));  // true
 console.log(myInstanceof([], Object)); // true
 console.log(myInstanceof(1, Number));  // false
+console.log(instanceOf(4, { [Symbol.hasInstance]: (x) => Number.isInteger(x) })); // true
 
-module.exports = { myInstanceof };
+module.exports = { myInstanceof, instanceOf, myInstanceofSafe };

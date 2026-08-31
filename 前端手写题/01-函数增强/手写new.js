@@ -18,12 +18,6 @@
  * 输入： myNew(Person, '小明')
  * 输出： { name: '小明' }（且 instanceof Person 为 true）
  *
- * ——— 延伸 ———
- * - 构造函数 return 函数也算对象（function instanceof Object 为 true），会当返回值。
- * - 箭头函数不能 new：没有 prototype，Object.create(undefined) 会抛。
- * - new.target：原生构造函数里能读到当前是被 new 的。apply 调没有这个，类构造会因此拒绝。
- * - 和 Object.create 的分工：create 只接原型；new 还要跑构造函数，把属性写到实例上。
- *
  * ——— 常见追问 ———
  * Q: 为什么返回对象就不用新对象了？
  * A: 规范如此。工厂式构造函数可以 return 另一个对象。返回基本类型则忽略，仍用新对象。
@@ -48,10 +42,49 @@ function myNew(Ctor, ...args) {
   return result instanceof Object ? result : obj;
 }
 
+/**
+ * 延伸 1：准确判断构造函数的显式返回值
+ *
+ * 需求：构造函数返回对象或函数时采用该返回值；返回 null 或基本类型时仍采用新实例。
+ *
+ * 思路：typeof function 不是 object，要单独放行；null 虽然 typeof 是 object，也要排除。
+ *
+ * ——— 示例 ———
+ * 输入：myNewComplete(function () { return () => 42; })
+ * 输出：返回的函数，调用后得到 42
+ */
+function myNewComplete(Ctor, ...args) {
+  if (typeof Ctor !== 'function' || !Ctor.prototype) {
+    throw new TypeError('Ctor 必须是可构造函数');
+  }
+  const instance = Object.create(Ctor.prototype);
+  const result = Ctor.apply(instance, args);
+  const isObject = result !== null
+    && (typeof result === 'object' || typeof result === 'function');
+  return isObject ? result : instance;
+}
+
+/**
+ * 延伸 2：支持 class 和 new.target
+ *
+ * 需求：class 不能用 apply 调用，构造函数里也可能依赖 new.target。
+ *       用 Reflect.construct 才能走引擎原生的 [[Construct]] 流程。
+ *
+ * 思路：Reflect.construct(Ctor, args) 等价于 new Ctor(...args)，同时免去动态参数展开限制。
+ *
+ * ——— 示例 ———
+ * 输入：construct(class User { constructor(name) { this.name = name; } }, '小明')
+ * 输出：User 实例，name 为「小明」
+ */
+function construct(Ctor, ...args) {
+  if (typeof Ctor !== 'function') throw new TypeError('Ctor 必须是函数');
+  return Reflect.construct(Ctor, args);
+}
+
 // —— 自测 ——
 function Person(name) { this.name = name; }
 const p = myNew(Person, '小明');
 console.log(p.name);              // 小明
 console.log(p instanceof Person); // true
 
-module.exports = { myNew };
+module.exports = { myNew, myNewComplete, construct };

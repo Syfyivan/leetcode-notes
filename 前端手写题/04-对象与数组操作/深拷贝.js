@@ -22,12 +22,6 @@
  * 输入： const o = { name: 'self' };  o.self = o;
  * 输出： 深拷贝(o).self.name === 'self'   // 不能爆栈
  *
- * ——— 延伸 ———
- * - structuredClone 是平台能力，Date / Map / Set / 循环引用都能搞，函数 / DOM / Symbol 会抛。
- * - JSON.parse(JSON.stringify) 最省事：函数丢掉、Date 变字符串、undefined 丢键、循环直接抛。
- * - Object.keys 只拷可枚举自有键，class 实例会丢方法。要的话 getOwnPropertyDescriptors
- *   + Object.create(proto)。
- *
  * ——— 常见追问 ———
  * Q: 为什么用 WeakMap 不用 Map？
  * A: key 是原对象，WeakMap 不阻止 GC。拷完原对象就能收。Map 会把原对象一直抓住。
@@ -85,6 +79,98 @@ function deepClone(value, cache = new WeakMap()) {
   return cloned;
 }
 
+/**
+ * 延伸 1：保留原型、Symbol、不可枚举属性和属性描述符
+ *
+ * 需求：class 实例拷贝后仍能调用原型方法；getter/setter、只读属性、Symbol key、
+ *       稀疏数组和循环引用都要保留。
+ *
+ * 思路：
+ * 1. 普通对象用 Object.create(originalPrototype) 建壳，数组仍用真正的 [] 建壳。
+ * 2. getOwnPropertyDescriptors 一次拿到全部自有属性及其特征。
+ * 3. 数据属性的 value 递归拷贝；访问器函数原样复用，再 defineProperties 回去。
+ *
+ * ——— 示例 ———
+ * 输入：class User { hi() {} }；copy = deepCloneComplete(new User())
+ * 输出：copy instanceof User 为 true，copy.hi 仍可调用
+ */
+function deepCloneComplete(value, cache = new WeakMap()) {
+  if (typeof value !== 'object' || value === null) return value;
+  if (cache.has(value)) return cache.get(value);
+
+  if (value instanceof Date) {
+    const cloned = new Date(value.getTime());
+    cache.set(value, cloned);
+    return cloned;
+  }
+  if (value instanceof RegExp) {
+    const cloned = new RegExp(value.source, value.flags);
+    cloned.lastIndex = value.lastIndex;
+    cache.set(value, cloned);
+    return cloned;
+  }
+  if (value instanceof Map) {
+    const cloned = new Map();
+    cache.set(value, cloned);
+    value.forEach((item, key) => {
+      cloned.set(deepCloneComplete(key, cache), deepCloneComplete(item, cache));
+    });
+    return cloned;
+  }
+  if (value instanceof Set) {
+    const cloned = new Set();
+    cache.set(value, cloned);
+    value.forEach((item) => cloned.add(deepCloneComplete(item, cache)));
+    return cloned;
+  }
+  if (value instanceof ArrayBuffer) {
+    const cloned = value.slice(0);
+    cache.set(value, cloned);
+    return cloned;
+  }
+  if (ArrayBuffer.isView(value)) {
+    const buffer = deepCloneComplete(value.buffer, cache);
+    const cloned = value instanceof DataView
+      ? new DataView(buffer, value.byteOffset, value.byteLength)
+      : new value.constructor(buffer, value.byteOffset, value.length);
+    cache.set(value, cloned);
+    return cloned;
+  }
+
+  const cloned = Array.isArray(value)
+    ? new Array(value.length)
+    : Object.create(Object.getPrototypeOf(value));
+  cache.set(value, cloned);
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  for (const key of Reflect.ownKeys(descriptors)) {
+    if ('value' in descriptors[key]) {
+      descriptors[key].value = deepCloneComplete(descriptors[key].value, cache);
+    }
+  }
+  Object.defineProperties(cloned, descriptors);
+  return cloned;
+}
+
+/**
+ * 延伸 2：平台版 structuredClone
+ *
+ * 需求：浏览器或 Node 已提供 structuredClone 时，可直接处理循环引用、Map、Set、
+ * ArrayBuffer 等结构化数据，并可用 transfer 转移大块二进制数据的所有权。
+ *
+ * 思路：平台函数由引擎实现，不能复制函数、WeakMap、DOM 节点等不可结构化克隆的值。
+ * 包一层的价值是统一环境检查和 transfer 参数。
+ *
+ * ——— 示例 ———
+ * 输入：cloneStructured({ buffer }, [buffer])
+ * 输出：新对象持有 buffer，原 buffer 的 byteLength 变成 0
+ */
+function cloneStructured(value, transfer = []) {
+  if (typeof structuredClone !== 'function') {
+    throw new Error('当前环境不支持 structuredClone');
+  }
+  return structuredClone(value, { transfer });
+}
+
 // —— 自测（实现前跑会报错，实现后应逐行打印期望值）——
 const obj = { a: 1, b: { c: 2 }, d: [3, 4] };
 const copy = deepClone(obj);
@@ -96,4 +182,4 @@ const cyclic = { name: 'self' };
 cyclic.self = cyclic;
 console.log(deepClone(cyclic).self.name); // 'self'
 
-module.exports = { deepClone };
+module.exports = { deepClone, deepCloneComplete, cloneStructured };

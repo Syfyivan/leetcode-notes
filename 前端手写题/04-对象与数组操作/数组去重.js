@@ -15,11 +15,6 @@
  * 输入： [1, 1, 2, 3, 3, 3, 4]      输出： [1, 2, 3, 4]
  * 输入： ['a', 'b', 'a', 'c']       输出： ['a', 'b', 'c']
  *
- * ——— 延伸 ———
- * - 对象去重：Map + JSON.stringify 当 key，或 iteratee 抽 id。Set 只认引用。
- * - filter + indexOf 也能做，NaN 对不上（indexOf 用 ===）。
- * - 按字段去重用 lodash.uniqBy，iteratee 返回值当唯一键。
- *
  * ——— 常见追问 ———
  * Q: 两个长得一样的 {} 为啥不去掉一个？
  * A: Set 按 SameValueZero，对象比引用。每次字面量都是新地址。
@@ -38,8 +33,53 @@ function unique(arr) {
   return [...new Set(arr)]; // Set 按插入序去重，展开才是新数组
 }
 
+/**
+ * 延伸 1：按字段或计算结果去重 uniqueBy
+ *
+ * 需求：对象数组按 id 等业务键去重，保留每个 key 第一次出现的元素。
+ * iteratee 可传函数，也可传属性名。
+ *
+ * 思路：Set 只保存 iteratee 算出的 key；key 没见过才把原元素推入结果。
+ *
+ * ——— 示例 ———
+ * 输入：uniqueBy([{id:1,n:'a'}, {id:1,n:'b'}, {id:2,n:'c'}], 'id')
+ * 输出：保留第一和第三项
+ */
+function uniqueBy(arr, iteratee) {
+  const fn = typeof iteratee === 'function' ? iteratee : (item) => item[iteratee];
+  const seen = new Set();
+  const result = [];
+  arr.forEach((item, index) => {
+    const key = fn(item, index, arr);
+    if (seen.has(key)) return;
+    seen.add(key);
+    result.push(item);
+  });
+  return result;
+}
+
+/**
+ * 延伸 2：自定义相等规则 uniqueWith
+ *
+ * 需求：调用方传 comparator(a, b)，长得一样但引用不同的对象也能去重。
+ *
+ * 思路：每个新元素和结果中的已有元素逐个比较，都不相等才保留。
+ * 这是 O(n²)，数据量大时应尽量抽出稳定 key 改用 uniqueBy。
+ *
+ * ——— 示例 ———
+ * 输入：uniqueWith([{x:1}, {x:1}], (a,b) => a.x === b.x)
+ * 输出：[{x:1}]
+ */
+function uniqueWith(arr, comparator) {
+  const result = [];
+  for (const item of arr) {
+    if (!result.some((saved) => comparator(saved, item))) result.push(item);
+  }
+  return result;
+}
+
 // —— 自测 ——
 console.log(unique([1, 1, 2, 3, 3, 3, 4])); // [1, 2, 3, 4]
 console.log(unique(['a', 'b', 'a', 'c']));  // ['a', 'b', 'c']
 
-module.exports = { unique };
+module.exports = { unique, uniqueBy, uniqueWith };

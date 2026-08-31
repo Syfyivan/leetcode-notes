@@ -39,13 +39,6 @@
  *   （等 1 秒）
  *   执行「写入笔记」
  *
- * ——— 延伸 ———
- * - queueMicrotask 也能延迟启动，比 setTimeout(0) 更贴当前这句点号链
- *   （微任务在同步结束立刻跑，宏任务还要再等一轮定时器）。
- * - waitFirst(sec)：unshift 到队头，和 LazyMan.sleepFirst 一样。
- * - 某步抛错：next 里 try/catch，Promise 链则 .then(task).catch(...)，避免整条断掉。
- * - 取消：加 aborted 标记，next / then 回调先看这个位。
- *
  * ——— 常见追问 ———
  * Q: wait 会不会触发 flush？
  * A: 不会。wait 只是把「以后要等 n 秒」推进数组。真正开跑的是 constructor
@@ -72,6 +65,8 @@
 class Runner {
   constructor(name) {
     this.queue = [];
+    this.aborted = false;
+    this.errorHandler = null;
     this.queue.push(() => {
       console.log(`开始任务「${name}」`);
       this.next();
@@ -81,8 +76,15 @@ class Runner {
   }
 
   next() {
+    if (this.aborted) return;
     const task = this.queue.shift();
-    if (task) task();
+    if (!task) return;
+    try {
+      task();
+    } catch (error) {
+      if (this.errorHandler) this.errorHandler(error);
+      else throw error;
+    }
   }
 
   run(step) {
@@ -102,6 +104,39 @@ class Runner {
   }
 }
 
+/**
+ * 延伸 1：waitFirst
+ *
+ * 需求：把等待任务插到队首，比“开始任务”更早执行。
+ *
+ * 思路：和 LazyMan.sleepFirst 一样使用 unshift；同步链写完前队列尚未启动。
+ *
+ * ——— 示例 ———
+ * 输入：new Runner('A').run('1').waitFirst(1)
+ * 输出：先等一秒，再打印开始任务和步骤 1
+ */
+Runner.prototype.waitFirst = function (sec) {
+  this.queue.unshift(() => setTimeout(() => this.next(), sec * 1000));
+  return this;
+};
+
+/**
+ * 延伸 2：取消与同步错误处理
+ *
+ * 需求：cancel 清掉尚未执行的任务；onError 捕获 run 回调同步抛出的错误。
+ * 当前已启动的定时器不会被强制取消，但到点后的 next 会因 aborted 直接返回。
+ */
+Runner.prototype.cancel = function () {
+  this.aborted = true;
+  this.queue.length = 0;
+  return this;
+};
+
+Runner.prototype.onError = function (handler) {
+  this.errorHandler = handler;
+  return this;
+};
+
 // ============================================================
 // 方案二：Promise 链（延伸）
 // 方法 return this；丢进 then 的回调，wait 必须 return Promise
@@ -109,6 +144,7 @@ class Runner {
 
 class RunnerPromise {
   constructor(name) {
+    this.aborted = false;
     this.queue = Promise.resolve();
     this._enqueue(() => {
       console.log(`开始任务「${name}」`);
@@ -116,7 +152,10 @@ class RunnerPromise {
   }
 
   _enqueue(task) {
-    this.queue = this.queue.then(task); // 接到队尾。返回值是新 Promise，不能拿去链式点号
+    this.queue = this.queue.then(() => {
+      if (!this.aborted) return task();
+      return undefined;
+    });
     return this;
   }
 
@@ -132,6 +171,16 @@ class RunnerPromise {
       () => new Promise((resolve) => setTimeout(resolve, sec * 1000))
       // 必须 return 这个 Promise，then 才会卡住
     );
+  }
+
+  cancel() {
+    this.aborted = true;
+    return this;
+  }
+
+  catch(handler) {
+    this.queue = this.queue.catch(handler);
+    return this;
   }
 }
 

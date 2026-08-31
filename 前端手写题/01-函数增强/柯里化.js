@@ -18,12 +18,6 @@
  * 输入： curried(1, 2)(3)   输出： 6
  * 输入： curried(1)(2, 3)   输出： 6
  *
- * ——— 延伸 ———
- * - 占位符：lodash 的 `_` 可以 curry(add)(_, 2)(1)，空位留给下次。
- * - 无限柯里化：不看 fn.length，碰到空调用 () 才结算。rest 参数只能走这条。
- * - 反柯里化：把 obj.method 变成 f(obj, ...args)，call / apply 就是在干这事。
- * - 默认参数、rest 不计入 fn.length。这种函数要自己定元数，否则第一次就执行。
- *
  * ——— 常见追问 ———
  * Q: 为什么看 fn.length？
  * A: 形参个数就是「凑够了」的标准。默认参数、rest 不计入，碰到它们 length 会偏小。
@@ -52,11 +46,77 @@ function curry(fn) {
   };
 }
 
+/**
+ * 延伸 1：支持占位符
+ *
+ * 需求：允许先跳过某个位置，后续调用再补。例如 curryPlaceholder(add)(_, 2)(1, 3)。
+ *
+ * 思路：
+ * 1. 用唯一 Symbol 表示空位，避免和业务参数撞值。
+ * 2. 新参数优先从左往右填旧空位，剩余参数追加到末尾。
+ * 3. 前 arity 项都没有空位且数量足够时，才执行原函数。
+ *
+ * ——— 示例 ———
+ * 输入：curryPlaceholder(add)(placeholder, 2)(1, 3)
+ * 输出：6
+ */
+const placeholder = Symbol('curry placeholder');
+
+function curryPlaceholder(fn, arity = fn.length) {
+  function collect(collected, ctx) {
+    return function (...incoming) {
+      const nextCtx = ctx === undefined ? this : ctx;
+      const merged = collected.slice();
+      let incomingIndex = 0;
+
+      for (let i = 0; i < merged.length && incomingIndex < incoming.length; i++) {
+        if (merged[i] === placeholder && incoming[incomingIndex] !== placeholder) {
+          merged[i] = incoming[incomingIndex++];
+        }
+      }
+      merged.push(...incoming.slice(incomingIndex));
+
+      const ready = merged.length >= arity
+        && merged.slice(0, arity).every((item) => item !== placeholder);
+      if (ready) return fn.apply(nextCtx, merged);
+      return collect(merged, nextCtx);
+    };
+  }
+
+  return collect([], undefined);
+}
+
+/**
+ * 延伸 2：无限参数柯里化
+ *
+ * 需求：不依赖 fn.length，持续分批收参，遇到空调用时结算。
+ * 典型场景：原函数用了 rest 参数，形参长度无法表达需要收多少项。
+ *
+ * 思路：
+ * 1. 闭包保存目前收集的全部参数。
+ * 2. 有新参数就返回下一层收集函数。
+ * 3. args.length 为 0 时调用 reducer，完成结算。
+ *
+ * ——— 示例 ———
+ * 输入：curryInfinite(nums => nums.reduce((a, b) => a + b, 0))(1)(2, 3)()
+ * 输出：6
+ */
+function curryInfinite(fn) {
+  function collect(allArgs) {
+    return function (...args) {
+      if (args.length === 0) return fn.call(this, allArgs);
+      return collect(allArgs.concat(args));
+    };
+  }
+  return collect([]);
+}
+
 // —— 自测 ——
 const add = (a, b, c) => a + b + c;
 const curried = curry(add);
 console.log(curried(1)(2)(3)); // 6
 console.log(curried(1, 2)(3)); // 6
 console.log(curried(1)(2, 3)); // 6
+console.log(curryPlaceholder(add)(placeholder, 2)(1, 3)); // 6
 
-module.exports = { curry };
+module.exports = { curry, curryPlaceholder, curryInfinite, placeholder };

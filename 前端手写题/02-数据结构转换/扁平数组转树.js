@@ -37,11 +37,6 @@
  * 注意：返回的是"根节点数组"。为什么是数组而不是单个对象？
  * 因为可能有多个 parentId 为 null 的节点（多棵树 = 森林），所以统一用数组装。
  *
- * ——— 延伸 ———
- * - parent 找不到：孤儿进 roots，或直接丢掉。开口问清再写。
- * - 同层排序：挂完 children 再按 sort 字段排一下。
- * - 一遍扫描：孩子先出现就先暂存，父出现再一次性 push。两遍更稳。
- *
  * ——— 常见追问 ———
  * Q: 为什么必须两遍？
  * A: 父可能排在子后面。一遍扫到孩子时父还不在 Map 里。先建完再挂。
@@ -93,7 +88,102 @@ function listToTree(list) {
     return roots;
 }
 
+/**
+ * 延伸 1：处理孤儿、重复 id 和同层排序
+ *
+ * 需求：真实数据可能缺父节点或出现重复 id。用 options 明确处理策略：
+ *   - orphan: 'root' 把孤儿当根，'discard' 丢掉，'throw' 直接报错；
+ *   - compare: 传入比较函数后，所有同层节点都按它排序；
+ *   - 重复 id 一律报错，避免后写节点悄悄覆盖前一个。
+ *
+ * 思路：
+ * 1. 第一遍建 Map 时校验重复 id。
+ * 2. 第二遍挂载时按 orphan 策略处理找不到父节点的项。
+ * 3. 挂完后递归排序，保证 roots 和每个 children 都走同一规则。
+ *
+ * ——— 示例 ———
+ * 输入：listToTreeWithOptions([{ id: 2, parentId: 99 }], { orphan: 'root' })
+ * 输出：id=2 的节点作为根节点返回
+ */
+function listToTreeWithOptions(list, options = {}) {
+  const { orphan = 'throw', compare } = options;
+  if (!['root', 'discard', 'throw'].includes(orphan)) {
+    throw new TypeError('orphan 只能是 root、discard 或 throw');
+  }
+
+  const map = new Map();
+  const roots = [];
+  for (const item of list) {
+    if (map.has(item.id)) throw new Error(`重复 id: ${item.id}`);
+    map.set(item.id, { ...item, children: [] });
+  }
+
+  for (const item of list) {
+    const node = map.get(item.id);
+    if (item.parentId === null) {
+      roots.push(node);
+      continue;
+    }
+    const parent = map.get(item.parentId);
+    if (parent) {
+      parent.children.push(node);
+    } else if (orphan === 'root') {
+      roots.push(node);
+    } else if (orphan === 'throw') {
+      throw new Error(`节点 ${item.id} 的父节点 ${item.parentId} 不存在`);
+    }
+  }
+
+  if (typeof compare === 'function') {
+    const sortLevel = (nodes) => {
+      nodes.sort(compare);
+      nodes.forEach((node) => sortLevel(node.children));
+    };
+    sortLevel(roots);
+  }
+  return roots;
+}
+
+/**
+ * 延伸 2：一遍扫描占位法
+ *
+ * 需求：父节点晚于子节点出现时仍能一次扫描完成挂载。
+ *
+ * 思路：
+ * 1. 每个 id 在 Map 中都对应一个稳定对象引用。
+ * 2. 孩子先出现时，先给父 id 建只有 children 的占位对象并挂上孩子。
+ * 3. 父节点后来出现，再用 Object.assign 补齐同一个占位对象，孩子引用不会丢。
+ *
+ * ——— 示例 ———
+ * 输入：[{ id: 2, parentId: 1 }, { id: 1, parentId: null }]
+ * 输出：id=2 正确挂在 id=1 的 children 中
+ */
+function listToTreeOnePass(list) {
+  const map = new Map();
+  const roots = [];
+  const getNode = (id) => {
+    if (!map.has(id)) map.set(id, { children: [] });
+    return map.get(id);
+  };
+
+  for (const item of list) {
+    const node = getNode(item.id);
+    Object.assign(node, item);
+    if (item.parentId === null) {
+      roots.push(node);
+    } else {
+      getNode(item.parentId).children.push(node);
+    }
+  }
+  return roots;
+}
+
 // —— 自测 ——
 console.log(JSON.stringify(listToTree(flatList), null, 2));
 
-module.exports = { listToTree, flatList };
+module.exports = {
+  listToTree,
+  listToTreeWithOptions,
+  listToTreeOnePass,
+  flatList,
+};

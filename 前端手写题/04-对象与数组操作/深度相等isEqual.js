@@ -22,11 +22,6 @@
  * 输入： isEqual({ a: 1 }, { a: 1, b: 2 })
  * 输出： false
  *
- * ——— 延伸 ———
- * - Date 比 getTime，RegExp 比 source + flags，Map / Set 转数组再递归。
- * - 循环引用要带 WeakMap，两边同时走过的配对记下来，见过就当相等。
- * - lodash.isEqual 还处理包装对象、typed array；+0 / -0 它当相等。
- *
  * ——— 常见追问 ———
  * Q: 为什么用 Object.is 不用 ===？
  * A: NaN === NaN 是 false，两个空数字会误判成变了。Object.is(NaN, NaN) 是 true。
@@ -63,9 +58,89 @@ function isEqual(a, b) {
   return true;
 }
 
+/**
+ * 延伸 1：循环引用 + Date / RegExp / Map / Set
+ *
+ * 需求：比较常见内建对象，并保证循环结构不会递归爆栈。
+ *
+ * 思路：
+ * 1. WeakMap 记录 a 曾和哪个 b 配对。再次遇到 a 时，只有仍配到同一个 b 才算一致。
+ * 2. Date 比时间戳，RegExp 比 source 和 flags。
+ * 3. Map 按 key 的 SameValueZero 规则查找，再递归比较 value；Set 按成员身份比较。
+ * 4. 普通对象还要比较 prototype、Reflect.ownKeys 和每个属性值。
+ *
+ * ——— 示例 ———
+ * 输入：a.self=a，b.self=b，isEqualComplete(a,b)
+ * 输出：true
+ */
+function isEqualComplete(a, b, seen = new WeakMap()) {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return false;
+  if (seen.has(a)) return seen.get(a) === b;
+  seen.set(a, b);
+
+  if (a instanceof Date) return a.getTime() === b.getTime();
+  if (a instanceof RegExp) return a.source === b.source && a.flags === b.flags;
+  if (a instanceof Map) {
+    if (a.size !== b.size) return false;
+    for (const [key, value] of a) {
+      if (!b.has(key) || !isEqualComplete(value, b.get(key), seen)) return false;
+    }
+    return true;
+  }
+  if (a instanceof Set) {
+    if (a.size !== b.size) return false;
+    for (const value of a) if (!b.has(value)) return false;
+    return true;
+  }
+  if (ArrayBuffer.isView(a)) {
+    if (a.byteLength !== b.byteLength) return false;
+    const left = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
+    const right = new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
+    return left.every((value, index) => value === right[index]);
+  }
+
+  const keysA = Reflect.ownKeys(a);
+  const keysB = Reflect.ownKeys(b);
+  if (keysA.length !== keysB.length) return false;
+  for (const key of keysA) {
+    if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+    if (!isEqualComplete(a[key], b[key], seen)) return false;
+  }
+  return true;
+}
+
+/**
+ * 延伸 2：自定义比较器
+ *
+ * 需求：某些字段需要业务规则，例如忽略 updatedAt，或把 0.1 + 0.2 与 0.3 视为近似相等。
+ * customizer 返回 true / false 时直接采用；返回 undefined 时继续默认深比较。
+ *
+ * ——— 示例 ———
+ * 输入：isEqualWith({n:0.3}, {n:0.30001}, (a,b) => 数字时比较误差)
+ * 输出：可按业务阈值返回 true
+ */
+function isEqualWith(a, b, customizer, path = [], seen = new WeakMap()) {
+  const decision = customizer(a, b, path);
+  if (decision !== undefined) return Boolean(decision);
+  if (Object.is(a, b)) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (seen.has(a)) return seen.get(a) === b;
+  seen.set(a, b);
+  const keysA = Reflect.ownKeys(a);
+  const keysB = Reflect.ownKeys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((key) =>
+    Object.prototype.hasOwnProperty.call(b, key)
+    && isEqualWith(a[key], b[key], customizer, path.concat(key), seen)
+  );
+}
+
 // —— 自测 ——
 console.log(isEqual({ a: 1, b: [1, 2] }, { a: 1, b: [1, 2] })); // true
 console.log(isEqual({ a: 1 }, { a: 1, b: 2 }));                 // false
 console.log(isEqual(NaN, NaN));                                 // true
 
-module.exports = { isEqual };
+module.exports = { isEqual, isEqualComplete, isEqualWith };

@@ -20,12 +20,6 @@
  * 输入： groupBy([{ t: 'a' }, { t: 'b' }, { t: 'a' }], 't')
  * 输出： { a: [{t:'a'}, {t:'a'}], b: [{t:'b'}] }
  *
- * ——— 延伸 ———
- * - 用 Map 当分桶，key 能是数字 / 对象，不会被 toString。ES2024 的 Object.groupBy
- *   返回无原型对象，也是字符串键。
- * - iteratee 拿 (item, index, arr) 三个参数，lodash 就是这样。
- * - 按多个字段分：key 拼成 `${dept}-${role}`，或者嵌套再 groupBy 一次。
- *
  * ——— 常见追问 ———
  * Q: 为什么 Math.floor 的结果打印出来是 '6'？
  * A: 对象的键一律字符串。6 和 '6' 是同一个桶。要保住类型就换 Map。
@@ -52,10 +46,53 @@ function groupBy(arr, iteratee) {
   return res;
 }
 
+/**
+ * 延伸 1：Map 分组，保留 key 类型
+ *
+ * 需求：iteratee 返回数字、对象或 Symbol 时，分组 key 不被强制转成字符串。
+ *
+ * 思路：Map 按 SameValueZero 保存 key；iteratee 接收 item、index、array 三个参数。
+ *
+ * ——— 示例 ———
+ * 输入：groupByMap([1.2, 1.8, 2.1], Math.floor)
+ * 输出：Map 中数字 1 对应 [1.2,1.8]，数字 2 对应 [2.1]
+ */
+function groupByMap(arr, iteratee) {
+  const fn = typeof iteratee === 'function' ? iteratee : (item) => item[iteratee];
+  const result = new Map();
+  arr.forEach((item, index) => {
+    const key = fn(item, index, arr);
+    if (!result.has(key)) result.set(key, []);
+    result.get(key).push(item);
+  });
+  return result;
+}
+
+/**
+ * 延伸 2：按多个字段嵌套分组
+ *
+ * 需求：依次按多个 iteratee 建嵌套 Map，最后一层的 value 是元素数组。
+ * 典型场景：先按部门分，再按角色分。
+ *
+ * 思路：递归消费 iteratees；每层先 groupByMap，再对每个桶继续分下一层。
+ *
+ * ——— 示例 ———
+ * 输入：groupByMany(users, ['department', 'role'])
+ * 输出：Map<department, Map<role, User[]>>
+ */
+function groupByMany(arr, iteratees) {
+  if (iteratees.length === 0) return arr.slice();
+  const [first, ...rest] = iteratees;
+  const groups = groupByMap(arr, first);
+  if (rest.length === 0) return groups;
+  for (const [key, items] of groups) groups.set(key, groupByMany(items, rest));
+  return groups;
+}
+
 // —— 自测 ——
 console.log(groupBy([6.1, 4.2, 6.3], Math.floor));
 // { '4': [4.2], '6': [6.1, 6.3] }
 console.log(groupBy([{ t: 'a' }, { t: 'b' }, { t: 'a' }], 't'));
 // { a: [{t:'a'}, {t:'a'}], b: [{t:'b'}] }
 
-module.exports = { groupBy };
+module.exports = { groupBy, groupByMap, groupByMany };

@@ -17,11 +17,6 @@
  * 输入： deepMerge({ a: 1, b: { x: 1 } }, { b: { y: 2 }, c: 3 })
  * 输出： { a: 1, b: { x: 1, y: 2 }, c: 3 }
  *
- * ——— 延伸 ———
- * - 多个 source 从左到右 fold：sources.reduce(deepMerge, target)。
- * - 数组合并策略：整段覆盖（本实现）/ concat / 按下标再合。lodash.merge 按下列标合。
- * - mergeWith 的 customizer：某个 key 想自己决定怎么合，数组 concat 就靠它。
- *
  * ——— 常见追问 ———
  * Q: 为什么数组不递归合？
  * A: 配置里数组多半是整份替换，[1,2] 合 [3] 很少有人想要 [3,2]。
@@ -39,8 +34,56 @@
  */
 
 function isPlainObject(value) {
-  // 数组不当纯对象，否则 [1] 会合出带数字键的怪对象
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+  if (value === null || Object.prototype.toString.call(value) !== '[object Object]') return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+/**
+ * 延伸 1：合并多个 source
+ *
+ * 需求：从左到右合并任意多个配置，后面的值覆盖前面的值。
+ *
+ * 思路：以 target 为累加器，对 sources 依次调用 deepMerge。
+ *
+ * ——— 示例 ———
+ * 输入：mergeAll({a:1}, {b:2}, {a:3})
+ * 输出：{a:3,b:2}
+ */
+function mergeAll(target, ...sources) {
+  return sources.reduce((result, source) => deepMerge(result, source), target);
+}
+
+/**
+ * 延伸 2：mergeWith 自定义合并策略
+ *
+ * 需求：customizer(targetValue, sourceValue, key, path) 可接管某个字段；
+ * 返回 undefined 时使用默认规则。默认数组仍整段覆盖。
+ *
+ * 思路：
+ * 1. 每个 key 先询问 customizer。
+ * 2. 有明确返回值就采用；否则两个纯对象继续递归。
+ * 3. 拦截危险 key，避免配置对象触发原型污染。
+ *
+ * ——— 示例 ———
+ * 输入：mergeWith({tags:['a']}, {tags:['b']}, (a,b) => 数组时 a.concat(b))
+ * 输出：{tags:['a','b']}
+ */
+function mergeWith(target, source, customizer, path = []) {
+  const result = isPlainObject(target) ? { ...target } : {};
+  for (const key of Object.keys(source)) {
+    if (key === '__proto__' || key === 'prototype' || key === 'constructor') continue;
+    const nextPath = path.concat(key);
+    const custom = customizer(result[key], source[key], key, nextPath);
+    if (custom !== undefined) {
+      result[key] = custom;
+    } else if (isPlainObject(result[key]) && isPlainObject(source[key])) {
+      result[key] = mergeWith(result[key], source[key], customizer, nextPath);
+    } else {
+      result[key] = source[key];
+    }
+  }
+  return result;
 }
 
 function deepMerge(target, source) {
@@ -48,6 +91,7 @@ function deepMerge(target, source) {
   const keys = Object.keys(source);
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
+    if (key === '__proto__' || key === 'prototype' || key === 'constructor') continue;
     const sv = source[key];
     const tv = result[key];
     if (isPlainObject(tv) && isPlainObject(sv)) {
@@ -63,4 +107,4 @@ function deepMerge(target, source) {
 console.log(deepMerge({ a: 1, b: { x: 1 } }, { b: { y: 2 }, c: 3 }));
 // { a: 1, b: { x: 1, y: 2 }, c: 3 }
 
-module.exports = { deepMerge };
+module.exports = { deepMerge, mergeAll, mergeWith, isPlainObject };

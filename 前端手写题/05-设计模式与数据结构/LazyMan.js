@@ -23,12 +23,6 @@
  *   Eat lunch~
  *   Eat dinner~
  *
- * ——— 延伸 ———
- * - 和 Runner 同构。Runner 没有 sleepFirst，多了 wait 写在链中间。
- * - 改 Promise 链：this.queue = this.queue.then(task)。sleepFirst 不好做，
- *   因为 then 已经挂上的环摘不下来，还是数组 + unshift 更顺。
- * - queueMicrotask 替换 setTimeout(0)，启动更贴同步链结束的那一拍。
- *
  * ——— 常见追问 ———
  * Q: 为什么 Hi 不能在 constructor 里立刻打印？
  * A: sleepFirst 要插到 Hi 前面。Hi 若已经打出来，unshift 也救不了。
@@ -84,8 +78,87 @@ function lazyMan(name) {
   return new LazyManClass(name);
 }
 
+/**
+ * 延伸 1：支持自定义异步任务
+ *
+ * 需求：除 eat / sleep 外，再提供 do(task)，task 可以返回普通值或 Promise；
+ * 前一个任务完成后才执行下一个。启动用 queueMicrotask，紧跟在同步链结束之后。
+ *
+ * 思路：
+ * 1. 队列里的每一项都统一成返回 Promise 的函数。
+ * 2. 微任务启动 async drain，while 循环逐项 await。
+ * 3. sleepFirst 仍然 unshift，因此比已经排好的问候任务更早执行。
+ *
+ * ——— 示例 ———
+ * 输入：lazyManAsync('Tony').do(() => fetchData()).eat('lunch')
+ * 输出：问候、等待 fetchData、吃午饭，严格按顺序执行
+ */
+class LazyManAsync {
+  constructor(name) {
+    this.queue = [async () => console.log(`Hi! This is ${name}!`)];
+    this.cancelled = false;
+    this.errorHandler = null;
+    queueMicrotask(() => this._drain());
+  }
+
+  async _drain() {
+    while (!this.cancelled && this.queue.length > 0) {
+      const task = this.queue.shift();
+      try {
+        await task();
+      } catch (error) {
+        if (this.errorHandler) this.errorHandler(error);
+        else queueMicrotask(() => { throw error; });
+        break;
+      }
+    }
+  }
+
+  eat(food) {
+    this.queue.push(async () => console.log(`Eat ${food}~`));
+    return this;
+  }
+
+  sleep(sec) {
+    this.queue.push(() => new Promise((resolve) => setTimeout(resolve, sec * 1000)));
+    return this;
+  }
+
+  sleepFirst(sec) {
+    this.queue.unshift(() => new Promise((resolve) => setTimeout(resolve, sec * 1000)));
+    return this;
+  }
+
+  do(task) {
+    this.queue.push(() => Promise.resolve().then(task));
+    return this;
+  }
+
+  catch(handler) {
+    this.errorHandler = handler;
+    return this;
+  }
+
+  /**
+   * 延伸 2：取消尚未开始的任务
+   *
+   * 需求：cancel 后清空等待队列。当前已经启动的异步任务不会被强停，
+   *       它结束后 drain 看到 cancelled 就退出。
+   *
+   * 思路：取消只能阻止未启动工作；底层请求要真正终止，task 仍需自己使用 AbortSignal。
+   */
+  cancel() {
+    this.cancelled = true;
+    this.queue.length = 0;
+  }
+}
+
+function lazyManAsync(name) {
+  return new LazyManAsync(name);
+}
+
 // —— 自测 ——
 lazyMan('Tony').eat('lunch').sleepFirst(1).eat('dinner');
 // 1s 后：Hi! This is Tony! / Eat lunch~ / Eat dinner~
 
-module.exports = { lazyMan, LazyManClass };
+module.exports = { lazyMan, LazyManClass, lazyManAsync, LazyManAsync };

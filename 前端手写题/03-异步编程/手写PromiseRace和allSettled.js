@@ -19,11 +19,6 @@
  * allSettled 输入： [ Promise.resolve(1), Promise.reject('err') ]
  * allSettled 输出： [ {status:'fulfilled', value:1}, {status:'rejected', reason:'err'} ]
  *
- * ——— 延伸 ———
- * - any：第一个成功就赢，全失败才 reject AggregateError。失败会被跳过。
- * - 空数组：race 永远 pending（没人敲门）；allSettled 立刻 []。
- * - 超时：`promiseRace([job, sleep(ms).then(() => Promise.reject('timeout'))])`。
- *
  * ——— 常见追问 ———
  * Q: race 空数组为什么会 pending？
  * A: 没有 then 会被调用，resolve/reject 没人触发。规范就是挂着。
@@ -74,6 +69,64 @@ function promiseAllSettled(promises) {
   });
 }
 
+/**
+ * 延伸 1：手写 Promise.any
+ *
+ * 需求：第一个成功的 Promise 胜出；失败项先记下来，只有全部失败才 reject AggregateError。
+ * 错误数组也要按输入顺序排列。
+ *
+ * 思路：
+ * 1. 任意 fulfilled 直接 resolve。
+ * 2. rejected 按下标写入 errors，并累计失败数。
+ * 3. 空可迭代或失败数到齐时，reject AggregateError。
+ *
+ * ——— 示例 ———
+ * 输入：[Promise.reject('x'), Promise.resolve('ok')]
+ * 输出：'ok'
+ */
+function promiseAny(promises) {
+  return new Promise((resolve, reject) => {
+    const list = Array.from(promises);
+    const errors = new Array(list.length);
+    if (list.length === 0) {
+      reject(new AggregateError([], 'All promises were rejected'));
+      return;
+    }
+    let rejected = 0;
+    list.forEach((promise, index) => {
+      Promise.resolve(promise).then(resolve, (error) => {
+        errors[index] = error;
+        if (++rejected === list.length) {
+          reject(new AggregateError(errors, 'All promises were rejected'));
+        }
+      });
+    });
+  });
+}
+
+/**
+ * 延伸 2：超时包装 withTimeout
+ *
+ * 需求：目标 Promise 在 timeout 毫秒内没有落定，就以 TimeoutError 拒绝。
+ *
+ * 思路：目标任务和超时任务做 race，结束后清理定时器。
+ *
+ * ——— 示例 ———
+ * 输入：withTimeout(new Promise(r => setTimeout(r, 500)), 100)
+ * 输出：约 100ms 后 reject TimeoutError
+ */
+function withTimeout(promise, timeout) {
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error(`任务超过 ${timeout}ms`);
+      error.name = 'TimeoutError';
+      reject(error);
+    }, timeout);
+  });
+  return promiseRace([promise, timeoutPromise]).finally(() => clearTimeout(timer));
+}
+
 // —— 自测 ——
 promiseRace([
   new Promise((r) => setTimeout(() => r('slow'), 200)),
@@ -86,4 +139,4 @@ promiseAllSettled([
 ]).then((v) => console.log(v));
 // [{status:'fulfilled',value:1}, {status:'rejected',reason:'err'}]
 
-module.exports = { promiseRace, promiseAllSettled };
+module.exports = { promiseRace, promiseAllSettled, promiseAny, withTimeout };

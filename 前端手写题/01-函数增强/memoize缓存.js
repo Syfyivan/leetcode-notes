@@ -19,12 +19,6 @@
  * 输入： fast(4); fast(4);
  * 输出： 两次都返回 16，但 slow 只真正执行 1 次（calls === 1）
  *
- * ——— 延伸 ———
- * - 缓存会无限涨。真用要 LRU 或 TTL；组件卸载记得清，别把过期结果一直握着。
- * - WeakMap：对象当 key 且允许被 GC。resolver 一旦 stringify 成字符串，WeakMap 就用不上。
- * - 递归函数要在定义里就走缓存（斐波那契内部调 memoFib），外层包一层包不到里面那次。
- * - JSON.stringify 当 key：键顺序敏感，循环引用会炸。对象默认按引用比，两个 {} 是两次计算。
- *
  * ——— 常见追问 ———
  * Q: 为什么默认只拿第一个参数当 key？
  * A: lodash 同款。多数场景就一个参数。多参自己传 resolver，常见是 JSON.stringify(args)。
@@ -53,6 +47,80 @@ function memoize(fn, resolver) {
   };
 }
 
+/**
+ * 延伸 1：TTL 过期缓存
+ *
+ * 需求：结果只在 ttl 毫秒内有效。过期后的第一次调用重新计算，并刷新过期时间。
+ * 典型场景：缓存接口配置或权限信息，既省重复请求，也不能永远返回旧数据。
+ *
+ * 思路：
+ * 1. Map 的值不只存结果，还存 expiresAt。
+ * 2. 命中时先看当前时间。未过期直接返回，过期就删掉再算。
+ * 3. 把 cache 和 clear 暴露在包装函数上，调用方可主动失效。
+ *
+ * ——— 示例 ———
+ * 输入： const get = memoizeWithTTL(x => x * 2, 1000); get(2); get(2)
+ * 输出： 一秒内两次都返回 4，原函数只执行一次
+ */
+function memoizeWithTTL(fn, ttl, resolver) {
+  const cache = new Map();
+
+  function memoized(...args) {
+    const key = resolver ? resolver(...args) : args[0];
+    const entry = cache.get(key);
+    if (entry && entry.expiresAt > Date.now()) return entry.value;
+    if (entry) cache.delete(key);
+
+    const value = fn.apply(this, args);
+    cache.set(key, { value, expiresAt: Date.now() + ttl });
+    return value;
+  }
+
+  memoized.cache = cache;
+  memoized.clear = () => cache.clear();
+  return memoized;
+}
+
+/**
+ * 延伸 2：限制容量的 LRU 缓存
+ *
+ * 需求：最多保留 maxSize 条。缓存满后加入新 key，要淘汰最久没被使用的那条。
+ *
+ * 思路：
+ * 1. Map 会保留插入顺序，最前面的 key 就是最久没碰的。
+ * 2. 每次命中先 delete 再 set，把它挪到队尾。
+ * 3. 超过上限时删除 cache.keys().next().value。
+ *
+ * ——— 示例 ———
+ * 输入：容量 2，依次调用 a、b、a、c
+ * 输出：b 被淘汰；a 因刚命中过而留下
+ */
+function memoizeLRU(fn, maxSize = 100, resolver) {
+  if (!Number.isInteger(maxSize) || maxSize < 1) {
+    throw new RangeError('maxSize 必须是正整数');
+  }
+  const cache = new Map();
+
+  function memoized(...args) {
+    const key = resolver ? resolver(...args) : args[0];
+    if (cache.has(key)) {
+      const value = cache.get(key);
+      cache.delete(key);
+      cache.set(key, value);
+      return value;
+    }
+
+    const value = fn.apply(this, args);
+    cache.set(key, value);
+    if (cache.size > maxSize) cache.delete(cache.keys().next().value);
+    return value;
+  }
+
+  memoized.cache = cache;
+  memoized.clear = () => cache.clear();
+  return memoized;
+}
+
 // —— 自测 ——
 let calls = 0;
 const slow = (n) => { calls++; return n * n; };
@@ -61,4 +129,4 @@ console.log(fast(4)); // 16
 console.log(fast(4)); // 16
 console.log(calls);   // 1
 
-module.exports = { memoize };
+module.exports = { memoize, memoizeWithTTL, memoizeLRU };

@@ -19,11 +19,6 @@
  *          () => resolve(3) ]
  * 输出： 依次执行后 resolve -> [1, 2, 3]
  *
- * ——— 延伸 ———
- * - reduce 版：累加器是 Promise，每次 then 再跑下一个。不写 async 也能串。
- * - 中途失败继续：catch 后 push 个标记，类似串行的 allSettled。
- * - 管道：后一个函数吃前一个的返回值，有依赖时比独立任务更常见。
- *
  * ——— 常见追问 ———
  * Q: 和 Promise.all 差在哪？
  * A: all 一起发，总耗时约等于最慢那个。serial 一个接一个，总耗时是求和。
@@ -47,10 +42,70 @@ async function runSerial(tasks) {
   return results;
 }
 
+/**
+ * 延伸 1：reduce 串行版
+ *
+ * 需求：不使用 async / await，仍保证每个任务等前一个完成后才开始。
+ *
+ * 思路：累加器始终是一条 Promise 链。每一轮在 then 中启动当前任务，
+ * 再把结果 push 进去并把同一个结果数组传到下一轮。
+ *
+ * ——— 示例 ———
+ * 输入：runSerialReduce([() => Promise.resolve(1), () => Promise.resolve(2)])
+ * 输出：Promise 最终兑现为 [1, 2]
+ */
+function runSerialReduce(tasks) {
+  return tasks.reduce(
+    (chain, task) => chain.then((results) =>
+      Promise.resolve().then(task).then((value) => {
+        results.push(value);
+        return results;
+      })
+    ),
+    Promise.resolve([])
+  );
+}
+
+/**
+ * 延伸 2：有依赖的异步管道
+ *
+ * 需求：第一个任务接收 initialValue，后一个任务接收前一个的返回值。
+ * 典型场景：登录后拿用户 id，再查订单，最后格式化订单。
+ *
+ * 思路：从 Promise.resolve(initialValue) 起步，每轮 then 当前函数。
+ *
+ * ——— 示例 ———
+ * 输入：runPipeline([x => x + 1, async x => x * 2], 5)
+ * 输出：12
+ */
+function runPipeline(tasks, initialValue) {
+  return tasks.reduce(
+    (chain, task) => chain.then((value) => task(value)),
+    Promise.resolve(initialValue)
+  );
+}
+
+/**
+ * 延伸 3：串行 allSettled
+ *
+ * 需求：任务失败后仍继续执行下一项，最终收集每项状态。
+ */
+async function runSerialSettled(tasks) {
+  const results = [];
+  for (const task of tasks) {
+    try {
+      results.push({ status: 'fulfilled', value: await task() });
+    } catch (reason) {
+      results.push({ status: 'rejected', reason });
+    }
+  }
+  return results;
+}
+
 // —— 自测 ——
 const delay = (v, ms) => () => new Promise((r) => setTimeout(() => r(v), ms));
 runSerial([delay(1, 30), delay(2, 10), delay(3, 0)]).then((res) =>
   console.log(res)
 ); // [1, 2, 3]
 
-module.exports = { runSerial };
+module.exports = { runSerial, runSerialReduce, runPipeline, runSerialSettled };

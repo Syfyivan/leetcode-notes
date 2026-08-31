@@ -19,12 +19,6 @@
  *        retry(fn, 3, 10)
  * 输出： 最终 resolve -> 'ok'
  *
- * ——— 延伸 ———
- * - 指数退避：delay * 2^n，服务挂了别用固定间隔猛打。
- * - 可取消：重试前看 AbortSignal，清掉等待的 timer。
- * - 只对 5xx / 网络错误重试，4xx 没必要。
- * - times 要说清：这份是「失败后再试 times 次」，总共最多 times+1 次。
- *
  * ——— 常见追问 ———
  * Q: times=3 一共调几次？
  * A: 最多 4 次。先调一次，失败再试 3 次。开口先问清包不包含第一次。
@@ -48,6 +42,121 @@ function retry(fn, times, delay) {
   });
 }
 
+/**
+ * 延伸 1：指数退避 + 错误筛选
+ *
+ * 需求：每次等待按 baseDelay * factor^attempt 增长，并用 shouldRetry 决定该错误是否值得重试。
+ * 典型场景：网络错误和 5xx 可重试；参数错误、鉴权失败等 4xx 应直接交给调用方。
+ *
+ * 思路：
+ * 1. attempt 从 0 开始，第一次请求仍然立刻发出。
+ * 2. 失败后先检查次数和 shouldRetry，再等待本轮退避时间。
+ * 3. maxDelay 给等待时间封顶，避免重试间隔无限增长。
+ *
+ * ——— 示例 ———
+ * 输入：retries=3, baseDelay=100, factor=2
+ * 输出：最多调用 4 次，三次重试前分别等待约 100、200、400ms
+ */
+async function retryWithOptions(fn, options = {}) {
+  const {
+    retries = 3,
+    baseDelay = 100,
+    factor = 2,
+    maxDelay = Infinity,
+    shouldRetry = () => true,
+    signal,
+  } = options;
+
+  function abortError() {
+    const error = new Error('重试已取消');
+    error.name = 'AbortError';
+    return error;
+  }
+
+  function wait(ms) {
+    return new Promise((resolve, reject) => {
+      if (signal?.aborted) {
+        reject(signal.reason || abortError());
+        return;
+      }
+      const timer = setTimeout(() => {
+        signal?.removeEventListener('abort', onAbort);
+        resolve();
+      }, ms);
+      function onAbort() {
+        clearTimeout(timer);
+        reject(signal.reason || abortError());
+      }
+      signal?.addEventListener('abort', onAbort, { once: true });
+    });
+  }
+
+  for (let attempt = 0; ; attempt++) {
+    if (signal?.aborted) throw signal.reason || abortError();
+    try {
+      return await fn(attempt, signal);
+    } catch (error) {
+      if (attempt >= retries || !shouldRetry(error, attempt)) throw error;
+      const delay = Math.min(maxDelay, baseDelay * (factor ** attempt));
+      await wait(delay);
+    }
+  }
+}
+
+/**
+ * 延伸 2：加入随机抖动 jitter
+ *
+ * 需求：大量客户端同时失败时，不要在相同时间点一起重试。等待时间随机落在 0 到 delay 之间。
+ *
+ * 思路：复用 retryWithOptions，只把每轮 factor 退避改成 full jitter。
+ * 这里通过包装 setTimeout 的基准参数展示公式，生产代码可把 random 注入以便测试。
+ */
+function retryWithJitter(fn, options = {}) {
+  const {
+    retries = 3,
+    baseDelay = 100,
+    factor = 2,
+    maxDelay = Infinity,
+    shouldRetry = () => true,
+    random = Math.random,
+    signal,
+  } = options;
+
+  const abortError = () => {
+    const error = new Error('重试已取消');
+    error.name = 'AbortError';
+    return error;
+  };
+  const wait = (ms) => new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason || abortError());
+      return;
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    function onAbort() {
+      clearTimeout(timer);
+      reject(signal.reason || abortError());
+    }
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
+
+  return (async () => {
+    for (let attempt = 0; ; attempt++) {
+      if (signal?.aborted) throw signal.reason || abortError();
+      try {
+        return await fn(attempt, signal);
+      } catch (error) {
+        if (attempt >= retries || !shouldRetry(error, attempt)) throw error;
+        const cap = Math.min(maxDelay, baseDelay * (factor ** attempt));
+        await wait(random() * cap);
+      }
+    }
+  })();
+}
+
 // —— 自测 ——
 let count = 0;
 const flaky = () =>
@@ -58,4 +167,4 @@ const flaky = () =>
 
 retry(flaky, 3, 10).then((res) => console.log(res)); // ok
 
-module.exports = { retry };
+module.exports = { retry, retryWithOptions, retryWithJitter };

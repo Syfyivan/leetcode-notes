@@ -17,11 +17,6 @@
  * 输入： new SingleStore() === new SingleStore()
  * 输出： true（两次拿到同一个实例）
  *
- * ——— 延伸 ———
- * - 模块当单例：`export const store = new Store()`。ESM / CJS 都只求值一次，很多全局 Store 够用。
- * - 静态 getInstance：实例挂 Ctor 上，不包一层。外面能改 Ctor.instance，测试好重置、生产易被踩。
- * - 按 key 分实例（multiton）：Map 缓存，同一组参数共用一个，弹窗/连接池常用。
- *
  * ——— 常见追问 ———
  * Q: 后面几次 new 传的参数去哪了？
  * A: 丢掉。只有第一次走 new Ctor(...args)，之后直接吐旧实例。
@@ -45,6 +40,64 @@ function singleton(Ctor) {
   };
 }
 
+/**
+ * 延伸 1：可重置单例
+ *
+ * 需求：生产中仍只构造一次，测试或退出登录时可以 reset，再次获取会创建新实例。
+ *
+ * 思路：把 getInstance 和 reset 都闭包在同一个 instance 上，不把实例字段暴露出去。
+ *
+ * ——— 示例 ———
+ * 输入：factory.getInstance(); factory.reset(); factory.getInstance()
+ * 输出：reset 前后是两个不同实例
+ */
+function singletonFactory(Ctor) {
+  let instance;
+  return {
+    getInstance(...args) {
+      if (instance === undefined) instance = new Ctor(...args);
+      return instance;
+    },
+    hasInstance() {
+      return instance !== undefined;
+    },
+    reset() {
+      instance = undefined;
+    },
+  };
+}
+
+/**
+ * 延伸 2：多例模式 multiton
+ *
+ * 需求：同一个 key 始终复用同一实例，不同 key 各有一份。
+ * 典型场景：按租户复用连接、按弹窗类型复用控制器。
+ *
+ * 思路：Map 从 key 映射到实例；首次读取时用 create(key, ...args) 构造。
+ *
+ * ——— 示例 ———
+ * 输入：pool.get('db-a') === pool.get('db-a')
+ * 输出：true；pool.get('db-a') !== pool.get('db-b')
+ */
+function multiton(create) {
+  const instances = new Map();
+  return {
+    get(key, ...args) {
+      if (!instances.has(key)) instances.set(key, create(key, ...args));
+      return instances.get(key);
+    },
+    delete(key) {
+      return instances.delete(key);
+    },
+    clear() {
+      instances.clear();
+    },
+    get size() {
+      return instances.size;
+    },
+  };
+}
+
 // —— 自测 ——
 class Store { constructor() { this.id = Math.random(); } }
 const SingleStore = singleton(Store);
@@ -52,4 +105,4 @@ const a = new SingleStore();
 const b = new SingleStore();
 console.log(a === b); // true
 
-module.exports = { singleton };
+module.exports = { singleton, singletonFactory, multiton };

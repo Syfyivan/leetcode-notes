@@ -23,11 +23,6 @@
  * 输入： new Dog('旺财').say()
  * 输出： 'I am 旺财'
  *
- * ——— 延伸 ———
- * - 静态方法：Object.setPrototypeOf(Child, Parent)，Child.create 才能摸到 Parent.create。
- * - class Child extends Parent：底层就是 inherit + constructor 里 super()（即 Parent.call(this)）。
- * - 组合继承：Child.prototype = new Parent()，父构造跑两次，原型上还会多一份无用的实例字段。
- *
  * ——— 常见追问 ———
  * Q: 为什么不用 new Parent() 接原型？
  * A: new 会跑父构造。父类若依赖参数，这一下就炸；还会把实例属性混进原型，子类们共享一份。
@@ -48,6 +43,50 @@ function inherit(Child, Parent) {
   Child.prototype.constructor = Child; // create 之后 constructor 指到了 Parent
 }
 
+/**
+ * 延伸 1：同时继承静态方法
+ *
+ * 需求：除了 Parent.prototype 上的实例方法，Child 还要能访问 Parent.create 等静态方法。
+ *
+ * 思路：实例原型链照旧；再用 Object.setPrototypeOf(Child, Parent) 接上构造函数本身的原型链。
+ *
+ * ——— 示例 ———
+ * 输入：Parent.create = () => 1；inheritWithStatics(Child, Parent)
+ * 输出：Child.create() === 1
+ */
+function inheritWithStatics(Child, Parent) {
+  inherit(Child, Parent);
+  Object.setPrototypeOf(Child, Parent);
+  return Child;
+}
+
+/**
+ * 延伸 2：保留子类原型上已经定义的方法
+ *
+ * 需求：调用 inherit 前，Child.prototype 可能已经写了方法。直接整体替换会把它们丢掉。
+ *
+ * 思路：先保存除 constructor 外的属性描述符，接好父原型后再定义回来。
+ * getter、setter、Symbol 方法和可枚举性都能保留。
+ *
+ * ——— 示例 ———
+ * 输入：Child.prototype.run = fn；inheritPreserve(Child, Parent)
+ * 输出：实例同时拥有 run 和父类方法
+ */
+function inheritPreserve(Child, Parent) {
+  const descriptors = Object.getOwnPropertyDescriptors(Child.prototype);
+  delete descriptors.constructor;
+  Child.prototype = Object.create(Parent.prototype, {
+    constructor: {
+      value: Child,
+      writable: true,
+      configurable: true,
+    },
+    ...descriptors,
+  });
+  Object.setPrototypeOf(Child, Parent);
+  return Child;
+}
+
 // —— 自测 ——
 function Animal(name) { this.name = name; }
 Animal.prototype.say = function () { return 'I am ' + this.name; };
@@ -59,4 +98,4 @@ console.log(d.say());                 // I am 旺财
 console.log(d instanceof Animal);     // true
 console.log(Dog.prototype.constructor === Dog); // true
 
-module.exports = { inherit };
+module.exports = { inherit, inheritWithStatics, inheritPreserve };

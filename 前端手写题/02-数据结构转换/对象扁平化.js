@@ -18,12 +18,6 @@
  * unflatten 输入： { 'a.b': 1, 'a.c.d': 2 }
  * unflatten 输出： { a: { b: 1, c: { d: 2 } } }
  *
- * ——— 延伸 ———
- * 面试常加数组：对象用点，数组用 [i]，null / undefined 丢掉。
- *   { a: 1, b: [1, { c: true }, [3]], g: null }
- *   → { a: 1, 'b[0]': 1, 'b[1].c': true, 'b[2][0]': 3 }
- * flatten / flattenIter 就是这个加强版，一个递归一个栈。
- *
  * ——— 常见追问 ———
  * Q: 为什么要先判断 Array.isArray，再判断 typeof === 'object'？
  * A: 数组也是 object。先走对象分支会拼成 b.0，题目要的是 b[0]。
@@ -69,8 +63,20 @@ function unflattenObject(obj) {
   return res;
 }
 
-// ---------- 延伸：带数组路径，null / undefined 丢弃 ----------
-
+/**
+ * 延伸 1：数组使用 [i] 路径
+ *
+ * 需求：对象字段用点连接，数组下标用方括号；null / undefined 不写入结果。
+ *
+ * 思路：
+ * 1. 数组先于普通对象判断，路径直接追加 [index]。
+ * 2. 对象追加 `.key`，顶层没有前缀点。
+ * 3. 走到基本类型才写结果；递归版和栈版产出相同。
+ *
+ * ——— 示例 ———
+ * 输入：{ a: 1, b: [1, { c: true }, [3]], g: null }
+ * 输出：{ a: 1, 'b[0]': 1, 'b[1].c': true, 'b[2][0]': 3 }
+ */
 function flatten(input) {
   const result = {};
 
@@ -133,6 +139,49 @@ function flattenIter(input) {
   return result;
 }
 
+/**
+ * 延伸 2：还原点路径和数组路径
+ *
+ * 需求：把 `a.b[0].c` 拆成字段序列，并根据下一段是不是数字决定创建对象还是数组。
+ * 同时拦住 __proto__ / constructor / prototype，避免不可信路径污染对象原型。
+ *
+ * 思路：
+ * 1. 正则同时提取点路径字段和方括号下标。
+ * 2. 下一段全是数字时建 []，否则建无原型对象。
+ * 3. 最后一段直接赋值；危险字段提前报错。
+ *
+ * ——— 示例 ———
+ * 输入：{ 'users[0].name': '小明', 'users[1].name': '小红' }
+ * 输出：{ users: [{ name: '小明' }, { name: '小红' }] }
+ */
+function unflatten(input) {
+  const result = Object.create(null);
+  const blocked = new Set(['__proto__', 'prototype', 'constructor']);
+
+  for (const [path, value] of Object.entries(input)) {
+    const parts = path.match(/[^.[\]]+/g) || [];
+    if (parts.length === 0) continue;
+    if (parts.some((part) => blocked.has(part))) {
+      throw new Error(`不安全的路径: ${path}`);
+    }
+
+    let current = result;
+    for (let i = 0; i < parts.length; i++) {
+      const key = parts[i];
+      if (i === parts.length - 1) {
+        current[key] = value;
+        break;
+      }
+      const nextIsIndex = /^\d+$/.test(parts[i + 1]);
+      if (current[key] == null) {
+        current[key] = nextIsIndex ? [] : Object.create(null);
+      }
+      current = current[key];
+    }
+  }
+  return result;
+}
+
 // —— 自测 ——
 console.log(flattenObject({ a: { b: 1, c: { d: 2 } } }));   // { 'a.b': 1, 'a.c.d': 2 }
 console.log(unflattenObject({ 'a.b': 1, 'a.c.d': 2 }));     // { a: { b: 1, c: { d: 2 } } }
@@ -147,4 +196,10 @@ console.log(flatten(nested));
 console.log(flattenIter(nested));
 // { a: 1, 'b[0]': 1, 'b[1]': 2, 'b[2].c': true, 'b[3][0]': 3, 'd.e': 2, 'd.f': 3 }
 
-module.exports = { flattenObject, unflattenObject, flatten, flattenIter };
+module.exports = {
+  flattenObject,
+  unflattenObject,
+  flatten,
+  flattenIter,
+  unflatten,
+};

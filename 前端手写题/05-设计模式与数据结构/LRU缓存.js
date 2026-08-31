@@ -23,12 +23,6 @@
  * get(3)   -> 3
  * get(4)   -> 4
  *
- * ——— 延伸 ———
- * - delete(key)：名册删、链表抽出。有这个方法才像真缓存。
- * - TTL：节点再带 expireAt，get 时过期当 miss，顺手删。
- * - LFU：按次数淘汰。哈希 + 频次桶（每个次数一条链表），比 LRU 重一档。
- * - 为什么不用普通对象当名册：数字键会被排序，"最旧"会乱。
- *
  * ——— 常见追问 ———
  * Q: 为什么哈希还要再加一条链表？
  * A: 哈希只能 O(1) 点名，不知道谁最久没被摸。链表左边最旧、右边最新，
@@ -63,6 +57,9 @@
 
 class LRUCache {
   constructor(capacity) {
+    if (!Number.isInteger(capacity) || capacity < 0) {
+      throw new RangeError('capacity 必须是非负整数');
+    }
     this.capacity = capacity;
     this.cache = new Map(); // 只用插入序，当「左旧右新」的队列
   }
@@ -76,6 +73,7 @@ class LRUCache {
   }
 
   put(key, value) {
+    if (this.capacity === 0) return;
     if (this.cache.has(key)) {
       this.cache.delete(key); // 已有 key：先摘掉，下面 set 才会到队尾
     } else if (this.cache.size >= this.capacity) {
@@ -83,6 +81,14 @@ class LRUCache {
       this.cache.delete(oldestKey);
     }
     this.cache.set(key, value);
+  }
+
+  delete(key) {
+    return this.cache.delete(key);
+  }
+
+  clear() {
+    this.cache.clear();
   }
 }
 
@@ -108,6 +114,9 @@ class Node {
 
 class LRUCacheLinked {
   constructor(capacity) {
+    if (!Number.isInteger(capacity) || capacity < 0) {
+      throw new RangeError('capacity 必须是非负整数');
+    }
     this.capacity = capacity;
     this.map = new Map(); // 名册：key -> 节点。不用 Map 的插入序
     this.head = new Node(0, 0); // 空门岗，不当缓存数据
@@ -144,6 +153,7 @@ class LRUCacheLinked {
   }
 
   put(key, value) {
+    if (this.capacity === 0) return;
     if (this.map.has(key)) {
       const node = this.map.get(key);
       node.value = value;
@@ -160,6 +170,143 @@ class LRUCacheLinked {
       this._remove(oldest);
       this.map.delete(oldest.key); // 链表和名册必须一起删
     }
+  }
+
+  delete(key) {
+    const node = this.map.get(key);
+    if (!node) return false;
+    this._remove(node);
+    this.map.delete(key);
+    return true;
+  }
+
+  clear() {
+    this.map.clear();
+    this.head.next = this.tail;
+    this.tail.prev = this.head;
+  }
+}
+
+/**
+ * 延伸 1：带 TTL 的 LRU
+ *
+ * 需求：每条缓存写入后只存活 ttl 毫秒。get 命中过期项时按 miss 处理并删除；
+ * 容量满时仍淘汰最久未使用的有效项。
+ *
+ * 思路：
+ * 1. Map 的 value 保存 value 和 expiresAt。
+ * 2. get 先查过期，再用 delete + set 刷新 LRU 顺序。
+ * 3. put 前清掉已过期项，避免死数据占容量。
+ *
+ * ——— 示例 ———
+ * 输入：new LRUCacheTTL(2, 100).put('a', 1)，100ms 后 get('a')
+ * 输出：-1
+ */
+class LRUCacheTTL {
+  constructor(capacity, ttl, now = Date.now) {
+    if (!Number.isInteger(capacity) || capacity < 0) {
+      throw new RangeError('capacity 必须是非负整数');
+    }
+    this.capacity = capacity;
+    this.ttl = ttl;
+    this.now = now;
+    this.cache = new Map();
+  }
+
+  _purgeExpired() {
+    const now = this.now();
+    for (const [key, entry] of this.cache) {
+      if (entry.expiresAt <= now) this.cache.delete(key);
+    }
+  }
+
+  get(key) {
+    const entry = this.cache.get(key);
+    if (!entry) return -1;
+    if (entry.expiresAt <= this.now()) {
+      this.cache.delete(key);
+      return -1;
+    }
+    this.cache.delete(key);
+    this.cache.set(key, entry);
+    return entry.value;
+  }
+
+  put(key, value, ttl = this.ttl) {
+    if (this.capacity === 0) return;
+    this._purgeExpired();
+    if (this.cache.has(key)) this.cache.delete(key);
+    this.cache.set(key, { value, expiresAt: this.now() + ttl });
+    if (this.cache.size > this.capacity) {
+      this.cache.delete(this.cache.keys().next().value);
+    }
+  }
+}
+
+/**
+ * 延伸 2：LFU 最少使用频次缓存
+ *
+ * 需求：容量满时淘汰访问次数最少的 key；次数相同则淘汰其中最久没使用的。
+ * get 和更新已有 key 都会把频次加一。
+ *
+ * 思路：
+ * 1. entries 保存 key -> {value, frequency}。
+ * 2. buckets 保存 frequency -> Map<key, true>，Map 的第一个 key 是该频次下最旧的。
+ * 3. minFrequency 直接指向当前最低频次，淘汰无需扫描全部 key。
+ *
+ * ——— 示例 ———
+ * 输入：容量 2，put a、put b、get a、put c
+ * 输出：b 频次最低被淘汰，a 和 c 留下
+ */
+class LFUCache {
+  constructor(capacity) {
+    if (!Number.isInteger(capacity) || capacity < 0) {
+      throw new RangeError('capacity 必须是非负整数');
+    }
+    this.capacity = capacity;
+    this.entries = new Map();
+    this.buckets = new Map();
+    this.minFrequency = 0;
+  }
+
+  _touch(key) {
+    const entry = this.entries.get(key);
+    const oldFrequency = entry.frequency;
+    const oldBucket = this.buckets.get(oldFrequency);
+    oldBucket.delete(key);
+    if (oldBucket.size === 0) {
+      this.buckets.delete(oldFrequency);
+      if (this.minFrequency === oldFrequency) this.minFrequency++;
+    }
+    entry.frequency++;
+    if (!this.buckets.has(entry.frequency)) this.buckets.set(entry.frequency, new Map());
+    this.buckets.get(entry.frequency).set(key, true);
+  }
+
+  get(key) {
+    if (!this.entries.has(key)) return -1;
+    this._touch(key);
+    return this.entries.get(key).value;
+  }
+
+  put(key, value) {
+    if (this.capacity === 0) return;
+    if (this.entries.has(key)) {
+      this.entries.get(key).value = value;
+      this._touch(key);
+      return;
+    }
+    if (this.entries.size >= this.capacity) {
+      const bucket = this.buckets.get(this.minFrequency);
+      const oldestKey = bucket.keys().next().value;
+      bucket.delete(oldestKey);
+      if (bucket.size === 0) this.buckets.delete(this.minFrequency);
+      this.entries.delete(oldestKey);
+    }
+    this.entries.set(key, { value, frequency: 1 });
+    if (!this.buckets.has(1)) this.buckets.set(1, new Map());
+    this.buckets.get(1).set(key, true);
+    this.minFrequency = 1;
   }
 }
 
@@ -182,4 +329,10 @@ function runExample(label, Cache) {
 runExample('Map', LRUCache);
 runExample('哈希+链表', LRUCacheLinked);
 
-module.exports = { LRUCache, LRUCacheLinked, Node };
+module.exports = {
+  LRUCache,
+  LRUCacheLinked,
+  LRUCacheTTL,
+  LFUCache,
+  Node,
+};

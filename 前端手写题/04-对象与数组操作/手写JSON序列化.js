@@ -22,13 +22,6 @@
  * 输入： jsonParse('{"a":1,"b":[true,null]}')
  * 输出： { a: 1, b: [true, null] }
  *
- * ——— 延伸 ———
- * - replacer：第二参是函数就改每个值，是数组就当白名单。第三参 space 用来缩进。
- * - 对象上有 toJSON 先调它，Date 才变成 ISO 字符串。
- * - 循环引用规范要求抛 TypeError；BigInt 直接抛；顶层 undefined / 函数
- *   返回 JS 的 undefined（JSON.stringify 同款）。
- * - parse 的 reviver 从叶子往根走，返回 undefined 就删这个键。
- *
  * ——— 常见追问 ———
  * Q: 对象里的 undefined 和数组里的为什么处理不一样？
  * A: 规范如此。对象省略这个键，数组写成 null，长度不能塌。
@@ -147,7 +140,13 @@ function jsonParse(str) {
       const key = parseString();
       skipSpace();
       i++; // 吃掉 :
-      obj[key] = parseValue();
+      // defineProperty 可把 "__proto__" 当普通数据键，避免触发原型 setter。
+      Object.defineProperty(obj, key, {
+        value: parseValue(),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
       skipSpace();
       if (str[i] === ',') { i++; continue; }
       i++;
@@ -159,10 +158,137 @@ function jsonParse(str) {
   return parseValue();
 }
 
+/**
+ * 延伸 1：replacer / space / toJSON / 循环引用
+ *
+ * 需求：补齐 JSON.stringify 的高频进阶规则：
+ *   - 对象有 toJSON 时先调用；
+ *   - replacer 函数可替换值，replacer 数组可筛选对象 key；
+ *   - space 控制缩进，最多取 10 个空格或 10 个字符；
+ *   - 循环引用和 BigInt 抛 TypeError；字符串补齐控制字符转义。
+ *
+ * 思路：
+ * 1. 用 holder + key 调度每个值，才能给 replacer 正确的 this 和 key。
+ * 2. Set 只记录当前递归路径。兄弟字段共享同一对象不是循环，离开该对象时要 delete。
+ * 3. indent 记录当前缩进，数组和对象按 gap 决定紧凑或换行格式。
+ *
+ * ——— 示例 ———
+ * 输入：jsonStringifyComplete({a:1,b:2}, ['a'], 2)
+ * 输出：只保留 a，并使用两个空格格式化
+ */
+function jsonStringifyComplete(value, replacer, space) {
+  const replacerFn = typeof replacer === 'function' ? replacer : null;
+  const propertyList = Array.isArray(replacer)
+    ? [...new Set(replacer
+      .filter((item) => typeof item === 'string' || typeof item === 'number')
+      .map(String))]
+    : null;
+  const gap = typeof space === 'number'
+    ? ' '.repeat(Math.min(10, Math.max(0, Math.floor(space))))
+    : typeof space === 'string' ? space.slice(0, 10) : '';
+  const stack = new Set();
+
+  function quote(text) {
+    const escapes = {
+      '"': '\\"',
+      '\\': '\\\\',
+      '\b': '\\b',
+      '\f': '\\f',
+      '\n': '\\n',
+      '\r': '\\r',
+      '\t': '\\t',
+    };
+    return '"' + String(text).replace(/[\\"\u0000-\u001f]/g, (char) =>
+      escapes[char] || `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`
+    ) + '"';
+  }
+
+  function serialize(key, holder, indent) {
+    let current = holder[key];
+    if (current && typeof current === 'object' && typeof current.toJSON === 'function') {
+      current = current.toJSON(key);
+    }
+    if (replacerFn) current = replacerFn.call(holder, key, current);
+
+    if (current === null) return 'null';
+    if (typeof current === 'string') return quote(current);
+    if (typeof current === 'number') return Number.isFinite(current) ? String(current) : 'null';
+    if (typeof current === 'boolean') return String(current);
+    if (typeof current === 'bigint') throw new TypeError('BigInt 不能序列化为 JSON');
+    if (typeof current !== 'object') return undefined;
+    if (stack.has(current)) throw new TypeError('Converting circular structure to JSON');
+
+    stack.add(current);
+    const nextIndent = indent + gap;
+    let output;
+    if (Array.isArray(current)) {
+      const parts = [];
+      for (let i = 0; i < current.length; i++) {
+        parts.push(serialize(String(i), current, nextIndent) ?? 'null');
+      }
+      output = gap && parts.length
+        ? `[\n${nextIndent}${parts.join(`,\n${nextIndent}`)}\n${indent}]`
+        : `[${parts.join(',')}]`;
+    } else {
+      const keys = propertyList || Object.keys(current);
+      const parts = [];
+      for (const itemKey of keys) {
+        if (!Object.prototype.hasOwnProperty.call(current, itemKey)) continue;
+        const item = serialize(itemKey, current, nextIndent);
+        if (item !== undefined) parts.push(`${quote(itemKey)}${gap ? ': ' : ':'}${item}`);
+      }
+      output = gap && parts.length
+        ? `{\n${nextIndent}${parts.join(`,\n${nextIndent}`)}\n${indent}}`
+        : `{${parts.join(',')}}`;
+    }
+    stack.delete(current);
+    return output;
+  }
+
+  return serialize('', { '': value }, '');
+}
+
+/**
+ * 延伸 2：parse reviver
+ *
+ * 需求：解析完成后从叶子向根调用 reviver(key, value)。返回 undefined 就删除该属性，
+ * 返回其他值就用它替换。可用来把 ISO 字符串还原成 Date。
+ *
+ * 思路：先完成语法解析，再做一次后序遍历；先处理孩子，最后处理父节点。
+ *
+ * ——— 示例 ———
+ * 输入：jsonParseWithReviver('{"n":1}', (key, value) => key === 'n' ? value + 1 : value)
+ * 输出：{ n: 2 }
+ */
+function jsonParseWithReviver(text, reviver) {
+  const parsed = jsonParse(text);
+  if (typeof reviver !== 'function') return parsed;
+  const root = { '': parsed };
+
+  function walk(holder, key) {
+    let value = holder[key];
+    if (value !== null && typeof value === 'object') {
+      for (const childKey of Object.keys(value)) {
+        const next = walk(value, childKey);
+        if (next === undefined) delete value[childKey];
+        else value[childKey] = next;
+      }
+    }
+    return reviver.call(holder, key, value);
+  }
+
+  return walk(root, '');
+}
+
 // —— 自测 ——
 console.log(jsonStringify({ a: 1, b: [true, null], c: 'hi' }));
 // {"a":1,"b":[true,null],"c":"hi"}
 console.log(jsonParse('{"a":1,"b":[true,null]}'));
 // { a: 1, b: [ true, null ] }
 
-module.exports = { jsonStringify, jsonParse };
+module.exports = {
+  jsonStringify,
+  jsonParse,
+  jsonStringifyComplete,
+  jsonParseWithReviver,
+};

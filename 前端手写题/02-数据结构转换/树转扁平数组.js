@@ -34,11 +34,6 @@
  * 注意：数组里节点的先后顺序取决于你怎么遍历（深度优先 / 逐层），
  * 只要"父节点在前、且 parentId 关系正确"即可，顺序本身不唯一。
  *
- * ——— 延伸 ———
- * - BFS 逐层拍：同层兄弟会挨在一起。DFS 是一条腿走到底。
- * - parentId 现场生成：遍历时把父 id 当参数传，节点上可以不带这个字段。
- * - 顺手记 depth：表格缩进、面包屑能直接用。
- *
  * ——— 常见追问 ———
  * Q: 为什么先 push 再走 children？
  * A: 前序。父一定排在子前面。后序的话，回头挂树会找不到父。
@@ -100,7 +95,60 @@ function treeToList(nodes) {
    return res;
 }
 
+/**
+ * 延伸 1：BFS 逐层拍平
+ *
+ * 需求：输出顺序按层级排列，同一层的节点连续出现。
+ * 典型场景：分层统计、按层渲染，或希望先拿到所有浅层节点。
+ *
+ * 思路：
+ * 1. 根节点先全部入队。
+ * 2. 每次出队一个节点，去掉 children 后写入结果，再把孩子放到队尾。
+ * 3. 用 head 下标代替 shift，避免每次移动整个数组。
+ *
+ * ——— 示例 ———
+ * 输入：1 的孩子为 2、3，2 的孩子为 4
+ * 输出顺序：1、2、3、4
+ */
+function treeToListBFS(nodes) {
+  const result = [];
+  const queue = [...nodes];
+  let head = 0;
+  while (head < queue.length) {
+    const node = queue[head++];
+    const { children = [], ...rest } = node;
+    result.push(rest);
+    queue.push(...children);
+  }
+  return result;
+}
+
+/**
+ * 延伸 2：现场生成 parentId 和 depth
+ *
+ * 需求：源树不要求自带 parentId。遍历时根据上下级关系补出 parentId，
+ *       再额外写入 depth，方便表格缩进和层级筛选。
+ *
+ * 思路：DFS 参数携带父 id 和当前深度；根的 parentId 统一用 null。
+ *
+ * ——— 示例 ———
+ * 输入：[{ id: 1, children: [{ id: 2 }] }]
+ * 输出：[{ id: 1, parentId: null, depth: 0 }, { id: 2, parentId: 1, depth: 1 }]
+ */
+function treeToListWithMeta(nodes) {
+  const result = [];
+
+  function visit(node, parentId, depth) {
+    const { children = [], parentId: ignoredParentId, depth: ignoredDepth, ...rest } = node;
+    result.push({ ...rest, parentId, depth });
+    children.forEach((child) => visit(child, node.id, depth + 1));
+  }
+
+  nodes.forEach((node) => visit(node, null, 0));
+  return result;
+}
+
 // —— 自测 ——
 console.log(JSON.stringify(treeToList(tree), null, 2));
 
-module.exports = { treeToList, tree };
+module.exports = { treeToList, treeToListBFS, treeToListWithMeta, tree };

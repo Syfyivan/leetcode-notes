@@ -18,11 +18,6 @@
  *          Promise.resolve(3) ]
  * 输出： 全部成功后 resolve -> [1, 2, 3]   （顺序和输入一致，不是谁先完成谁先排）
  *
- * ——— 延伸 ———
- * - 空可迭代：立刻 []。漏了这个会 pending 到死。
- * - 和 allSettled：all 一个失败就整单失败；allSettled 等全部落定再交卷。
- * - 超时：每个再 race 一个 sleep reject，避免某条一直挂着。
- *
  * ——— 常见追问 ———
  * Q: 为什么按下标写？
  * A: 完成有快有慢。push 会按完成序排，题目要输入序。
@@ -59,6 +54,50 @@ function promiseAll(promises) {
   });
 }
 
+/**
+ * 延伸 1：给整组任务设置总超时
+ *
+ * 需求：所有任务必须在 timeout 毫秒内完成，否则以 TimeoutError 拒绝。
+ *
+ * 思路：基础 promiseAll 和超时 Promise 做 race；无论谁先落定都清掉 timer。
+ * 注意：超时只是不再等待，已经发出的网络请求要配合 AbortController 才能真正停止。
+ *
+ * ——— 示例 ———
+ * 输入：promiseAllWithTimeout([sleep(500)], 100)
+ * 输出：约 100ms 后 reject TimeoutError
+ */
+function promiseAllWithTimeout(promises, timeout) {
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error(`Promise.all 超过 ${timeout}ms`);
+      error.name = 'TimeoutError';
+      reject(error);
+    }, timeout);
+  });
+  return Promise.race([promiseAll(promises), timeoutPromise])
+    .finally(() => clearTimeout(timer));
+}
+
+/**
+ * 延伸 2：对象版 Promise.all
+ *
+ * 需求：输入对象的每个 value 都可能是 Promise，全部完成后仍按原 key 返回对象。
+ * 典型场景：页面同时加载 user、permissions、settings，结果按名字读取比数组下标清楚。
+ *
+ * 思路：Object.entries 拆成键值对，只对 value 做 Promise.all，完成后再 Object.fromEntries。
+ *
+ * ——— 示例 ———
+ * 输入：promiseAllObject({ user: Promise.resolve('A'), count: 2 })
+ * 输出：{ user: 'A', count: 2 }
+ */
+function promiseAllObject(record) {
+  const entries = Object.entries(record);
+  return promiseAll(entries.map(([, value]) => value)).then((values) =>
+    Object.fromEntries(entries.map(([key], index) => [key, values[index]]))
+  );
+}
+
 // —— 自测 ——
 promiseAll([
   Promise.resolve(1),
@@ -66,4 +105,4 @@ promiseAll([
   Promise.resolve(3),
 ]).then((res) => console.log(res)); // [1, 2, 3]
 
-module.exports = { promiseAll };
+module.exports = { promiseAll, promiseAllWithTimeout, promiseAllObject };

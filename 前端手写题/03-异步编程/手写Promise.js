@@ -23,11 +23,6 @@
  *     .then((v) => console.log(v));
  * 输出： 2
  *
- * ——— 延伸 ———
- * - catch 就是 then(null, onRejected)。finally 不论成败都跑，再把原值/原因接着传。
- * - resolve 了一个 Promise：要先拆开，不能把 Promise 对象当 value 存。
- * - 同一个 Promise 可以 then 多次，所以 fulfills 是数组。
- *
  * ——— 常见追问 ———
  * Q: 为什么 then 回调必须异步？
  * A: A+ 规定。已经落定再 then 如果同步跑，和 pending 时登记的时序会拧在一起。
@@ -49,22 +44,79 @@
 
 class MyPromise {
   constructor(executor) {
+    if (typeof executor !== 'function') throw new TypeError('executor 必须是函数');
     this.state = 'pending';
     this.value = undefined;
     this.fulfills = [];
     this.rejects = [];
 
-    const resolve = (value) => {
-      if (this.state !== 'pending') return; // 状态只能改一次，后面的 resolve/reject 丢掉
+    const fulfill = (value) => {
+      if (this.state !== 'pending') return;
       this.state = 'fulfilled';
       this.value = value;
       this.fulfills.forEach((fn) => fn());
     };
-    const reject = (reason) => {
+    const rejectInternal = (reason) => {
       if (this.state !== 'pending') return;
       this.state = 'rejected';
       this.value = reason;
       this.rejects.forEach((fn) => fn());
+    };
+
+    // executor 一旦调用 resolve/reject 就被锁定。resolve 一个 pending thenable 时，
+    // state 暂时仍是 pending，但 executor 后续再 reject 也不能反悔。
+    let locked = false;
+    const adopt = (value) => {
+      if (value === this) {
+        rejectInternal(new TypeError('Promise 不能 resolve 自己'));
+        return;
+      }
+      if (value !== null && (typeof value === 'object' || typeof value === 'function')) {
+        let then;
+        try {
+          then = value.then;
+        } catch (error) {
+          rejectInternal(error);
+          return;
+        }
+        if (typeof then === 'function') {
+          let called = false;
+          try {
+            then.call(
+              value,
+              (nextValue) => {
+                if (called) return;
+                called = true;
+                if (nextValue === value) {
+                  rejectInternal(new TypeError('Thenable 不能 resolve 自己'));
+                } else {
+                  adopt(nextValue);
+                }
+              },
+              (reason) => {
+                if (called) return;
+                called = true;
+                rejectInternal(reason);
+              }
+            );
+          } catch (error) {
+            if (!called) rejectInternal(error);
+          }
+          return;
+        }
+      }
+      fulfill(value);
+    };
+
+    const resolve = (value) => {
+      if (locked) return;
+      locked = true;
+      adopt(value);
+    };
+    const reject = (reason) => {
+      if (locked) return;
+      locked = true;
+      rejectInternal(reason);
     };
 
     try {
@@ -75,34 +127,24 @@ class MyPromise {
   }
 
   then(onFulfilled, onRejected) {
-    // 值穿透：不是函数就原样往下传；拒绝路径要继续 throw
-    if (typeof onFulfilled !== 'function') onFulfilled = (v) => v;
-    if (typeof onRejected !== 'function') {
-      onRejected = (e) => {
-        throw e;
-      };
-    }
-
-    const run = (cb, resolve, reject) => {
-      queueMicrotask(() => { // then 回调必须异步，和原生微任务对齐
-        try {
-          const x = cb(this.value);
-          if (x instanceof MyPromise) {
-            x.then(resolve, reject);
-          } else if (x && typeof x.then === 'function') {
-            x.then(resolve, reject); // thenable 再拆一层
-          } else {
-            resolve(x);
-          }
-        } catch (e) {
-          reject(e);
-        }
-      });
-    };
-
     return new MyPromise((resolve, reject) => {
-      const ok = () => run(onFulfilled, resolve, reject);
-      const fail = () => run(onRejected, resolve, reject);
+      const run = (callback, fulfilled) => {
+        queueMicrotask(() => {
+          try {
+            if (typeof callback !== 'function') {
+              if (fulfilled) resolve(this.value);
+              else reject(this.value);
+              return;
+            }
+            // child 的 resolve 会展开 Promise / thenable，也会挡住返回 child 自己的环。
+            resolve(callback(this.value));
+          } catch (error) {
+            reject(error);
+          }
+        });
+      };
+      const ok = () => run(onFulfilled, true);
+      const fail = () => run(onRejected, false);
       if (this.state === 'fulfilled') ok();
       else if (this.state === 'rejected') fail();
       else {
@@ -112,6 +154,62 @@ class MyPromise {
     });
   }
 }
+
+/**
+ * 延伸 1：catch / finally
+ *
+ * 需求：
+ *   - catch(onRejected) 等价于 then(undefined, onRejected)；
+ *   - finally(callback) 无论成败都执行 callback，等待它结束后再透传原值或原错误。
+ *
+ * 思路：finally 的成功分支执行回调后 return 原值；失败分支执行回调后重新 throw 原因。
+ * 回调若返回 Promise，MyPromise.resolve 会等它落定。
+ *
+ * ——— 示例 ———
+ * 输入：MyPromise.reject('boom').finally(cleanup).catch(e => e)
+ * 输出：先执行 cleanup，最后得到 'boom'
+ */
+MyPromise.prototype.catch = function (onRejected) {
+  return this.then(undefined, onRejected);
+};
+
+MyPromise.prototype.finally = function (callback) {
+  const run = typeof callback === 'function' ? callback : () => callback;
+  return this.then(
+    (value) => MyPromise.resolve(run()).then(() => value),
+    (reason) => MyPromise.resolve(run()).then(() => { throw reason; })
+  );
+};
+
+/**
+ * 延伸 2：静态 resolve / reject
+ *
+ * 需求：把普通值、原生 Promise 或任意 thenable 统一转成 MyPromise；reject 直接创建失败实例。
+ *
+ * 思路：同类实例可原样返回，其余交给构造器的 resolve 过程自动展开。
+ *
+ * ——— 示例 ———
+ * 输入：MyPromise.resolve(Promise.resolve(7)).then(console.log)
+ * 输出：7
+ */
+MyPromise.resolve = function (value) {
+  if (value instanceof MyPromise) return value;
+  return new MyPromise((resolve) => resolve(value));
+};
+
+MyPromise.reject = function (reason) {
+  return new MyPromise((_, reject) => reject(reason));
+};
+
+// promises-aplus-tests 约定的适配入口，便于把实现交给规范测试套件。
+MyPromise.deferred = function () {
+  const deferred = {};
+  deferred.promise = new MyPromise((resolve, reject) => {
+    deferred.resolve = resolve;
+    deferred.reject = reject;
+  });
+  return deferred;
+};
 
 // —— 自测 ——
 new MyPromise((resolve) => setTimeout(() => resolve(1), 10))

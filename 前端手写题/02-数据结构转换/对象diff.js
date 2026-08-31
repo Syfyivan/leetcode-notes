@@ -29,11 +29,6 @@
  *     'f',     // 删除
  *   ]
  *
- * ——— 延伸 ———
- * - 数组：按 '0' '1' 当下标递归。有的题把数组当叶子，一变就报整条路径。
- * - 循环引用：WeakMap 记下走过的对象对，见过就跳，不然会死循环。
- * - 返回 { added, removed, changed } 比光路径更像真实 diff。
- *
  * ——— 常见追问 ———
  * Q: 为什么两边 key 要并到一个 Set？
  * A: 只扫新对象会漏删除。只扫旧对象会漏新增。Set 去重，两边一次扫完。
@@ -79,9 +74,94 @@ function diff(newObj, oldObj, prefix = '') {
    return res;
 }
 
+/**
+ * 延伸 1：区分 added / removed / changed
+ *
+ * 需求：除了路径，还要告诉调用方字段是新增、删除还是改值，并保留修改前后的值。
+ * 注意：必须用 hasOwn 判断字段是否存在，否则 `{ a: undefined }` 和 `{}` 会被误判成相同。
+ *
+ * 思路：
+ * 1. 合并两边 key 后，先分别检查字段是否为自有属性。
+ * 2. 只在新对象中出现记 added，只在旧对象中出现记 removed。
+ * 3. 两边都有时，普通对象/数组继续递归，其余用 Object.is 比较。
+ *
+ * ——— 示例 ———
+ * 输入：diffDetailed({ a: 2, b: 3 }, { a: 1, c: 4 })
+ * 输出：added=['b']，removed=['c']，changed 含 a 的 before=1、after=2
+ */
+function diffDetailed(newObj, oldObj) {
+  const result = { added: [], removed: [], changed: [] };
+  const seenPairs = new WeakMap();
+  const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+  const canWalk = (value) => {
+    if (!isObj(value)) return false;
+    const proto = Object.getPrototypeOf(value);
+    return Array.isArray(value) || proto === Object.prototype || proto === null;
+  };
+
+  function seen(left, right) {
+    let rights = seenPairs.get(left);
+    if (!rights) {
+      rights = new WeakSet();
+      seenPairs.set(left, rights);
+    }
+    if (rights.has(right)) return true;
+    rights.add(right);
+    return false;
+  }
+
+  function walk(after, before, prefix) {
+    if (seen(after, before)) return;
+    const keys = new Set([...Object.keys(after), ...Object.keys(before)]);
+    for (const key of keys) {
+      const path = prefix ? `${prefix}.${key}` : key;
+      const inAfter = hasOwn(after, key);
+      const inBefore = hasOwn(before, key);
+      if (!inBefore) {
+        result.added.push(path);
+      } else if (!inAfter) {
+        result.removed.push(path);
+      } else if (canWalk(after[key]) && canWalk(before[key])) {
+        walk(after[key], before[key], path);
+      } else if (!Object.is(after[key], before[key])) {
+        result.changed.push({ path, before: before[key], after: after[key] });
+      }
+    }
+  }
+
+  walk(newObj, oldObj, '');
+  return result;
+}
+
+/**
+ * 延伸 2：数组整体视为叶子
+ *
+ * 需求：表单场景常把数组当一个字段。只要元素或顺序不同，就只报数组所在路径，
+ *       不继续产生 items.0、items.1 这类细路径。
+ *
+ * 思路：递归前遇到数组就用深度相等比较，变化时记录当前路径。
+ */
+function diffArraysAsLeaves(newObj, oldObj, prefix = '') {
+  const result = [];
+  const keys = new Set([...Object.keys(newObj), ...Object.keys(oldObj)]);
+  for (const key of keys) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    const after = newObj[key];
+    const before = oldObj[key];
+    if (Array.isArray(after) || Array.isArray(before)) {
+      if (JSON.stringify(after) !== JSON.stringify(before)) result.push(path);
+    } else if (isObj(after) && isObj(before)) {
+      result.push(...diffArraysAsLeaves(after, before, path));
+    } else if (!Object.is(after, before)) {
+      result.push(path);
+    }
+  }
+  return result;
+}
+
 // —— 自测 ——
 const newObj = { a: 1, b: { c: 2, d: 3 }, e: 5 };
 const oldObj = { a: 1, b: { c: 9 }, f: 6 };
 console.log(diff(newObj, oldObj)); // ['b.c', 'b.d', 'e', 'f'] （顺序不唯一）
 
-module.exports = { diff };
+module.exports = { diff, diffDetailed, diffArraysAsLeaves };

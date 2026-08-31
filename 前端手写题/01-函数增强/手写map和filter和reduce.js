@@ -24,12 +24,6 @@
  * 输入： [1, 2, 3, 4].myReduce((a, b) => a + b, 0)
  * 输出： 10
  *
- * ——— 延伸 ———
- * - 稀疏数组：原生 map / filter 跳过 empty slot，这份 for 会把洞当 undefined 喂给回调。
- * - thisArg：原生 map(fn, thisArg) 能绑回调 this，手写常省。
- * - reduce 空数组又不传初值，原生抛 TypeError。这份会读到 this[0] 为 undefined 继续跑。
- * - 链式：map / filter 返回新数组才能接着点。reduce 返回的是累加值，链到这就断。
- *
  * ——— 常见追问 ———
  * Q: 为什么不直接改原数组？
  * A: 这三个都是非破坏性方法。调用方还要用原数组，必须另开一份。
@@ -76,9 +70,96 @@ Array.prototype.myReduce = function (fn, initial) {
   return acc;
 };
 
+/**
+ * 延伸 1：处理稀疏数组、thisArg 和类数组
+ *
+ * 需求：更贴近原生 map / filter：
+ *   - 跳过稀疏数组的 empty slot；
+ *   - 回调支持 thisArg；
+ *   - 可处理 arguments、NodeList 等类数组。
+ *
+ * 思路：
+ * 1. Object(arrayLike) 统一包装输入，length 转成非负整数。
+ * 2. 用 i in source 判断该下标是否真的存在。
+ * 3. map 保留原长度和空洞；filter 只 push 命中的现有元素。
+ *
+ * ——— 示例 ———
+ * 输入：mapLike([1, , 3], x => x * 2)
+ * 输出：[2, <empty>, 6]
+ */
+function toLength(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return 0;
+  return Math.min(Math.floor(number), Number.MAX_SAFE_INTEGER);
+}
+
+function mapLike(arrayLike, callback, thisArg) {
+  if (arrayLike == null) throw new TypeError('不能遍历 null 或 undefined');
+  if (typeof callback !== 'function') throw new TypeError('callback 必须是函数');
+  const source = Object(arrayLike);
+  const length = toLength(source.length);
+  const result = new Array(length);
+  for (let i = 0; i < length; i++) {
+    if (i in source) result[i] = callback.call(thisArg, source[i], i, source);
+  }
+  return result;
+}
+
+function filterLike(arrayLike, callback, thisArg) {
+  if (arrayLike == null) throw new TypeError('不能遍历 null 或 undefined');
+  if (typeof callback !== 'function') throw new TypeError('callback 必须是函数');
+  const source = Object(arrayLike);
+  const length = toLength(source.length);
+  const result = [];
+  for (let i = 0; i < length; i++) {
+    if (i in source && callback.call(thisArg, source[i], i, source)) {
+      result.push(source[i]);
+    }
+  }
+  return result;
+}
+
+/**
+ * 延伸 2：对齐 reduce 的空数组和稀疏数组规则
+ *
+ * 需求：无初值时寻找第一个真实存在的元素打底；一个元素都找不到就抛 TypeError。
+ *
+ * 思路：
+ * 1. arguments.length 判断调用方是否真的传了 initialValue。
+ * 2. 没传初值就向右寻找第一个 i in source 的元素。
+ * 3. 后续循环仍跳过空洞。
+ *
+ * ——— 示例 ———
+ * 输入：reduceLike([, 2, 3], (sum, n) => sum + n)
+ * 输出：5
+ */
+function reduceLike(arrayLike, callback, ...initial) {
+  if (arrayLike == null) throw new TypeError('不能遍历 null 或 undefined');
+  if (typeof callback !== 'function') throw new TypeError('callback 必须是函数');
+  const source = Object(arrayLike);
+  const length = toLength(source.length);
+  let index = 0;
+  let accumulator;
+
+  if (initial.length > 0) {
+    [accumulator] = initial;
+  } else {
+    while (index < length && !(index in source)) index++;
+    if (index >= length) throw new TypeError('空数组且没有初始值');
+    accumulator = source[index++];
+  }
+
+  for (; index < length; index++) {
+    if (index in source) {
+      accumulator = callback(accumulator, source[index], index, source);
+    }
+  }
+  return accumulator;
+}
+
 // —— 自测 ——
 console.log([1, 2, 3].myMap((x) => x * 2));             // [2, 4, 6]
 console.log([1, 2, 3, 4].myFilter((x) => x % 2 === 0)); // [2, 4]
 console.log([1, 2, 3, 4].myReduce((a, b) => a + b, 0)); // 10
 
-module.exports = {};
+module.exports = { mapLike, filterLike, reduceLike };

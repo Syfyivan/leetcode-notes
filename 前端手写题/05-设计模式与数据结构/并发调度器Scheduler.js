@@ -18,12 +18,6 @@
  * 输入： max = 2，依次 add 4 个耗时分别为 1000/500/300/400ms 的任务
  * 输出： 完成顺序 2 → 3 → 1 → 4（任意时刻并发不超过 2）
  *
- * ——— 延伸 ———
- * - 暂停 / 恢复：next 开头看 paused，恢复时再调一次 next。
- * - 超时：Promise.race([task(), sleep(ms)])，超时也占一个工位，finally 照样补位。
- * - 取消还在排队的：从 queue 里 splice 掉。已经 running 的只能靠 AbortSignal。
- * - 和「并发控制.js」的差别：那边一次吃完整组、按原序回结果；这里是流式 add。
- *
  * ——— 常见追问 ———
  * Q: add 返回的 Promise 和任务自己的 Promise 什么关系？
  * A: 外包那层把任务的成功/失败原样转出去。调用方 await add() 才能拿到结果或接到拒绝。
@@ -41,6 +35,9 @@
 
 class Scheduler {
   constructor(max) {
+    if (!Number.isInteger(max) || max < 1) {
+      throw new RangeError('max 必须是正整数');
+    }
     this.max = max;
     this.running = 0;
     this.queue = [];
@@ -69,6 +66,72 @@ class Scheduler {
   }
 }
 
+/**
+ * 延伸 1：暂停 / 恢复
+ *
+ * 需求：pause 后不再启动排队任务，已经运行的任务继续完成；resume 后立即填满空闲工位。
+ *
+ * 思路：覆盖 next，在 paused 时直接返回；恢复时循环调用父类 next，直到工位填满。
+ *
+ * ——— 示例 ———
+ * 输入：scheduler.pause(); add(a); add(b); scheduler.resume()
+ * 输出：暂停期间 a、b 都不启动；恢复后按并发上限启动
+ */
+class PausableScheduler extends Scheduler {
+  constructor(max) {
+    super(max);
+    this.paused = false;
+  }
+
+  pause() {
+    this.paused = true;
+  }
+
+  resume() {
+    this.paused = false;
+    while (this.running < this.max && this.queue.length > 0) super.next();
+  }
+
+  next() {
+    if (!this.paused) super.next();
+  }
+}
+
+/**
+ * 延伸 2：任务超时 + AbortSignal
+ *
+ * 需求：每项任务最多运行 timeout 毫秒。超时后拒绝 add 返回的 Promise，
+ * 并 abort 内部 signal；任务愿意监听 signal 时可真正停止底层工作。
+ *
+ * 思路：任务和超时 Promise 做 race，finally 清 timer。超时也会走 Scheduler 的 finally，
+ * 正确释放并发工位。
+ *
+ * ——— 示例 ———
+ * 输入：scheduler.add(signal => fetch(url,{signal}), 1000)
+ * 输出：一秒未完成则 reject TimeoutError，并取消 fetch
+ */
+class TimeoutScheduler extends PausableScheduler {
+  add(task, timeout) {
+    if (timeout === undefined) return super.add(task);
+    return super.add(() => {
+      const controller = new AbortController();
+      let timer;
+      const timeoutPromise = new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          const error = new Error(`任务超过 ${timeout}ms`);
+          error.name = 'TimeoutError';
+          controller.abort(error);
+          reject(error);
+        }, timeout);
+      });
+      return Promise.race([
+        Promise.resolve().then(() => task(controller.signal)),
+        timeoutPromise,
+      ]).finally(() => clearTimeout(timer));
+    });
+  }
+}
+
 // —— 自测 ——
 const scheduler = new Scheduler(2);
 const timeout = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -82,4 +145,4 @@ Promise.all([
   scheduler.add(task(400, 4)),
 ]).then(() => console.log(order.join(''))); // 2314
 
-module.exports = { Scheduler };
+module.exports = { Scheduler, PausableScheduler, TimeoutScheduler };

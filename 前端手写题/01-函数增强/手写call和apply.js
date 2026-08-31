@@ -19,12 +19,6 @@
  * 输入： greet.myCall({ name: '小明' }, '你好', '!')     输出： '你好 小明!'
  * 输入： greet.myApply({ name: '小红' }, ['嗨', '~'])   输出： '嗨 小红~'
  *
- * ——— 延伸 ———
- * - 严格模式：null / undefined 不转全局，this 就是 null。手写这份按非严格来。
- * - apply 第二参不是类数组，原生抛 TypeError。手写常用 args || [] 宽容掉。
- * - 不想挂属性：Reflect.apply(fn, context, args)，行为一样，不用 delete。
- * - call 比 apply 在旧引擎里快一点（不定参更熟），现在无感。
- *
  * ——— 常见追问 ———
  * Q: 为什么用 Symbol 当 key？
  * A: 绝对不撞对象已有字段，普通 for-in 也扫不到。调完立刻 delete。
@@ -55,9 +49,45 @@ Function.prototype.myApply = function (context, args) {
   return this.myCall(context, ...(args || [])); // 没传 args 当空数组，对齐原生
 };
 
+/**
+ * 延伸 1：用 Reflect.apply 避免临时改写 context
+ *
+ * 需求：冻结对象、不可扩展对象也能充当 this，并且调用后不需要 delete 临时属性。
+ *
+ * 思路：Reflect.apply 直接接收目标函数、this 和参数数组，由引擎完成调用。
+ * 它还保留严格模式语义：严格函数收到 null 时，this 就是 null。
+ *
+ * ——— 示例 ———
+ * 输入：callReflect(function () { 'use strict'; return this; }, null)
+ * 输出：null
+ */
+function callReflect(fn, context, ...args) {
+  if (typeof fn !== 'function') throw new TypeError('fn 必须是函数');
+  return Reflect.apply(fn, context, args);
+}
+
+/**
+ * 延伸 2：校验 apply 的类数组参数
+ *
+ * 需求：第二个参数可传数组或 arguments 这类可迭代/类数组对象；传数字等非法值时抛错。
+ *
+ * 思路：null / undefined 当空参数；其余值先要求是对象，再用 Array.from 转成真正数组。
+ *
+ * ——— 示例 ———
+ * 输入：applyReflect(Math.max, null, { 0: 3, 1: 7, length: 2 })
+ * 输出：7
+ */
+function applyReflect(fn, context, args) {
+  if (args == null) return callReflect(fn, context);
+  if ((typeof args !== 'object' && typeof args !== 'function')) {
+    throw new TypeError('apply 的参数列表必须是对象');
+  }
+  return callReflect(fn, context, ...Array.from(args));
+}
+
 // —— 自测 ——
 function greet(greeting, punct) { return greeting + ' ' + this.name + punct; }
 console.log(greet.myCall({ name: '小明' }, '你好', '!'));   // '你好 小明!'
 console.log(greet.myApply({ name: '小红' }, ['嗨', '~'])); // '嗨 小红~'
 
-module.exports = {};
+module.exports = { callReflect, applyReflect };

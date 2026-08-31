@@ -20,12 +20,6 @@
  *        bus.off('msg', fn); bus.emit('msg', 2);    输出： 无（已取消订阅）
  *        bus.once('x', fn);  bus.emit('x'); emit('x'); 输出： fn 只被调用一次
  *
- * ——— 延伸 ———
- * - off(event) 不传 fn：清空这个事件的全部监听。组件卸载常用。
- * - 错误隔离：某个 fn throw，try/catch 包住，别让后面的监听歇菜。Node 的 'error' 没人听会自己抛。
- * - prepend：unshift 到数组头，让某些监听先跑（Node 有 prependListener）。
- * - once 用 Map 记 fn -> wrapper。否则 off(event, 原fn) 对不上引用，once 的清不掉。
- *
  * ——— 常见追问 ———
  * Q: emit 为什么要 slice？
  * A: 遍历时一旦 off / on，原数组长度会变，后面的监听可能被跳过或重复调。
@@ -43,18 +37,26 @@
 
 class EventEmitter {
   constructor() {
-    this.events = {};
+    this.events = Object.create(null); // '__proto__' 等字符串也能安全作为事件名
   }
 
   on(event, fn) {
     if (!this.events[event]) this.events[event] = [];
     this.events[event].push(fn);
+    return () => this.off(event, fn); // 组件卸载时可直接调用返回的取消函数
   }
 
   off(event, fn) {
     const list = this.events[event];
     if (!list) return;
-    this.events[event] = list.filter((item) => item !== fn); // 按引用删，箭头函数每次都是新的
+    if (fn === undefined) {
+      delete this.events[event];
+      return;
+    }
+    this.events[event] = list.filter(
+      (item) => item !== fn && item.original !== fn
+    );
+    if (this.events[event].length === 0) delete this.events[event];
   }
 
   emit(event, ...args) {
@@ -72,7 +74,58 @@ class EventEmitter {
       this.off(event, wrapper); // 名单里是 wrapper，摘原 fn 对不上
       fn(...args);
     };
+    wrapper.original = fn; // off(event, 原函数) 也能找到 once 包装层
     this.on(event, wrapper);
+  }
+
+  /**
+   * 延伸 1：prepend / 清空 / 监听数量
+   *
+   * 需求：prepend 把监听放到队首；off(event) 清空整个事件；listenerCount 用于排查重复订阅。
+   *
+   * 思路：prepend 用 unshift，其余都复用 events 中保存的监听数组。
+   *
+   * ——— 示例 ———
+   * 输入：on('x', second); prepend('x', first); emit('x')
+   * 输出：first 先于 second 执行
+   */
+  prepend(event, fn) {
+    if (!this.events[event]) this.events[event] = [];
+    this.events[event].unshift(fn);
+    return () => this.off(event, fn);
+  }
+
+  listenerCount(event) {
+    return this.events[event]?.length || 0;
+  }
+
+  removeAllListeners(event) {
+    if (event === undefined) this.events = Object.create(null);
+    else delete this.events[event];
+  }
+
+  /**
+   * 延伸 2：错误隔离 emitSafe
+   *
+   * 需求：一个监听抛错时继续执行后面的监听，并把所有错误交给调用方处理。
+   *
+   * 思路：仍遍历快照，但每个监听各自 try/catch，最后返回 errors 数组。
+   *
+   * ——— 示例 ———
+   * 输入：第一个监听 throw，第二个监听正常；emitSafe('x')
+   * 输出：第二个仍执行，返回数组中包含第一个错误
+   */
+  emitSafe(event, ...args) {
+    const snapshot = this.events[event]?.slice() || [];
+    const errors = [];
+    for (const listener of snapshot) {
+      try {
+        listener(...args);
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    return errors;
   }
 }
 

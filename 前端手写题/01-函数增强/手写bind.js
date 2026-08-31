@@ -19,12 +19,6 @@
  *        bound('!')
  * 输出： '你好 小明!'
  *
- * ——— 延伸 ———
- * - 多次 bind：第二次改不了 this，只能继续往后面拼参数。原生就是这样。
- * - 箭头函数没有自己的 this，bind 了也绑不上。手写同样无效。
- * - 原生会改 bound.length / bound.name，面试手写一般不做。
- * - new bound() 之后 instanceof 原函数要为 true，所以才去接 prototype。
- *
  * ——— 常见追问 ———
  * Q: 为什么 new 的时候要丢掉绑定的 this？
  * A: 规范规定 bind 后当构造函数，this 是新实例。绑定对象只对普通调用生效。
@@ -56,9 +50,61 @@ Function.prototype.myBind = function (context, ...boundArgs) {
   return bound;
 };
 
+/**
+ * 延伸 1：用 Reflect.construct 支持 class 构造
+ *
+ * 需求：基础版靠 fn.apply 执行构造函数，遇到 class 会报错；完整版本要同时支持普通调用和 new。
+ *
+ * 思路：
+ * 1. new.target 有值，说明 bound 正在被构造调用。
+ * 2. 构造分支交给 Reflect.construct，class、显式返回对象、new.target 都由引擎处理。
+ * 3. 普通调用仍用 Reflect.apply，把 this 固定为 context。
+ *
+ * ——— 示例 ———
+ * 输入：const BoundUser = bindComplete(User, null, '小明'); new BoundUser()
+ * 输出：User 实例，name 为「小明」
+ */
+function bindComplete(fn, context, ...boundArgs) {
+  if (typeof fn !== 'function') throw new TypeError('fn 必须是函数');
+
+  function bound(...args) {
+    const allArgs = boundArgs.concat(args);
+    if (new.target) return Reflect.construct(fn, allArgs, new.target);
+    return Reflect.apply(fn, context, allArgs);
+  }
+
+  if (fn.prototype) {
+    bound.prototype = Object.create(fn.prototype, {
+      constructor: { value: bound, writable: true, configurable: true },
+    });
+  }
+  return bound;
+}
+
+/**
+ * 延伸 2：补齐 length 和 name 元信息
+ *
+ * 需求：原生 bind 会把已预置的参数从 length 中扣掉，并把函数名改成 "bound 原名"。
+ * 这些字段不影响调用，但调试器、日志和部分框架会读取它们。
+ *
+ * 思路：基于完整版生成 bound，再用 defineProperty 覆盖可配置的 length / name。
+ *
+ * ——— 示例 ———
+ * 输入：bindWithMetadata(function add(a, b, c) {}, null, 1)
+ * 输出：length 为 2，name 为 "bound add"
+ */
+function bindWithMetadata(fn, context, ...boundArgs) {
+  const bound = bindComplete(fn, context, ...boundArgs);
+  Object.defineProperties(bound, {
+    length: { value: Math.max(0, fn.length - boundArgs.length), configurable: true },
+    name: { value: `bound ${fn.name || ''}`, configurable: true },
+  });
+  return bound;
+}
+
 // —— 自测 ——
 function greet(greeting, punct) { return greeting + ' ' + this.name + punct; }
 const bound = greet.myBind({ name: '小明' }, '你好');
 console.log(bound('!')); // '你好 小明!'
 
-module.exports = {};
+module.exports = { bindComplete, bindWithMetadata };

@@ -16,11 +16,6 @@
  * 输入： [1, [2, [3, [4]]]], 深度 2       输出： [1, 2, 3, [4]]
  * 输入： [1, [2, [3, [4]]]], 深度 Infinity 输出： [1, 2, 3, 4]
  *
- * ——— 延伸 ———
- * - 迭代栈：倒着压栈，弹出来才是从左到右。
- * - reduce + concat 一行版只能拍一层，浅层面试能写。
- * - 稀疏数组：for...of 会跳过空位。要保留 hole 就用下标 for。
- *
  * ——— 常见追问 ———
  * Q: 为什么 depth 默认 1？
  * A: 跟 Array.prototype.flat() 对齐。不传只拍一层。
@@ -32,7 +27,8 @@
  * A: instanceof Array 跨 iframe 会失败，那边的数组原型不是这边的 Array。
  *
  * Q: [1, , 3] 会怎样？
- * A: for...of 把空位跳过，结果少一项。下标遍历才能留下 hole。
+ * A: 原生 flat 会移除被遍历层级里的空位。for...of 实际会读出 undefined，
+ *    所以要用下标并配合 `i in arr` 才能跳过 hole。
  *
  * Q: concat 能代替吗？
  * A: concat 只拍一层。多层还是得递归或栈。
@@ -40,7 +36,9 @@
 
 function flatten(arr, depth = 1) {
   const res = [];
-  for (const item of arr) {
+  for (let i = 0; i < arr.length; i++) {
+    if (!(i in arr)) continue; // 对齐原生 flat：移除当前遍历层级里的空位
+    const item = arr[i];
     if (Array.isArray(item) && depth > 0) {
       res.push(...flatten(item, depth - 1)); // Infinity-1 还是 Infinity，全展开靠这个
     } else {
@@ -50,9 +48,63 @@ function flatten(arr, depth = 1) {
   return res;
 }
 
+/**
+ * 延伸 1：迭代栈版本
+ *
+ * 需求：不用递归，避免嵌套极深时调用栈溢出，并保留指定 depth 的能力。
+ *
+ * 思路：
+ * 1. 栈里同时保存 value 和剩余 depth。
+ * 2. 数组需要展开时倒序压入，弹出后才保持原来的从左到右顺序。
+ * 3. 下标不存在就跳过，对齐原生 flat 移除空位的规则。
+ *
+ * ——— 示例 ———
+ * 输入：flattenIterative([1, [2, [3]]], 1)
+ * 输出：[1, 2, [3]]
+ */
+function flattenIterative(arr, depth = 1) {
+  const maxDepth = depth === Infinity
+    ? Infinity
+    : Math.max(0, Math.floor(Number(depth) || 0));
+  const result = [];
+  const stack = [];
+
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (i in arr) stack.push({ value: arr[i], depth: maxDepth });
+  }
+  while (stack.length) {
+    const current = stack.pop();
+    if (Array.isArray(current.value) && current.depth > 0) {
+      for (let i = current.value.length - 1; i >= 0; i--) {
+        if (i in current.value) {
+          stack.push({ value: current.value[i], depth: current.depth - 1 });
+        }
+      }
+    } else {
+      result.push(current.value);
+    }
+  }
+  return result;
+}
+
+/**
+ * 延伸 2：reduce + concat 拍一层
+ *
+ * 需求：题目明确只展开一层时，可以用数组归并写出最短版本。
+ *
+ * 思路：concat 遇到数组会展开一层，遇到普通值直接追加。它不会继续递归。
+ *
+ * ——— 示例 ———
+ * 输入：flattenOneLevel([1, [2, [3]]])
+ * 输出：[1, 2, [3]]
+ */
+function flattenOneLevel(arr) {
+  return arr.reduce((result, item) => result.concat(item), []);
+}
+
 // —— 自测 ——
 console.log(flatten([1, [2, [3, [4]]]]));            // [1, 2, [3, [4]]]
 console.log(flatten([1, [2, [3, [4]]]], 2));         // [1, 2, 3, [4]]
 console.log(flatten([1, [2, [3, [4]]]], Infinity));  // [1, 2, 3, 4]
 
-module.exports = { flatten };
+module.exports = { flatten, flattenIterative, flattenOneLevel };
