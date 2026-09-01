@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 数组中的第K个最大元素
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 数组中的第K个最大元素（LeetCode 215）
  *
  * 给定整数数组 nums 和整数 k，请返回数组中第 k 个最大的元素。
@@ -70,8 +76,58 @@ function partition(nums, left, right) {
     return i;
 }
 
+/**
+ * 延伸 1：小根堆求第 K 大
+ *
+ * 需求：在不修改原数组的前提下，稳定地求出第 k 大元素。
+ *
+ * 思路：维护大小最多为 k 的小根堆；扫描结束后，堆顶就是所有已见元素中的第 k 大。
+ *
+ * ——— 示例 ———
+ * 示例：findKthLargestWithHeap([3,2,1,5,6,4], 2) => 5
+ *
+ * 复杂度：时间 O(n log k)，空间 O(k)
+ */
+function findKthLargestWithHeap(nums, k) {
+    const heap = [];
+    const swap = (i, j) => {
+        [heap[i], heap[j]] = [heap[j], heap[i]];
+    };
+    const push = (num) => {
+        heap.push(num);
+        let i = heap.length - 1;
+        while (i > 0) {
+            const parent = (i - 1) >> 1;
+            if (heap[parent] <= heap[i]) break;
+            swap(parent, i);
+            i = parent;
+        }
+    };
+    const replaceTop = (num) => {
+        heap[0] = num;
+        let i = 0;
+        while (true) {
+            let smallest = i;
+            const left = i * 2 + 1;
+            const right = left + 1;
+            if (left < heap.length && heap[left] < heap[smallest]) smallest = left;
+            if (right < heap.length && heap[right] < heap[smallest]) smallest = right;
+            if (smallest === i) break;
+            swap(i, smallest);
+            i = smallest;
+        }
+    };
+
+    for (const num of nums) {
+        if (heap.length < k) push(num);
+        else if (num > heap[0]) replaceTop(num);
+    }
+    return heap[0];
+}
+
 // —— 自测 ——
 console.log(findKthLargest([3, 2, 1, 5, 6, 4], 2)); // 5
 console.log(findKthLargest([3, 2, 3, 1, 2, 4, 5, 5, 6], 4)); // 4
+console.log(findKthLargestWithHeap([3, 2, 1, 5, 6, 4], 2)); // 5
 
-module.exports = { findKthLargest };
+module.exports = { findKthLargest, findKthLargestWithHeap };

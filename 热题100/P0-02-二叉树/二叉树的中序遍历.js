@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 二叉树的中序遍历
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * Definition for a binary tree node.
  * function TreeNode(val, left, right) {
  *     this.val = (val===undefined ? 0 : val)
@@ -11,6 +17,10 @@
  * 2. 递归中序。
  * 3. 空节点直接返回。
  * 复杂度：时间 O(n)，空间 O(h)
+ *
+ * ——— 示例 ———
+ * 输入：[1,null,2,3]
+ * 输出：[1,3,2]
  *
  * ——— 延伸 ———
  * - 迭代：左一路入栈，弹出来访问，再转向右。面试常要手写栈。
@@ -47,3 +57,40 @@ var inorderTraversal = function(root) {
     inorder(root);
     return res;
 };
+
+/**
+ * 延伸 1：显式栈迭代
+ *
+ * 需求：不用递归完成“左 → 根 → 右”的遍历。
+ *
+ * 思路：当前节点沿左链全部入栈；弹栈访问后转向它的右子树。
+ *
+ * ——— 示例 ———
+ * 示例：[1,null,2,3] 输出 [1,3,2]。
+ *
+ * 复杂度：时间 O(n)，空间 O(h)。
+ */
+function inorderTraversalIterative(root) {
+  const result = [];
+  const stack = [];
+  let current = root;
+  while (current || stack.length) {
+    while (current) {
+      stack.push(current);
+      current = current.left;
+    }
+    current = stack.pop();
+    result.push(current.val);
+    current = current.right;
+  }
+  return result;
+}
+
+// —— 自测 ——
+console.log(inorderTraversal({
+  val: 1,
+  left: null,
+  right: { val: 2, left: { val: 3, left: null, right: null }, right: null },
+})); // [1,3,2]
+
+module.exports = { inorderTraversal, inorderTraversalIterative };

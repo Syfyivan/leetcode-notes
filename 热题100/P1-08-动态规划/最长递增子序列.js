@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 最长递增子序列
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 最长递增子序列（LeetCode 300）
  *
  * 给你一个整数数组 nums，找到其中最长严格递增子序列的长度。
@@ -56,9 +62,40 @@ function lengthOfLIS(nums) {
   return best;
 }
 
+/**
+ * 延伸 1：还原一条最长递增子序列
+ *
+ * 需求：返回实际序列，不只返回长度。
+ *
+ * 思路：O(n²) DP 记录每个位置的最长长度与前驱下标，最后从最大位置反向追踪。
+ *
+ * ——— 示例 ———
+ * 示例：[10,9,2,5,3,7,101,18] 可返回 [2,5,7,101]。
+ *
+ * 复杂度：时间 O(n²)，空间 O(n)。
+ */
+function longestIncreasingSubsequence(nums) {
+  if (nums.length === 0) return [];
+  const lengths = new Array(nums.length).fill(1);
+  const previous = new Array(nums.length).fill(-1);
+  let bestIndex = 0;
+  for (let i = 0; i < nums.length; i++) {
+    for (let j = 0; j < i; j++) {
+      if (nums[j] < nums[i] && lengths[j] + 1 > lengths[i]) {
+        lengths[i] = lengths[j] + 1;
+        previous[i] = j;
+      }
+    }
+    if (lengths[i] > lengths[bestIndex]) bestIndex = i;
+  }
+  const result = [];
+  for (let index = bestIndex; index !== -1; index = previous[index]) result.push(nums[index]);
+  return result.reverse();
+}
+
 // —— 自测 ——
 console.log(lengthOfLIS([10, 9, 2, 5, 3, 7, 101, 18])); // 4
 console.log(lengthOfLIS([0, 1, 0, 3, 2, 3])); // 4
 console.log(lengthOfLIS([7, 7, 7, 7, 7, 7, 7])); // 1
 
-module.exports = { lengthOfLIS };
+module.exports = { lengthOfLIS, longestIncreasingSubsequence };

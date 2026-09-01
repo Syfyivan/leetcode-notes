@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 不同路径
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * @param {number} m
  * @param {number} n
  * @return {number}
@@ -37,3 +43,28 @@ var uniquePaths = function(m, n) {
     }
     return dp[m - 1][n - 1];
 };
+
+/**
+ * 延伸 1：组合数学版
+ *
+ * 需求：机器人总共走 m+n-2 步，从中选择 m-1 步向下。
+ *
+ * 思路：逐项计算组合数 C(m+n-2, min(m-1,n-1))，避免直接算阶乘。
+ *
+ * ——— 示例 ———
+ * 示例：m=3，n=7，输出 28。
+ *
+ * 复杂度：时间 O(min(m,n))，空间 O(1)。
+ */
+function uniquePathsCombinatorial(m, n) {
+  const total = m + n - 2;
+  const choose = Math.min(m - 1, n - 1);
+  let result = 1;
+  for (let i = 1; i <= choose; i++) result = result * (total - choose + i) / i;
+  return Math.round(result);
+}
+
+// —— 自测 ——
+console.log(uniquePaths(3, 7)); // 28
+
+module.exports = { uniquePaths, uniquePathsCombinatorial };

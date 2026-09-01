@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 有效的括号
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 有效的括号（LeetCode 20）
  *
  * 给定一个只包括 '('，')'，'{'，'}'，'['，']' 的字符串 s，判断字符串是否有效。
@@ -57,9 +63,32 @@ function isValid(s) {
   return stack.length === 0; // 还有左括号没合上
 }
 
+/**
+ * 延伸 1：使圆括号有效的最少添加次数（LeetCode 921）
+ *
+ * 需求：字符串只含 '(' 和 ')'，可在任意位置添加括号，求最少添加数。
+ *
+ * 思路：balance 记录未匹配左括号；遇到多余右括号就计入 missingLeft。
+ *
+ * ——— 示例 ———
+ * 示例："()))((" 输出 4。
+ *
+ * 复杂度：时间 O(n)，空间 O(1)。
+ */
+function minAddToMakeValid(s) {
+  let balance = 0;
+  let missingLeft = 0;
+  for (const char of s) {
+    if (char === '(') balance++;
+    else if (balance > 0) balance--;
+    else missingLeft++;
+  }
+  return balance + missingLeft;
+}
+
 // —— 自测 ——
 console.log(isValid("()")); // true
 console.log(isValid("()[]{}")); // true
 console.log(isValid("(]")); // false
 
-module.exports = { isValid };
+module.exports = { isValid, minAddToMakeValid };

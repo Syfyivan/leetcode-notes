@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 二叉树的最近公共祖先
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 二叉树的最近公共祖先（LC236）
  *
  * 给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。
@@ -80,6 +86,28 @@ function lowestCommonAncestor(root, p, q) {
   return left || right; // 都在一边，把那边的答案带上去
 }
 
+/**
+ * 延伸 1：BST 最近公共祖先（LeetCode 235）
+ *
+ * 需求：利用二叉搜索树有序性，不必遍历两棵子树。
+ *
+ * 思路：p、q 都小于当前就向左，都大于当前就向右；出现分叉时当前就是答案。
+ *
+ * ——— 示例 ———
+ * 示例：BST [6,2,8,0,4,7,9] 中 p=2、q=8，返回 6。
+ *
+ * 复杂度：时间 O(h)，空间 O(1)。
+ */
+function lowestCommonAncestorBST(root, p, q) {
+  let node = root;
+  while (node) {
+    if (p.val < node.val && q.val < node.val) node = node.left;
+    else if (p.val > node.val && q.val > node.val) node = node.right;
+    else return node;
+  }
+  return null;
+}
+
 // —— 自测 ——
 const r1 = build([3, 5, 1, 6, 2, 0, 8, null, null, 7, 4]);
 const a1 = lowestCommonAncestor(r1, findNode(r1, 5), findNode(r1, 1));
@@ -89,4 +117,4 @@ const r2 = build([3, 5, 1, 6, 2, 0, 8, null, null, 7, 4]);
 const a2 = lowestCommonAncestor(r2, findNode(r2, 5), findNode(r2, 4));
 console.log(a2 ? a2.val : null); // 期望输出 5
 
-module.exports = { lowestCommonAncestor, TreeNode, build };
+module.exports = { lowestCommonAncestor, lowestCommonAncestorBST, TreeNode, build };

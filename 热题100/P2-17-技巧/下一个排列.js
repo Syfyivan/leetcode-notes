@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 下一个排列
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 下一个排列（LeetCode 31）
  *
  * 整数数组的一个排列就是将其所有成员以序列或线性顺序排列。
@@ -67,9 +73,41 @@ function nextPermutation(nums) {
     return nums;
 }
 
+/**
+ * 延伸 1：上一个排列
+ *
+ * 需求：原地得到字典序中紧邻当前排列的更小排列；若当前最小，则回到最大排列。
+ *
+ * 思路：从右找第一个上升点，换入右侧刚好更小的元素，再把后缀反转成降序。
+ *
+ * ——— 示例 ———
+ * 示例：previousPermutation([1,3,2]) => [1,2,3]；previousPermutation([1,2,3]) => [3,2,1]
+ *
+ * 复杂度：时间 O(n)，空间 O(1)
+ */
+function previousPermutation(nums) {
+    let i = nums.length - 2;
+    while (i >= 0 && nums[i] <= nums[i + 1]) i--;
+    if (i >= 0) {
+        let j = nums.length - 1;
+        while (nums[j] >= nums[i]) j--;
+        [nums[i], nums[j]] = [nums[j], nums[i]];
+    }
+
+    let left = i + 1;
+    let right = nums.length - 1;
+    while (left < right) {
+        [nums[left], nums[right]] = [nums[right], nums[left]];
+        left++;
+        right--;
+    }
+    return nums;
+}
+
 // —— 自测 ——
 console.log(nextPermutation([1, 2, 3])); // [1,3,2]
 console.log(nextPermutation([3, 2, 1])); // [1,2,3]
 console.log(nextPermutation([1, 1, 5])); // [1,5,1]
+console.log(previousPermutation([1, 3, 2])); // [1,2,3]
 
-module.exports = { nextPermutation };
+module.exports = { nextPermutation, previousPermutation };

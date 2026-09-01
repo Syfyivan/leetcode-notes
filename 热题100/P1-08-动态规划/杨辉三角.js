@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 杨辉三角
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 思路：
  * 1. 第 i 行有 i+1 个数，两端是 1。
  * 2. 中间 res[i][j] = res[i-1][j-1] + res[i-1][j]。
@@ -38,3 +44,29 @@ var generate = function(numRows) {
     }
     return res;
 };
+
+/**
+ * 延伸 1：只生成第 rowIndex 行（LeetCode 119）
+ *
+ * 需求：使用 O(rowIndex) 空间返回指定的 0-based 行。
+ *
+ * 思路：一维数组从右向左更新，避免本轮新值覆盖仍要使用的上一行值。
+ *
+ * ——— 示例 ———
+ * 示例：rowIndex=3 输出 [1,3,3,1]。
+ *
+ * 复杂度：时间 O(k²)，空间 O(k)。
+ */
+function getPascalRow(rowIndex) {
+  const row = new Array(rowIndex + 1).fill(0);
+  row[0] = 1;
+  for (let i = 1; i <= rowIndex; i++) {
+    for (let j = i; j >= 1; j--) row[j] += row[j - 1];
+  }
+  return row;
+}
+
+// —— 自测 ——
+console.log(generate(5));
+
+module.exports = { generate, getPascalRow };

@@ -1,3 +1,9 @@
+/**
+ * 热题 100 · 跳跃游戏
+ *
+ * 优先级：Hot 100 · P2
+ */
+
 /**给你一个非负整数数组 nums ，你最初位于数组的 第一个下标 。数组中的每个元素代表你在该位置可以跳跃的最大长度。
 
 判断你是否能够到达最后一个下标，如果可以，返回 true ；否则，返回 false 。
@@ -55,3 +61,29 @@ var canJump = function(nums) {
     }
     return false;
 };
+
+/**
+ * 延伸 1：从终点反向判断可达性
+ *
+ * 需求：用与正向“最远覆盖”不同的视角判断能否到达末尾。
+ *
+ * 思路：把 last 视为当前必须到达的位置；若下标 i 能覆盖 last，就把目标左移到 i，最终检查能否移到 0。
+ *
+ * ——— 示例 ———
+ * 示例：canJumpBackward([2,3,1,1,4]) => true；canJumpBackward([3,2,1,0,4]) => false
+ *
+ * 复杂度：时间 O(n)，空间 O(1)
+ */
+function canJumpBackward(nums) {
+    let last = nums.length - 1;
+    for (let i = nums.length - 2; i >= 0; i--) {
+        if (i + nums[i] >= last) last = i;
+    }
+    return last === 0;
+}
+
+// —— 自测 ——
+console.log(canJump([2, 3, 1, 1, 4]));         // 期望：true
+console.log(canJumpBackward([3, 2, 1, 0, 4])); // 期望：false
+
+module.exports = { canJump, canJumpBackward };

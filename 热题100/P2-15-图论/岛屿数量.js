@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 岛屿数量
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 岛屿数量（LeetCode 200）
  *
  * 给定一个由字符 '1'（陆地）和 '0'（水）组成的二维网格 grid，
@@ -75,6 +81,49 @@ function numIslands(grid) {
     return count;
 }
 
+/**
+ * 延伸 1：岛屿的最大面积
+ *
+ * 需求：在同样的四方向连通规则下，返回最大岛屿包含的陆地格数。
+ *
+ * 思路：每遇到一块未访问陆地就用栈完成一次 DFS，并累计本次连通块面积。
+ *
+ * ——— 示例 ———
+ * 示例：maxAreaOfIsland([[1,1,0],[0,1,0],[1,0,1]]) => 3
+ *
+ * 复杂度：时间 O(mn)，空间 O(mn)
+ */
+function maxAreaOfIsland(grid) {
+    if (grid.length === 0 || grid[0].length === 0) return 0;
+    const rows = grid.length;
+    const cols = grid[0].length;
+    const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    let maxArea = 0;
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            if (grid[row][col] !== 1 && grid[row][col] !== '1') continue;
+            const stack = [[row, col]];
+            grid[row][col] = 0;
+            let area = 0;
+            while (stack.length) {
+                const [x, y] = stack.pop();
+                area++;
+                for (const [dx, dy] of dirs) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (nx < 0 || nx >= rows || ny < 0 || ny >= cols) continue;
+                    if (grid[nx][ny] !== 1 && grid[nx][ny] !== '1') continue;
+                    grid[nx][ny] = 0;
+                    stack.push([nx, ny]);
+                }
+            }
+            maxArea = Math.max(maxArea, area);
+        }
+    }
+    return maxArea;
+}
+
 // —— 自测 ——
 console.log(numIslands([
   ["1", "1", "1", "1", "0"],
@@ -88,5 +137,6 @@ console.log(numIslands([
   ["0", "0", "1", "0", "0"],
   ["0", "0", "0", "1", "1"],
 ])); // 期望： 3
+console.log(maxAreaOfIsland([[1, 1, 0], [0, 1, 0], [1, 0, 1]])); // 期望： 3
 
-module.exports = { numIslands };
+module.exports = { numIslands, maxAreaOfIsland };

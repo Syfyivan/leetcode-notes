@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 和为K的子数组
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 和为 K 的子数组（LeetCode 560）
  *
  * 给定一个整数数组 nums 和一个整数 k，请统计并返回该数组中和为 k 的连续子数组的个数。
@@ -53,8 +59,32 @@ function subarraySum(nums, k) {
   return count;
 }
 
+/**
+ * 延伸 1：最长和为 k 的子数组
+ *
+ * 需求：返回满足和为 k 的最长连续子数组长度，数组可含负数。
+ *
+ * 思路：Map 只保存某个前缀和第一次出现的位置；当前 prefix-k 出现过即可形成区间。
+ *
+ * ——— 示例 ———
+ * 示例：[1,-1,5,-2,3]，k=3，输出 4。
+ *
+ * 复杂度：时间 O(n)，空间 O(n)。
+ */
+function maxSubArrayLen(nums, k) {
+  const firstIndex = new Map([[0, -1]]);
+  let prefix = 0;
+  let best = 0;
+  for (let i = 0; i < nums.length; i++) {
+    prefix += nums[i];
+    if (firstIndex.has(prefix - k)) best = Math.max(best, i - firstIndex.get(prefix - k));
+    if (!firstIndex.has(prefix)) firstIndex.set(prefix, i);
+  }
+  return best;
+}
+
 // —— 自测 ——
 console.log(subarraySum([1, 1, 1], 2)); // 2
 console.log(subarraySum([1, 2, 3], 3)); // 2
 
-module.exports = { subarraySum };
+module.exports = { subarraySum, maxSubArrayLen };

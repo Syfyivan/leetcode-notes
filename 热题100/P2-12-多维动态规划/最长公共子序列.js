@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 最长公共子序列
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 最长公共子序列（LeetCode 1143）
  *
  * 给定两个字符串 text1 和 text2，返回这两个字符串的最长公共子序列的长度。如果不存在公共子序列，返回 0。
@@ -61,9 +67,41 @@ function longestCommonSubsequence(text1, text2) {
     return dp[m][n];
 }
 
+/**
+ * 延伸 1：还原一条最长公共子序列
+ *
+ * 需求：返回实际字符串，不只返回长度。
+ *
+ * 思路：完整 dp 表从右下回溯；字符相同就收下，否则走 dp 值较大的方向。
+ *
+ * ——— 示例 ———
+ * 示例："abcde" 与 "ace" 输出 "ace"。
+ *
+ * 复杂度：时间 O(mn)，空间 O(mn)。
+ */
+function longestCommonSubsequenceString(text1, text2) {
+  const dp = Array.from({ length: text1.length + 1 }, () => new Array(text2.length + 1).fill(0));
+  for (let i = 1; i <= text1.length; i++) {
+    for (let j = 1; j <= text2.length; j++) {
+      dp[i][j] = text1[i - 1] === text2[j - 1]
+        ? dp[i - 1][j - 1] + 1
+        : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  const chars = [];
+  let i = text1.length;
+  let j = text2.length;
+  while (i > 0 && j > 0) {
+    if (text1[i - 1] === text2[j - 1]) { chars.push(text1[i - 1]); i--; j--; }
+    else if (dp[i - 1][j] >= dp[i][j - 1]) i--;
+    else j--;
+  }
+  return chars.reverse().join('');
+}
+
 // —— 自测 ——
 console.log(longestCommonSubsequence("abcde", "ace")); // 3
 console.log(longestCommonSubsequence("abc", "abc")); // 3
 console.log(longestCommonSubsequence("abc", "def")); // 0
 
-module.exports = { longestCommonSubsequence };
+module.exports = { longestCommonSubsequence, longestCommonSubsequenceString };

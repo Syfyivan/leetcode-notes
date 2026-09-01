@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 两两交换链表中的节点
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 两两交换链表中的节点（LeetCode 24）
  *
  * 给定一个链表，两两交换其中相邻的节点，并返回交换后链表的头节点。
@@ -74,9 +80,29 @@ function swapPairs(head) {
   return dummy.next;
 }
 
+/**
+ * 延伸 1：递归交换
+ *
+ * 需求：每次只交换链表开头两个节点，后面的部分交给递归。
+ *
+ * 思路：second 成为新头，first.next 接递归结果，second.next 再指回 first。
+ *
+ * ——— 示例 ———
+ * 示例：1→2→3→4，输出 2→1→4→3。
+ *
+ * 复杂度：时间 O(n)，递归栈 O(n)。
+ */
+function swapPairsRecursive(head) {
+  if (!head || !head.next) return head;
+  const second = head.next;
+  head.next = swapPairsRecursive(second.next);
+  second.next = head;
+  return second;
+}
+
 // —— 自测 ——
 console.log(toArray(swapPairs(build([1, 2, 3, 4])))); // 期望： [2,1,4,3]
 console.log(toArray(swapPairs(build([]))));           // 期望： []
 console.log(toArray(swapPairs(build([1]))));          // 期望： [1]
 
-module.exports = { ListNode, build, toArray, swapPairs };
+module.exports = { ListNode, build, toArray, swapPairs, swapPairsRecursive };

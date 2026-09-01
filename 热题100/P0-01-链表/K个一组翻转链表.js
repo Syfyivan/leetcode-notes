@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · K个一组翻转链表
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * K 个一组翻转链表（LeetCode 25）
  *
  * 给定链表的头节点 head，每 k 个节点一组翻转，返回翻转后的链表。
@@ -78,6 +84,37 @@ function reverseKGroup(head, k) {
   }
 }
 
+/**
+ * 延伸 1：递归分组反转
+ *
+ * 需求：每次只处理前 k 个节点，剩余链表递归处理；不足 k 个保持原样。
+ *
+ * 思路：先探出第 k 个节点后的边界，再把 [head, boundary) 反转，原 head 接递归结果。
+ *
+ * ——— 示例 ———
+ * 示例：1→2→3→4→5，k=2，输出 2→1→4→3→5。
+ *
+ * 复杂度：时间 O(n)，递归栈 O(n/k)。
+ */
+function reverseKGroupRecursive(head, k) {
+  if (k <= 1 || !head) return head;
+  let boundary = head;
+  for (let i = 0; i < k; i++) {
+    if (!boundary) return head;
+    boundary = boundary.next;
+  }
+  let prev = boundary;
+  let current = head;
+  for (let i = 0; i < k; i++) {
+    const next = current.next;
+    current.next = prev;
+    prev = current;
+    current = next;
+  }
+  head.next = reverseKGroupRecursive(boundary, k);
+  return prev;
+}
+
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——
 function build(arr) {
   const dummy = new ListNode(0);
@@ -96,4 +133,4 @@ console.log(toArray(reverseKGroup(build([1, 2, 3, 4, 5]), 2))); // [2, 1, 4, 3, 
 console.log(toArray(reverseKGroup(build([1, 2, 3, 4, 5]), 3))); // [3, 2, 1, 4, 5]
 console.log(toArray(reverseKGroup(build([1, 2, 3, 4, 5]), 1))); // [1, 2, 3, 4, 5]
 
-module.exports = { ListNode, reverseKGroup, build, toArray };
+module.exports = { ListNode, reverseKGroup, reverseKGroupRecursive, build, toArray };

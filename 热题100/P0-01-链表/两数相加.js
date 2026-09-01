@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 两数相加
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 两数相加（LeetCode 2）
  *
  * 给定两个非空链表 l1 和 l2，表示两个非负整数。
@@ -77,6 +83,33 @@ function addTwoNumbers(l1, l2) {
   return dummy.next;
 }
 
+/**
+ * 延伸 1：数字按正序存放（LeetCode 445）
+ *
+ * 需求：链表头是最高位，不能直接从头相加；返回结果也保持正序。
+ *
+ * 思路：两条链表分别压栈，从末位弹出相加；新节点每次插到结果头部。
+ *
+ * ——— 示例 ———
+ * 示例：7→2→4→3 加 5→6→4，输出 7→8→0→7。
+ *
+ * 复杂度：时间 O(m+n)，空间 O(m+n)。
+ */
+function addTwoNumbersForward(l1, l2) {
+  const a = [];
+  const b = [];
+  for (; l1; l1 = l1.next) a.push(l1.val);
+  for (; l2; l2 = l2.next) b.push(l2.val);
+  let carry = 0;
+  let head = null;
+  while (a.length || b.length || carry) {
+    const sum = (a.pop() || 0) + (b.pop() || 0) + carry;
+    head = new ListNode(sum % 10, head);
+    carry = Math.floor(sum / 10);
+  }
+  return head;
+}
+
 // —— 自测 ——
 console.log(toArray(addTwoNumbers(build([2, 4, 3]), build([5, 6, 4]))));
 // 期望： [7,0,8]
@@ -85,4 +118,4 @@ console.log(toArray(addTwoNumbers(build([0]), build([0]))));
 console.log(toArray(addTwoNumbers(build([9, 9, 9, 9, 9, 9, 9]), build([9, 9, 9, 9]))));
 // 期望： [8,9,9,9,0,0,0,1]
 
-module.exports = { ListNode, build, toArray, addTwoNumbers };
+module.exports = { ListNode, build, toArray, addTwoNumbers, addTwoNumbersForward };

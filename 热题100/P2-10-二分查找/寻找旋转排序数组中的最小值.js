@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 寻找旋转排序数组中的最小值
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 寻找旋转排序数组中的最小值（LC153）
  *
  * 已知一个长度为 n 的数组，预先按照升序排列，经由 1 到 n 次 旋转 后，得到输入数组。
@@ -61,9 +67,33 @@ function findMin(nums) {
     return nums[left];
 }
 
+/**
+ * 延伸 1：允许重复元素（LeetCode 154）
+ *
+ * 需求：旋转数组中可出现重复值，返回最小值。
+ *
+ * 思路：mid 小于 right 时最小值在左侧；大于时在右侧；相等时只能安全地 right--。
+ *
+ * ——— 示例 ———
+ * 示例：[2,2,2,0,1] 输出 0。
+ *
+ * 复杂度：平均 O(log n)，全重复时 O(n)。
+ */
+function findMinWithDuplicates(nums) {
+  let left = 0;
+  let right = nums.length - 1;
+  while (left < right) {
+    const middle = left + Math.floor((right - left) / 2);
+    if (nums[middle] < nums[right]) right = middle;
+    else if (nums[middle] > nums[right]) left = middle + 1;
+    else right--;
+  }
+  return nums[left];
+}
+
 // —— 自测 ——
 console.log(findMin([3, 4, 5, 1, 2])); // 期望输出 1
 console.log(findMin([4, 5, 6, 7, 0, 1, 2])); // 期望输出 0
 console.log(findMin([11, 13, 15, 17])); // 期望输出 11
 
-module.exports = { findMin };
+module.exports = { findMin, findMinWithDuplicates };

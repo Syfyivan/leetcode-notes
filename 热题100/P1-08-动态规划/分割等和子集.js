@@ -1,3 +1,9 @@
+/**
+ * 热题 100 · 分割等和子集
+ *
+ * 优先级：Hot 100 · P1
+ */
+
 // 给你一个 只包含正整数 的 非空 数组 nums 。请你判断是否可以将这个数组分割成两个子集，使得两个子集的元素和相等。
 
 
@@ -48,3 +54,36 @@ var canPartition = function(nums) {
     }
     return dp[target];
 };
+
+/**
+ * 延伸 1：返回一个目标子集
+ *
+ * 需求：可分割时返回和为总和一半的元素集合；不可分割返回 null。
+ *
+ * 思路：0/1 背包倒序更新，dp[sum] 直接保存第一次构成该和的数组。
+ *
+ * ——— 示例 ———
+ * 示例：[1,5,11,5] 可返回 [11] 或 [1,5,5]。
+ *
+ * 复杂度：状态转移 O(n*target)，为还原路径额外复制数组。
+ */
+function partitionSubset(nums) {
+  const total = nums.reduce((sum, value) => sum + value, 0);
+  if (total % 2) return null;
+  const target = total / 2;
+  const dp = new Array(target + 1).fill(null);
+  dp[0] = [];
+  for (const value of nums) {
+    for (let sum = target; sum >= value; sum--) {
+      if (dp[sum] === null && dp[sum - value] !== null) {
+        dp[sum] = dp[sum - value].concat(value);
+      }
+    }
+  }
+  return dp[target];
+}
+
+// —— 自测 ——
+console.log(canPartition([1, 5, 11, 5])); // true
+
+module.exports = { canPartition, partitionSubset };

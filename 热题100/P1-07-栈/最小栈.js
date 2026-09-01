@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 最小栈
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 最小栈（LeetCode 155）
  *
  * 设计一个支持 push、pop、top 操作，并能在常数时间内检索到最小元素的栈。
@@ -81,6 +87,35 @@ class MinStack {
   }
 }
 
+/**
+ * 延伸 1：双栈写法
+ *
+ * 需求：数据栈保存全部值，辅助栈只保存每一层对应的最小值。
+ *
+ * 思路：push 时把 min(value, 当前最小值) 同步压入 mins；pop 时两个栈一起弹。
+ *
+ * ——— 示例 ———
+ * 示例：push(-2),push(0),push(-3)，getMin()=-3；pop 后 top()=0、getMin()=-2。
+ *
+ * 复杂度：所有操作 O(1)，空间 O(n)。
+ */
+class MinStackTwoStacks {
+  constructor() {
+    this.values = [];
+    this.mins = [];
+  }
+  push(value) {
+    this.values.push(value);
+    this.mins.push(this.mins.length ? Math.min(value, this.mins.at(-1)) : value);
+  }
+  pop() {
+    this.mins.pop();
+    return this.values.pop();
+  }
+  top() { return this.values.at(-1); }
+  getMin() { return this.mins.at(-1); }
+}
+
 // —— 自测 ——
 const minStack = new MinStack();
 minStack.push(-2);
@@ -91,4 +126,4 @@ minStack.pop();
 console.log(minStack.top()); // 0
 console.log(minStack.getMin()); // -2
 
-module.exports = { MinStack };
+module.exports = { MinStack, MinStackTwoStacks };

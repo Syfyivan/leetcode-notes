@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 有序数组转化成二叉搜索树
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * Definition for a binary tree node.
  * function TreeNode(val, left, right) {
  *     this.val = (val===undefined ? 0 : val)
@@ -11,6 +17,10 @@
  * 2. 每次取中点做根，左边建左子树，右边建右子树。
  * 3. 区间空则返回 null。偶数个时中点取左或右都行。
  * 复杂度：时间 O(n)，空间 O(log n)
+ *
+ * ——— 示例 ———
+ * 输入：[-10,-3,0,5,9]
+ * 输出：一种高度平衡 BST，例如 [0,-3,9,-10,null,5]
  *
  * ——— 延伸 ———
  * - 有序链表建 BST（LC109）：快慢指针找中点，先建左再断开再建右。
@@ -30,6 +40,12 @@
  * Q: 时间空间？
  * A: 每个元素当一次根 O(n)。递归深度 O(log n)，因为每次对半。
  */
+function TreeNode(val, left = null, right = null) {
+  this.val = val;
+  this.left = left;
+  this.right = right;
+}
+
 /**
  * @param {number[]} nums
  * @return {TreeNode}
@@ -45,3 +61,30 @@ var sortedArrayToBST = function(nums) {
     };
     return build(0, nums.length - 1);
 };
+
+/**
+ * 延伸 1：切片版写法
+ *
+ * 需求：用最直观的代码展示“中点为根，左右递归”的结构。
+ *
+ * 思路：每轮取中点，左右 slice 后继续构造；代价是反复复制子数组。
+ *
+ * ——— 示例 ———
+ * 示例：[-10,-3,0,5,9] 的根可取 0，左右子树高度差不超过 1。
+ *
+ * 复杂度：时间最坏 O(n log n)，切片额外空间 O(n log n)。
+ */
+function sortedArrayToBSTWithSlice(nums) {
+  if (nums.length === 0) return null;
+  const middle = Math.floor(nums.length / 2);
+  return {
+    val: nums[middle],
+    left: sortedArrayToBSTWithSlice(nums.slice(0, middle)),
+    right: sortedArrayToBSTWithSlice(nums.slice(middle + 1)),
+  };
+}
+
+// —— 自测 ——
+console.log(sortedArrayToBST([-10, -3, 0, 5, 9]).val); // 0
+
+module.exports = { TreeNode, sortedArrayToBST, sortedArrayToBSTWithSlice };

@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 字符串解码
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 字符串解码（LeetCode 394）
  *
  * 给定一个经过编码的字符串，返回它解码后的字符串。
@@ -69,9 +75,41 @@ function decodeString(s) {
   return cur;
 }
 
+/**
+ * 延伸 1：递归下降解码
+ *
+ * 需求：用共享指针解析嵌套括号，遇到 ']' 返回当前层结果。
+ *
+ * 思路：数字累积倍数；普通字符直接追加；'[' 后递归解析子串并 repeat。
+ *
+ * ——— 示例 ———
+ * 示例："3[a2[c]]" 输出 "accaccacc"。
+ *
+ * 复杂度：时间 O(输出长度)，递归栈 O(嵌套深度)。
+ */
+function decodeStringRecursive(s) {
+  let index = 0;
+  function parse() {
+    let result = '';
+    let count = 0;
+    while (index < s.length && s[index] !== ']') {
+      const char = s[index++];
+      if (/\d/.test(char)) count = count * 10 + Number(char);
+      else if (char === '[') {
+        const nested = parse();
+        index++;
+        result += nested.repeat(count);
+        count = 0;
+      } else result += char;
+    }
+    return result;
+  }
+  return parse();
+}
+
 // —— 自测 ——
 console.log(decodeString("3[a]2[bc]")); // "aaabcbc"
 console.log(decodeString("3[a2[c]]")); // "accaccacc"
 console.log(decodeString("2[abc]3[cd]ef")); // "abcabccdcdcdef"
 
-module.exports = { decodeString };
+module.exports = { decodeString, decodeStringRecursive };

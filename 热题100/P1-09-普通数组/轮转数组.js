@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 轮转数组
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 思路：
  * 1. 右旋 k 步等于：整体翻转，再翻转前 k 个，再翻转后面。
  * 2. k 先对 n 取模，k=0 等于没动。
@@ -42,3 +48,31 @@ var rotate = function(nums, k) {
     reverse(0, k - 1);     // 前 k 翻回来
     reverse(k, n - 1);     // 后 n-k 翻回来
 };
+
+/**
+ * 延伸 1：额外数组版
+ *
+ * 需求：用最直观的下标映射实现右轮转，返回原数组便于自测。
+ *
+ * 思路：原下标 i 的值写到 (i+k)%n，最后复制回 nums。
+ *
+ * ——— 示例 ———
+ * 示例：[1,2,3,4,5,6,7]，k=3，变为 [5,6,7,1,2,3,4]。
+ *
+ * 复杂度：时间 O(n)，空间 O(n)。
+ */
+function rotateWithExtraSpace(nums, k) {
+  if (nums.length === 0) return nums;
+  k = ((k % nums.length) + nums.length) % nums.length;
+  const copy = new Array(nums.length);
+  for (let i = 0; i < nums.length; i++) copy[(i + k) % nums.length] = nums[i];
+  for (let i = 0; i < nums.length; i++) nums[i] = copy[i];
+  return nums;
+}
+
+// —— 自测 ——
+const rotateSample = [1, 2, 3, 4, 5, 6, 7];
+rotate(rotateSample, 3);
+console.log(rotateSample); // [5,6,7,1,2,3,4]
+
+module.exports = { rotate, rotateWithExtraSpace };

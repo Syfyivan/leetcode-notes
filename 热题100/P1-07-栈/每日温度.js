@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 每日温度
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 每日温度（LeetCode 739）
  *
  * 给定一个整数数组 temperatures，表示每天的温度，返回一个数组 answer，
@@ -58,9 +64,34 @@ function dailyTemperatures(temperatures) {
   return ans;
 }
 
+/**
+ * 延伸 1：循环数组的下一个更大元素（LeetCode 503）
+ *
+ * 需求：数组首尾相接，为每项返回下一个更大值；不存在返回 -1。
+ *
+ * 思路：下标扫描两轮，栈保存仍未找到答案的下标；第二轮只出栈，不重复入栈。
+ *
+ * ——— 示例 ———
+ * 示例：[1,2,1] 输出 [2,-1,2]。
+ *
+ * 复杂度：时间 O(n)，空间 O(n)。
+ */
+function nextGreaterElements(nums) {
+  const result = new Array(nums.length).fill(-1);
+  const stack = [];
+  for (let i = 0; i < nums.length * 2; i++) {
+    const index = i % nums.length;
+    while (stack.length && nums[stack.at(-1)] < nums[index]) {
+      result[stack.pop()] = nums[index];
+    }
+    if (i < nums.length) stack.push(index);
+  }
+  return result;
+}
+
 // —— 自测 ——
 console.log(dailyTemperatures([73, 74, 75, 71, 69, 72, 76, 73])); // [1,1,4,2,1,1,0,0]
 console.log(dailyTemperatures([30, 40, 50, 60])); // [1,1,1,0]
 console.log(dailyTemperatures([30, 60, 90])); // [1,1,0]
 
-module.exports = { dailyTemperatures };
+module.exports = { dailyTemperatures, nextGreaterElements };

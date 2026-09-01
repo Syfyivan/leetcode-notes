@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 最小覆盖子串
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 最小覆盖子串（LeetCode 76）
  *
  * 给定一个字符串 s 和一个字符串 t，返回 s 中涵盖 t 所有字符（含重复次数）的最小子串。
@@ -78,9 +84,28 @@ function minWindow(s, t) {
   return minLen === Infinity ? '' : s.slice(start, start + minLen);
 }
 
+/**
+ * 延伸 1：返回最小窗口的位置
+ *
+ * 需求：除子串外返回 start、end（左闭右开），找不到时返回 -1。
+ *
+ * 思路：复用主解法得到最短文本，再在原串中定位；相同文本首次出现同样是合法最短窗口。
+ *
+ * ——— 示例 ———
+ * 示例：s="ADOBECODEBANC"，t="ABC"，返回 {window:"BANC",start:9,end:13}。
+ *
+ * 复杂度：时间 O(n)，空间 O(字符集大小)。
+ */
+function minWindowInfo(s, t) {
+  const window = minWindow(s, t);
+  if (!window) return { window: '', start: -1, end: -1 };
+  const start = s.indexOf(window);
+  return { window, start, end: start + window.length };
+}
+
 // —— 自测 ——
 console.log(minWindow("ADOBECODEBANC", "ABC")); // "BANC"
 console.log(minWindow("a", "a"));               // "a"
 console.log(minWindow("a", "aa"));              // ""
 
-module.exports = { minWindow };
+module.exports = { minWindow, minWindowInfo };

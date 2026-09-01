@@ -1,3 +1,9 @@
+/**
+ * 热题 100 · 组合总和
+ *
+ * 优先级：Hot 100 · P2
+ */
+
 /*给你一个 无重复元素 的整数数组 candidates 和一个目标整数 target ，
 找出 candidates 中可以使数字和为目标数 target 的 所有 不同组合 ，并以列表形式返回。你可以按 任意顺序 返回这些组合。
 candidates 中的 同一个 数字可以 无限制重复被选取 。如果至少一个数字的被选数量不同，则两种组合是不同的。 
@@ -58,3 +64,40 @@ var combinationSum = function(candidates, target) {
     dfs(0, 0);
     return res;
 };
+
+/**
+ * 延伸 1：每个数字只能使用一次（LeetCode 40）
+ *
+ * 需求：输入可重复，每个下标最多选一次，输出组合不能重复。
+ *
+ * 思路：排序后从 i+1 递归；同层相同数字跳过，当前值超过剩余目标就停止。
+ *
+ * ——— 示例 ———
+ * 示例：[10,1,2,7,6,1,5]，target=8，输出 4 个不同组合。
+ *
+ * 复杂度：最坏 O(2^n)，递归空间 O(n)。
+ */
+function combinationSum2(candidates, target) {
+  const sorted = candidates.slice().sort((a, b) => a - b);
+  const result = [];
+  const path = [];
+  function backtrack(start, rest) {
+    if (rest === 0) {
+      result.push(path.slice());
+      return;
+    }
+    for (let i = start; i < sorted.length && sorted[i] <= rest; i++) {
+      if (i > start && sorted[i] === sorted[i - 1]) continue;
+      path.push(sorted[i]);
+      backtrack(i + 1, rest - sorted[i]);
+      path.pop();
+    }
+  }
+  backtrack(0, target);
+  return result;
+}
+
+// —— 自测 ——
+console.log(combinationSum([2, 3, 6, 7], 7));
+
+module.exports = { combinationSum, combinationSum2 };

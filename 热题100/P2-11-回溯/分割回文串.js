@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 分割回文串
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
 给你一个字符串 s，请你将 s 分割成一些 子串，使每个子串都是 回文串 。返回 s 所有可能的分割方案。
 
 输入：s = "aab"
@@ -64,3 +70,37 @@ var partition = function(s) {
     dfs(s);
     return res;
 };
+
+/**
+ * 延伸 1：分割回文串的最少切割次数（LeetCode 132）
+ *
+ * 需求：把字符串切成若干回文子串，返回最少切几刀。
+ *
+ * 思路：先预处理 palindrome[left][right]，再让 cuts[end] 枚举最后一段起点。
+ *
+ * ——— 示例 ———
+ * 示例："aab" 输出 1（"aa" | "b"）。
+ *
+ * 复杂度：时间 O(n²)，空间 O(n²)。
+ */
+function minCutPalindrome(s) {
+  const n = s.length;
+  if (n === 0) return 0;
+  const palindrome = Array.from({ length: n }, () => new Array(n).fill(false));
+  const cuts = new Array(n).fill(0);
+  for (let right = 0; right < n; right++) {
+    cuts[right] = right;
+    for (let left = 0; left <= right; left++) {
+      if (s[left] === s[right] && (right - left <= 2 || palindrome[left + 1][right - 1])) {
+        palindrome[left][right] = true;
+        cuts[right] = left === 0 ? 0 : Math.min(cuts[right], cuts[left - 1] + 1);
+      }
+    }
+  }
+  return cuts[n - 1];
+}
+
+// —— 自测 ——
+console.log(partition('aab')); // [['a','a','b'],['aa','b']]
+
+module.exports = { partition, minCutPalindrome };

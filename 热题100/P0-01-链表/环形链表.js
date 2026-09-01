@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 环形链表
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 环形链表（LeetCode 141）
  *
  * 给定链表的头节点 head，判断链表中是否有环。
@@ -66,6 +72,33 @@ function hasCycle(head) {
   return false;
 }
 
+/**
+ * 延伸 1：计算环长
+ *
+ * 需求：有环时返回环内节点数，无环返回 0。
+ *
+ * 思路：快慢指针相遇后固定 slow，让 fast 再绕一圈，回到 slow 前累计步数。
+ *
+ * ——— 示例 ———
+ * 示例：3→2→0→-4，尾节点连回下标 1，环长为 3。
+ *
+ * 复杂度：时间 O(n)，空间 O(1)。
+ */
+function cycleLength(head) {
+  let slow = head;
+  let fast = head;
+  while (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+    if (slow === fast) {
+      let length = 1;
+      for (fast = fast.next; fast !== slow; fast = fast.next) length++;
+      return length;
+    }
+  }
+  return 0;
+}
+
 // —— 小工具：建链表，并可选地让尾节点指向第 pos 个节点（0 起）制造环；pos = -1 表示无环 ——
 function buildWithCycle(arr, pos) {
   const nodes = arr.map((v) => new ListNode(v));
@@ -80,4 +113,4 @@ console.log(hasCycle(buildWithCycle([1, 2], 0)));        // true
 console.log(hasCycle(buildWithCycle([1], -1)));          // false
 console.log(hasCycle(buildWithCycle([], -1)));           // false
 
-module.exports = { ListNode, hasCycle, buildWithCycle };
+module.exports = { ListNode, hasCycle, cycleLength, buildWithCycle };

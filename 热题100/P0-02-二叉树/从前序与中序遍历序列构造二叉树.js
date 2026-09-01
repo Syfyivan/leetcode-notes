@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 从前序与中序遍历序列构造二叉树
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 从前序与中序遍历序列构造二叉树（LC105）
  *
  * 给定两个整数数组 preorder 和 inorder ，其中 preorder 是二叉树的先序遍历，
@@ -91,8 +97,35 @@ function buildTree(preorder, inorder) {
   return build(0, inorder.length - 1);
 }
 
+/**
+ * 延伸 1：中序 + 后序构造（LeetCode 106）
+ *
+ * 需求：后序最后一个元素是根，根据中序位置拆出左右子树。
+ *
+ * 思路：后序指针从尾部向前；必须先构造右子树，再构造左子树。
+ *
+ * ——— 示例 ———
+ * 示例：inorder=[9,3,15,20,7]，postorder=[9,15,7,20,3]，根节点为 3。
+ *
+ * 复杂度：时间 O(n)，Map 与递归栈 O(n)。
+ */
+function buildTreeFromInPost(inorder, postorder) {
+  const positions = new Map(inorder.map((value, index) => [value, index]));
+  let postIndex = postorder.length - 1;
+  function create(left, right) {
+    if (left > right) return null;
+    const value = postorder[postIndex--];
+    const root = new TreeNode(value);
+    const middle = positions.get(value);
+    root.right = create(middle + 1, right);
+    root.left = create(left, middle - 1);
+    return root;
+  }
+  return create(0, inorder.length - 1);
+}
+
 // —— 自测 ——
 console.log(inorderTraversal(buildTree([3, 9, 20, 15, 7], [9, 3, 15, 20, 7]))); // 期望输出 [9,3,15,20,7]
 console.log(inorderTraversal(buildTree([-1], [-1]))); // 期望输出 [-1]
 
-module.exports = { buildTree, TreeNode, build };
+module.exports = { buildTree, buildTreeFromInPost, TreeNode, build };

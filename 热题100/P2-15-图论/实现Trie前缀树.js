@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 实现Trie前缀树
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 实现 Trie（前缀树）（LeetCode 208）
  *
  * 请实现一个类 Trie，支持以下操作：
@@ -45,7 +51,7 @@
 
 class Trie {
   constructor() {
-    this.root = {};
+    this.root = Object.create(null);
   }
 
   /**
@@ -55,7 +61,7 @@ class Trie {
   insert(word) {
     let node = this.root;
     for (const ch of word) {
-      if (!node[ch]) node[ch] = {};
+      if (!node[ch]) node[ch] = Object.create(null);
       node = node[ch];
     }
     node.isEnd = true; // 路径在不代表成词，末尾必须打标
@@ -86,6 +92,35 @@ class Trie {
   startsWith(prefix) {
     return !!this._walk(prefix);
   }
+
+  /**
+   * 延伸 1：删除单词
+   *
+   * 需求：删除一个完整单词；不存在时返回 false，并保留仍被其他单词共享的前缀。
+   *
+   * 思路：先确认单词存在，再递归取消词尾标记；子节点既不成词也没有孩子时才向上剪枝。
+   *
+   * ——— 示例 ———
+   * 示例：插入 apple、app，删除 apple 后 search("app") 仍为 true。
+   *
+   * 复杂度：时间 O(L)，递归栈空间 O(L)
+   */
+  delete(word) {
+    if (!this.search(word)) return false;
+
+    const remove = (node, index) => {
+      if (index === word.length) {
+        delete node.isEnd;
+      } else {
+        const ch = word[index];
+        if (remove(node[ch], index + 1)) delete node[ch];
+      }
+      return !node.isEnd && Object.keys(node).length === 0;
+    };
+
+    remove(this.root, 0);
+    return true;
+  }
 }
 
 // —— 自测 ——
@@ -95,6 +130,9 @@ console.log(t.search("apple"));   // 期望： true
 console.log(t.search("app"));     // 期望： false
 console.log(t.startsWith("app")); // 期望： true
 t.insert("app");
+console.log(t.search("app"));     // 期望： true
+console.log(t.delete("apple"));   // 期望： true
+console.log(t.search("apple"));   // 期望： false
 console.log(t.search("app"));     // 期望： true
 
 module.exports = { Trie };

@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 搜索旋转排序数组
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * @param {number[]} nums
  * @param {number} target
  * @return {number}
@@ -51,3 +57,38 @@ var search = function(nums, target) {
     }
     return -1;
 };
+
+/**
+ * 延伸 1：允许重复元素（LeetCode 81）
+ *
+ * 需求：数组旋转且可能重复，只判断 target 是否存在。
+ *
+ * 思路：当 left、mid、right 三值相等时同时收缩两端；其余仍判断哪一半有序。
+ *
+ * ——— 示例 ———
+ * 示例：[2,5,6,0,0,1,2] 查找 0 返回 true，查找 3 返回 false。
+ *
+ * 复杂度：平均 O(log n)，全重复时退化 O(n)。
+ */
+function searchWithDuplicates(nums, target) {
+  let left = 0;
+  let right = nums.length - 1;
+  while (left <= right) {
+    const middle = left + Math.floor((right - left) / 2);
+    if (nums[middle] === target) return true;
+    if (nums[left] === nums[middle] && nums[middle] === nums[right]) {
+      left++;
+      right--;
+    } else if (nums[left] <= nums[middle]) {
+      if (nums[left] <= target && target < nums[middle]) right = middle - 1;
+      else left = middle + 1;
+    } else if (nums[middle] < target && target <= nums[right]) left = middle + 1;
+    else right = middle - 1;
+  }
+  return false;
+}
+
+// —— 自测 ——
+console.log(search([4, 5, 6, 7, 0, 1, 2], 0)); // 4
+
+module.exports = { search, searchWithDuplicates };

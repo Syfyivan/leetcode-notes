@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 最大子数组和
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 最大子数组和（LeetCode 53）
  *
  * 给定一个整数数组 nums，请找出一个具有最大和的连续子数组（子数组最少包含一个元素），
@@ -53,9 +59,36 @@ function maxSubArray(nums) {
   return best;
 }
 
+/**
+ * 延伸 1：返回最大和区间
+ *
+ * 需求：返回 sum、start、end，end 为闭区间下标。
+ *
+ * 思路：当前累计和小于 0 时，从当前位置重新起段；刷新最大和时记录边界。
+ *
+ * ——— 示例 ———
+ * 示例：[-2,1,-3,4,-1,2,1,-5,4] 返回和 6、区间 [3,6]。
+ *
+ * 复杂度：时间 O(n)，空间 O(1)。
+ */
+function maxSubArrayRange(nums) {
+  if (nums.length === 0) return { sum: 0, start: -1, end: -1 };
+  let currentSum = nums[0];
+  let currentStart = 0;
+  let answer = { sum: nums[0], start: 0, end: 0 };
+  for (let i = 1; i < nums.length; i++) {
+    if (currentSum < 0) {
+      currentSum = nums[i];
+      currentStart = i;
+    } else currentSum += nums[i];
+    if (currentSum > answer.sum) answer = { sum: currentSum, start: currentStart, end: i };
+  }
+  return answer;
+}
+
 // —— 自测 ——
 console.log(maxSubArray([-2, 1, -3, 4, -1, 2, 1, -5, 4])); // 6
 console.log(maxSubArray([1]));                             // 1
 console.log(maxSubArray([5, 4, -1, 7, 8]));                // 23
 
-module.exports = { maxSubArray };
+module.exports = { maxSubArray, maxSubArrayRange };

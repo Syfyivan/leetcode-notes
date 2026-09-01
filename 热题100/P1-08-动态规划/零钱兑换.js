@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 零钱兑换
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 思路：
  * 1. dp[i] = 凑出金额 i 的最少硬币数。
  * 2. 枚举硬币 c，若 i >= c，dp[i] = min(dp[i], dp[i-c] + 1)。硬币可重复用，完全背包。
@@ -40,3 +46,29 @@ var coinChange = function(coins, amount) {
     }
     return dp[amount] === Infinity ? -1 : dp[amount]; // 凑不出别把 Infinity 丢出去
 };
+
+/**
+ * 延伸 1：零钱兑换组合数（LeetCode 518）
+ *
+ * 需求：每种硬币可无限使用，计算凑成 amount 的不同组合数量，顺序不同不重复计数。
+ *
+ * 思路：硬币放外层、金额正序更新，dp[sum] += dp[sum-coin]。
+ *
+ * ——— 示例 ———
+ * 示例：amount=5，coins=[1,2,5]，输出 4。
+ *
+ * 复杂度：时间 O(coins*amount)，空间 O(amount)。
+ */
+function changeCombinations(amount, coins) {
+  const dp = new Array(amount + 1).fill(0);
+  dp[0] = 1;
+  for (const coin of coins) {
+    for (let sum = coin; sum <= amount; sum++) dp[sum] += dp[sum - coin];
+  }
+  return dp[amount];
+}
+
+// —— 自测 ——
+console.log(coinChange([1, 2, 5], 11)); // 3
+
+module.exports = { coinChange, changeCombinations };

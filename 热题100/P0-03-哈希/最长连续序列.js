@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 最长连续序列
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 最长连续序列（LeetCode 128）
  *
  * 给定一个未排序的整数数组 nums，找出数字连续的最长序列（不要求序列元素在原数组中连续）的长度。
@@ -59,9 +65,34 @@ function longestConsecutive(nums) {
   return best;
 }
 
+/**
+ * 延伸 1：返回最长连续序列本身
+ *
+ * 需求：长度相同时保留最先在输入中遇到的序列起点。
+ *
+ * 思路：只从没有 predecessor 的数字起步，向后收集完整序列并更新最佳答案。
+ *
+ * ——— 示例 ———
+ * 示例：[100,4,200,1,3,2] 输出 [1,2,3,4]。
+ *
+ * 复杂度：时间 O(n)，空间 O(n)。
+ */
+function longestConsecutiveSequence(nums) {
+  const set = new Set(nums);
+  let best = [];
+  for (const value of nums) {
+    if (!set.has(value - 1)) {
+      const current = [];
+      for (let number = value; set.has(number); number++) current.push(number);
+      if (current.length > best.length) best = current;
+    }
+  }
+  return best;
+}
+
 // —— 自测 ——
 console.log(longestConsecutive([100, 4, 200, 1, 3, 2]));            // 4
 console.log(longestConsecutive([0, 3, 7, 2, 5, 8, 4, 6, 0, 1]));   // 9
 console.log(longestConsecutive([]));                               // 0
 
-module.exports = { longestConsecutive };
+module.exports = { longestConsecutive, longestConsecutiveSequence };

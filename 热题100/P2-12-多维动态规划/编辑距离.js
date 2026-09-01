@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 编辑距离
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 编辑距离（LeetCode 72）
  *
  * 给你两个单词 word1 和 word2，请返回将 word1 转换成 word2 所使用的最少操作数。
@@ -63,8 +69,52 @@ function minDistance(word1, word2) {
     return dp[m][n];
 }
 
+/**
+ * 延伸 1：还原一组编辑操作
+ *
+ * 需求：返回最短距离和一种 insert/delete/replace 操作序列。
+ *
+ * 思路：先建完整 dp 表，再从右下角沿最优前驱倒推；相同字符直接走左上。
+ *
+ * ——— 示例 ———
+ * 示例：horse → ros，可得到 replace h→r、delete r、delete e，共 3 步。
+ *
+ * 复杂度：时间 O(mn)，空间 O(mn)。
+ */
+function minDistanceWithOperations(word1, word2) {
+  const m = word1.length;
+  const n = word2.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = word1[i - 1] === word2[j - 1]
+        ? dp[i - 1][j - 1]
+        : Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]) + 1;
+    }
+  }
+  const operations = [];
+  let i = m;
+  let j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && word1[i - 1] === word2[j - 1]) { i--; j--; }
+    else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) {
+      operations.push({ type: 'replace', from: word1[i - 1], to: word2[j - 1], index: i - 1 });
+      i--; j--;
+    } else if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) {
+      operations.push({ type: 'delete', value: word1[i - 1], index: i - 1 });
+      i--;
+    } else {
+      operations.push({ type: 'insert', value: word2[j - 1], index: i });
+      j--;
+    }
+  }
+  return { distance: dp[m][n], operations: operations.reverse() };
+}
+
 // —— 自测 ——
 console.log(minDistance("horse", "ros")); // 3
 console.log(minDistance("intention", "execution")); // 5
 
-module.exports = { minDistance };
+module.exports = { minDistance, minDistanceWithOperations };

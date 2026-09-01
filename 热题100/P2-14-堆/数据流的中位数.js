@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 数据流的中位数
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 数据流的中位数（LeetCode 295）
  *
  * 中位数是有序整数列表中的中间值。如果列表的大小是偶数，则没有中间值，中位数是两个中间值的平均值。
@@ -118,6 +124,42 @@ class MedianFinder {
   }
 }
 
+/**
+ * 延伸 1：有序数组版数据流中位数
+ *
+ * 需求：实现一个更容易手写和验证的版本，适合写入次数少、查询次数多的场景。
+ *
+ * 思路：每次用二分查找插入位置，再用 splice 保持数组有序；查询时直接读取中间位置。
+ *
+ * ——— 示例 ———
+ * 示例：依次加入 1、2、3，中位数依次为 1、1.5、2。
+ *
+ * 复杂度：addNum 时间 O(n)，findMedian 时间 O(1)，空间 O(n)
+ */
+class MedianFinderSortedArray {
+  constructor() {
+    this.data = [];
+  }
+
+  addNum(num) {
+    let left = 0;
+    let right = this.data.length;
+    while (left < right) {
+      const mid = left + ((right - left) >> 1);
+      if (this.data[mid] < num) left = mid + 1;
+      else right = mid;
+    }
+    this.data.splice(left, 0, num);
+  }
+
+  findMedian() {
+    const n = this.data.length;
+    if (n === 0) return undefined;
+    const mid = n >> 1;
+    return n % 2 === 1 ? this.data[mid] : (this.data[mid - 1] + this.data[mid]) / 2;
+  }
+}
+
 // —— 自测 ——
 const mf = new MedianFinder();
 mf.addNum(1);
@@ -126,4 +168,10 @@ console.log(mf.findMedian()); // 1.5
 mf.addNum(3);
 console.log(mf.findMedian()); // 2
 
-module.exports = { MedianFinder };
+const sortedMf = new MedianFinderSortedArray();
+sortedMf.addNum(3);
+sortedMf.addNum(1);
+sortedMf.addNum(2);
+console.log(sortedMf.findMedian()); // 2
+
+module.exports = { MedianFinder, MedianFinderSortedArray };

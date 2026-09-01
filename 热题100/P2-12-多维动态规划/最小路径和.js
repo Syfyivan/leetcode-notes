@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 最小路径和
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 64. 最小路径和
  *
  * 给定一个包含非负整数的 m x n 网格 grid，请找出一条从左上角到右下角的路径，
@@ -72,3 +78,42 @@ var minPathSum = function(grid) {
     return dp[m - 1][n - 1];
 
 };
+
+/**
+ * 延伸 1：还原一条最小路径
+ *
+ * 需求：返回最小和与从左上到右下的坐标路径。
+ *
+ * 思路：从右下向左上计算 dp；还原时比较“向下”和“向右”的剩余代价，走较小者。
+ *
+ * ——— 示例 ———
+ * 示例：[[1,3,1],[1,5,1],[4,2,1]] 返回和 7。
+ *
+ * 复杂度：时间 O(mn)，空间 O(mn)。
+ */
+function minPathSumWithPath(grid) {
+  const rows = grid.length;
+  const cols = rows ? grid[0].length : 0;
+  if (!rows || !cols) return { sum: 0, path: [] };
+  const dp = Array.from({ length: rows }, () => new Array(cols).fill(Infinity));
+  for (let row = rows - 1; row >= 0; row--) {
+    for (let col = cols - 1; col >= 0; col--) {
+      if (row === rows - 1 && col === cols - 1) dp[row][col] = grid[row][col];
+      else dp[row][col] = grid[row][col] + Math.min(dp[row + 1]?.[col] ?? Infinity, dp[row][col + 1] ?? Infinity);
+    }
+  }
+  const path = [[0, 0]];
+  let row = 0;
+  let col = 0;
+  while (row !== rows - 1 || col !== cols - 1) {
+    if ((dp[row + 1]?.[col] ?? Infinity) <= (dp[row][col + 1] ?? Infinity)) row++;
+    else col++;
+    path.push([row, col]);
+  }
+  return { sum: dp[0][0], path };
+}
+
+// —— 自测 ——
+console.log(minPathSum([[1, 3, 1], [1, 5, 1], [4, 2, 1]])); // 7
+
+module.exports = { minPathSum, minPathSumWithPath };

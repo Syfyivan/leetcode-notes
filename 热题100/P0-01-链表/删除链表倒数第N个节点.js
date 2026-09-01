@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 删除链表倒数第N个节点
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 删除链表的倒数第 N 个节点（LeetCode 19）
  *
  * 给定一个链表，删除链表的倒数第 n 个节点，返回头节点。
@@ -67,6 +73,29 @@ function removeNthFromEnd(head, n) {
   return dummy.next;
 }
 
+/**
+ * 延伸 1：两次遍历版
+ *
+ * 需求：先用最直观的长度法定位待删除节点，同时处理删除头节点。
+ *
+ * 思路：第一遍统计 length；dummy 再走 length-n 步，删除它的下一个节点。
+ *
+ * ——— 示例 ———
+ * 示例：1→2→3→4→5，n=2，输出 1→2→3→5。
+ *
+ * 复杂度：时间 O(n)，空间 O(1)。
+ */
+function removeNthFromEndWithLength(head, n) {
+  let length = 0;
+  for (let node = head; node; node = node.next) length++;
+  if (n < 1 || n > length) return head;
+  const dummy = new ListNode(0, head);
+  let before = dummy;
+  for (let i = 0; i < length - n; i++) before = before.next;
+  before.next = before.next.next;
+  return dummy.next;
+}
+
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——
 function build(arr) {
   const dummy = new ListNode(0);
@@ -84,4 +113,4 @@ function toArray(head) {
 console.log(toArray(removeNthFromEnd(build([1, 2, 3, 4, 5]), 2))); // [1, 2, 3, 5]
 console.log(toArray(removeNthFromEnd(build([1]), 1)));             // []
 
-module.exports = { ListNode, removeNthFromEnd, build, toArray };
+module.exports = { ListNode, removeNthFromEnd, removeNthFromEndWithLength, build, toArray };

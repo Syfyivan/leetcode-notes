@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · N皇后
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * N 皇后（LC51）
  *
  * 按照国际象棋的规则，皇后可以攻击与之处在同一行或同一列或同一斜线上的棋子。
@@ -69,8 +75,41 @@ function solveNQueens(n) {
     return res;
 }
 
+/**
+ * 延伸 1：只统计方案数（LeetCode 52）
+ *
+ * 需求：不构造棋盘字符串，只返回 n 皇后的合法摆放数量。
+ *
+ * 思路：逐行选择列，用列、主对角线 row-col、次对角线 row+col 三个 Set 剪枝。
+ *
+ * ——— 示例 ———
+ * 示例：n=4 输出 2。
+ *
+ * 复杂度：最坏约 O(n!)，递归空间 O(n)。
+ */
+function totalNQueens(n) {
+  const columns = new Set();
+  const diagonals1 = new Set();
+  const diagonals2 = new Set();
+  let count = 0;
+  function place(row) {
+    if (row === n) {
+      count++;
+      return;
+    }
+    for (let col = 0; col < n; col++) {
+      if (columns.has(col) || diagonals1.has(row - col) || diagonals2.has(row + col)) continue;
+      columns.add(col); diagonals1.add(row - col); diagonals2.add(row + col);
+      place(row + 1);
+      columns.delete(col); diagonals1.delete(row - col); diagonals2.delete(row + col);
+    }
+  }
+  place(0);
+  return count;
+}
+
 // —— 自测 ——
 console.log(solveNQueens(4)); // 期望输出 [[".Q..","...Q","Q...","..Q."],["..Q.","Q...","...Q",".Q.."]]
 console.log(solveNQueens(1)); // 期望输出 [["Q"]]
 
-module.exports = { solveNQueens };
+module.exports = { solveNQueens, totalNQueens };

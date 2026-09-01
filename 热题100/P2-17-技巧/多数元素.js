@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 多数元素
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 多数元素（LeetCode 169）
  *
  * 给定一个大小为 n 的数组 nums，返回其中的多数元素。多数元素是指在数组中出现次数大于 ⌊ n/2 ⌋ 的元素。
@@ -50,8 +56,31 @@ function majorityElement(nums) {
     return cand;
 }
 
+/**
+ * 延伸 1：多数元素可能不存在
+ *
+ * 需求：取消“多数元素一定存在”的前提；存在则返回该元素，否则返回 null。
+ *
+ * 思路：第一遍 Boyer-Moore 找候选，第二遍验证候选出现次数是否严格超过 n/2。
+ *
+ * ——— 示例 ———
+ * 示例：majorityElementVerified([3,2,3]) => 3；majorityElementVerified([1,2,3]) => null
+ *
+ * 复杂度：时间 O(n)，空间 O(1)
+ */
+function majorityElementVerified(nums) {
+    if (nums.length === 0) return null;
+    const candidate = majorityElement(nums);
+    let count = 0;
+    for (const num of nums) {
+        if (num === candidate) count++;
+    }
+    return count > nums.length / 2 ? candidate : null;
+}
+
 // —— 自测 ——
 console.log(majorityElement([3, 2, 3])); // 3
 console.log(majorityElement([2, 2, 1, 1, 1, 2, 2])); // 2
+console.log(majorityElementVerified([1, 2, 3])); // null
 
-module.exports = { majorityElement };
+module.exports = { majorityElement, majorityElementVerified };

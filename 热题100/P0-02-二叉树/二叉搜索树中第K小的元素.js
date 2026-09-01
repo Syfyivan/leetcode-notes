@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 二叉搜索树中第K小的元素
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 二叉搜索树中第K小的元素（LC230）
  *
  * 给定一个二叉搜索树的根节点 root ，和一个整数 k ，
@@ -77,8 +83,35 @@ function kthSmallest(root, k) {
   return ans;
 }
 
+/**
+ * 延伸 1：查找第 k 大
+ *
+ * 需求：利用 BST 的逆中序顺序，从大到小计数。
+ *
+ * 思路：显式栈沿右链入栈，弹出一个计数一次，再转向左子树。
+ *
+ * ——— 示例 ———
+ * 示例：BST [3,1,4,null,2]，k=2，返回 3。
+ *
+ * 复杂度：时间 O(h+k)，空间 O(h)。
+ */
+function kthLargest(root, k) {
+  const stack = [];
+  let node = root;
+  while (node || stack.length) {
+    while (node) {
+      stack.push(node);
+      node = node.right;
+    }
+    node = stack.pop();
+    if (--k === 0) return node.val;
+    node = node.left;
+  }
+  return undefined;
+}
+
 // —— 自测 ——
 console.log(kthSmallest(build([3, 1, 4, null, 2]), 1)); // 期望输出 1
 console.log(kthSmallest(build([5, 3, 6, 2, 4, null, null, 1]), 3)); // 期望输出 3
 
-module.exports = { kthSmallest, TreeNode, build };
+module.exports = { kthSmallest, kthLargest, TreeNode, build };

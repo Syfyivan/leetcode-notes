@@ -1,3 +1,9 @@
+/**
+ * 热题 100 · 除了自身以外数组的乘积
+ *
+ * 优先级：Hot 100 · P1
+ */
+
 // 给你一个整数数组 nums，返回 数组 answer ，其中 answer[i] 等于 nums 中除了 nums[i] 之外其余各元素的乘积 。
 
 // 题目数据 保证 数组 nums之中任意元素的全部前缀元素和后缀的乘积都在  32 位 整数范围内。
@@ -59,3 +65,34 @@ var productExceptSelf = function(nums) {
     res[len - 1] = suffix[len - 1] * prefix[len - 1]; // 后缀循环没覆盖最后一位
     return res;
 };
+
+/**
+ * 延伸 1：允许除法时处理零
+ *
+ * 需求：用总乘积解题，但必须正确处理数组中 0 的数量。
+ *
+ * 思路：两个以上 0 时全为 0；一个 0 时只有该位置等于非零项乘积；没有 0 才做除法。
+ *
+ * ——— 示例 ———
+ * 示例：[1,2,0,4] 输出 [0,0,8,0]。
+ *
+ * 复杂度：时间 O(n)，除结果数组外空间 O(1)。
+ */
+function productExceptSelfWithDivision(nums) {
+  let product = 1;
+  let zeroCount = 0;
+  for (const value of nums) {
+    if (value === 0) zeroCount++;
+    else product *= value;
+  }
+  if (zeroCount > 1) return new Array(nums.length).fill(0);
+  return nums.map((value) => {
+    if (zeroCount === 1) return value === 0 ? product : 0;
+    return product / value;
+  });
+}
+
+// —— 自测 ——
+console.log(productExceptSelf([1, 2, 3, 4])); // [24,12,8,6]
+
+module.exports = { productExceptSelf, productExceptSelfWithDivision };

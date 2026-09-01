@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 移动零
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 移动零（LeetCode 283）
  *
  * 给定一个数组 nums，将所有 0 移动到数组的末尾，同时保持非零元素的相对顺序。
@@ -54,9 +60,28 @@ function moveZeroes(nums) {
   return nums;
 }
 
+/**
+ * 延伸 1：把指定值稳定移到末尾
+ *
+ * 需求：原地移动所有等于 value 的元素，其余元素保持相对顺序。
+ *
+ * 思路：慢指针写入所有非 value 元素，剩余位置统一填 value。
+ *
+ * ——— 示例 ———
+ * 示例：[2,1,2,3]，value=2，变为 [1,3,2,2]。
+ *
+ * 复杂度：时间 O(n)，空间 O(1)。
+ */
+function moveValueToEnd(nums, value) {
+  let write = 0;
+  for (const item of nums) if (item !== value) nums[write++] = item;
+  while (write < nums.length) nums[write++] = value;
+  return nums;
+}
+
 // —— 自测 ——
 console.log(moveZeroes([0, 1, 0, 3, 12])); // [1, 3, 12, 0, 0]
 console.log(moveZeroes([0]));              // [0]
 console.log(moveZeroes([1, 2, 3]));        // [1, 2, 3]
 
-module.exports = { moveZeroes };
+module.exports = { moveZeroes, moveValueToEnd };

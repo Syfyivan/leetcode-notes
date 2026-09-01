@@ -1,3 +1,9 @@
+/**
+ * 热题 100 · 合并区间
+ *
+ * 优先级：Hot 100 · P1
+ */
+
 // /**
 //  * @param {number[][]} intervals
 //  * @return {number[][]}
@@ -80,3 +86,36 @@ var merge = function(intervals) {
     res.push(cmp); // 最后一段没人推，补一次
     return res;
 };
+
+/**
+ * 延伸 1：插入区间（LeetCode 57）
+ *
+ * 需求：原区间已按起点排序且互不重叠，插入新区间后仍返回有序不重叠结果。
+ *
+ * 思路：先收左侧无交集区间，再合并所有相交区间，最后接上右侧剩余区间。
+ *
+ * ——— 示例 ———
+ * 示例：[[1,3],[6,9]] 插入 [2,5]，输出 [[1,5],[6,9]]。
+ *
+ * 复杂度：时间 O(n)，结果空间 O(n)。
+ */
+function insertInterval(intervals, newInterval) {
+  const result = [];
+  let index = 0;
+  while (index < intervals.length && intervals[index][1] < newInterval[0]) {
+    result.push(intervals[index++]);
+  }
+  let merged = newInterval.slice();
+  while (index < intervals.length && intervals[index][0] <= merged[1]) {
+    merged[0] = Math.min(merged[0], intervals[index][0]);
+    merged[1] = Math.max(merged[1], intervals[index][1]);
+    index++;
+  }
+  result.push(merged);
+  return result.concat(intervals.slice(index));
+}
+
+// —— 自测 ——
+console.log(merge([[1, 3], [2, 6], [8, 10], [15, 18]]));
+
+module.exports = { merge, insertInterval };

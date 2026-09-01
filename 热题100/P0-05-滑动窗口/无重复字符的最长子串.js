@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 无重复字符的最长子串
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 无重复字符的最长子串（LeetCode 3）
  *
  * 给定一个字符串 s，请找出其中不含有重复字符的最长子串的长度。
@@ -57,9 +63,38 @@ function lengthOfLongestSubstring(s) {
   return best;
 }
 
+/**
+ * 延伸 1：至多包含 k 种字符的最长子串
+ *
+ * 需求：窗口内不同字符数量不能超过 k，返回最长长度。
+ *
+ * 思路：Map 记录窗口计数；种类超限就移动 left，并删除计数归零的字符。
+ *
+ * ——— 示例 ———
+ * 示例：s="eceba"，k=2，输出 3（"ece"）。
+ *
+ * 复杂度：时间 O(n)，空间 O(k)。
+ */
+function lengthOfLongestSubstringKDistinct(s, k) {
+  if (k <= 0) return 0;
+  const counts = new Map();
+  let left = 0;
+  let best = 0;
+  for (let right = 0; right < s.length; right++) {
+    counts.set(s[right], (counts.get(s[right]) || 0) + 1);
+    while (counts.size > k) {
+      const char = s[left++];
+      counts.set(char, counts.get(char) - 1);
+      if (counts.get(char) === 0) counts.delete(char);
+    }
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
+}
+
 // —— 自测 ——
 console.log(lengthOfLongestSubstring("abcabcbb")); // 3
 console.log(lengthOfLongestSubstring("bbbbb"));    // 1
 console.log(lengthOfLongestSubstring("pwwkew"));   // 3
 
-module.exports = { lengthOfLongestSubstring };
+module.exports = { lengthOfLongestSubstring, lengthOfLongestSubstringKDistinct };

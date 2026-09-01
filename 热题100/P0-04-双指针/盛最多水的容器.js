@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 盛最多水的容器
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 盛最多水的容器（LeetCode 11）
  *
  * 给定一个长度为 n 的整数数组 height，有 n 条垂线，第 i 条线的两个端点是 (i, 0) 和 (i, height[i])。
@@ -54,8 +60,33 @@ function maxArea(height) {
   return best;
 }
 
+/**
+ * 延伸 1：同时返回最佳边界
+ *
+ * 需求：除最大面积外，还返回组成容器的两个下标。
+ *
+ * 思路：双指针规则不变；刷新 best 时同步保存 left/right。
+ *
+ * ——— 示例 ———
+ * 示例：[1,8,6,2,5,4,8,3,7] 返回 {area:49,left:1,right:8}。
+ *
+ * 复杂度：时间 O(n)，空间 O(1)。
+ */
+function maxAreaWithIndices(height) {
+  let left = 0;
+  let right = height.length - 1;
+  let answer = { area: 0, left: -1, right: -1 };
+  while (left < right) {
+    const area = Math.min(height[left], height[right]) * (right - left);
+    if (area > answer.area) answer = { area, left, right };
+    if (height[left] <= height[right]) left++;
+    else right--;
+  }
+  return answer;
+}
+
 // —— 自测 ——
 console.log(maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7])); // 49
 console.log(maxArea([1, 1]));                      // 1
 
-module.exports = { maxArea };
+module.exports = { maxArea, maxAreaWithIndices };

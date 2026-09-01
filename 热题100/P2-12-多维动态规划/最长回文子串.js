@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 最长回文子串
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 5. 最长回文子串
  *
  * 给你一个字符串 s，找到 s 中最长的回文子串。
@@ -82,3 +88,32 @@ var longestPalindrome = function(s) {
     }
     return s.slice(start, end + 1);
 };
+
+/**
+ * 延伸 1：统计回文子串数量（LeetCode 647）
+ *
+ * 需求：位置不同就算不同子串，返回所有回文子串数量。
+ *
+ * 思路：枚举每个字符中心和每个字符缝隙中心，向两侧扩展并计数。
+ *
+ * ——— 示例 ———
+ * 示例："aaa" 输出 6。
+ *
+ * 复杂度：时间 O(n²)，空间 O(1)。
+ */
+function countSubstrings(s) {
+  let count = 0;
+  const expand = (left, right) => {
+    while (left >= 0 && right < s.length && s[left--] === s[right++]) count++;
+  };
+  for (let center = 0; center < s.length; center++) {
+    expand(center, center);
+    expand(center, center + 1);
+  }
+  return count;
+}
+
+// —— 自测 ——
+console.log(longestPalindrome('babad')); // bab 或 aba
+
+module.exports = { longestPalindrome, countSubstrings };

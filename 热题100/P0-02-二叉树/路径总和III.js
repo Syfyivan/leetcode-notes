@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 路径总和III
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 路径总和 III（LC437）
  *
  * 给定一个二叉树的根节点 root ，和一个整数 targetSum ，
@@ -79,8 +85,27 @@ function pathSum(root, targetSum) {
   return dfs(root, 0);
 }
 
+/**
+ * 延伸 1：根到叶路径总和（LeetCode 112）
+ *
+ * 需求：判断是否存在一条从根节点到叶节点的路径，节点和等于 targetSum。
+ *
+ * 思路：向下递归时减去当前值；只有到叶子且剩余值等于叶子值才成功。
+ *
+ * ——— 示例 ———
+ * 示例：[5,4,8,11,null,13,4,7,2]，target=22，返回 true。
+ *
+ * 复杂度：时间 O(n)，递归栈 O(h)。
+ */
+function hasPathSum(root, targetSum) {
+  if (!root) return false;
+  if (!root.left && !root.right) return root.val === targetSum;
+  const rest = targetSum - root.val;
+  return hasPathSum(root.left, rest) || hasPathSum(root.right, rest);
+}
+
 // —— 自测 ——
 console.log(pathSum(build([10, 5, -3, 3, 2, null, 11, 3, -2, null, 1]), 8)); // 期望输出 3
 console.log(pathSum(build([5, 4, 8, 11, null, 13, 4, 7, 2, null, null, 5, 1]), 22)); // 期望输出 3
 
-module.exports = { pathSum, TreeNode, build };
+module.exports = { pathSum, hasPathSum, TreeNode, build };

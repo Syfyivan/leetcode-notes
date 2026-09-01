@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 爬楼梯
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 思路：
  * 1. dp[i] = 爬到第 i 阶的方法数，最后一步只能跨 1 阶或 2 阶。
  * 2. dp[i] = dp[i-1] + dp[i-2]。dp[0]=1，dp[1]=1。
@@ -37,3 +43,29 @@ var climbStairs = function(n) {
     }
     return dp[n];
 };
+
+/**
+ * 延伸 1：每次可走任意给定步数
+ *
+ * 需求：steps 例如 [1,2,3]，计算到第 n 阶的有序走法数。
+ *
+ * 思路：dp[i] 汇总所有合法 step 对应的 dp[i-step]；先后顺序不同算不同走法。
+ *
+ * ——— 示例 ———
+ * 示例：n=4，steps=[1,2]，输出 5。
+ *
+ * 复杂度：时间 O(n*steps.length)，空间 O(n)。
+ */
+function climbStairsWithSteps(n, steps = [1, 2]) {
+  const dp = new Array(n + 1).fill(0);
+  dp[0] = 1;
+  for (let floor = 1; floor <= n; floor++) {
+    for (const step of steps) if (floor >= step) dp[floor] += dp[floor - step];
+  }
+  return dp[n];
+}
+
+// —— 自测 ——
+console.log(climbStairs(5)); // 8
+
+module.exports = { climbStairs, climbStairsWithSteps };

@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 搜索插入位置
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * @param {number[]} nums
  * @param {number} target
  * @return {number}
@@ -42,3 +48,31 @@ var searchInsert = function(nums, target) {
     }
     return left
 };
+
+/**
+ * 延伸 1：支持对象数组的 lowerBound
+ *
+ * 需求：按 key(item) 找到第一个不小于 target 的位置。
+ *
+ * 思路：搜索区间使用 [left,right)，key(array[mid]) < target 时排除左半段。
+ *
+ * ——— 示例 ———
+ * 示例：[{x:1},{x:3}] 中 target=2、key=item.x，返回 1。
+ *
+ * 复杂度：时间 O(log n)，空间 O(1)。
+ */
+function lowerBoundBy(array, target, key = (value) => value) {
+  let left = 0;
+  let right = array.length;
+  while (left < right) {
+    const middle = left + Math.floor((right - left) / 2);
+    if (key(array[middle]) < target) left = middle + 1;
+    else right = middle;
+  }
+  return left;
+}
+
+// —— 自测 ——
+console.log(searchInsert([1, 3, 5, 6], 2)); // 1
+
+module.exports = { searchInsert, lowerBoundBy };

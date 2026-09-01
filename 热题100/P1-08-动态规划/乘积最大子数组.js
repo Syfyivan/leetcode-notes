@@ -1,3 +1,9 @@
+/**
+ * 热题 100 · 乘积最大子数组
+ *
+ * 优先级：Hot 100 · P1
+ */
+
 // 给你一个整数数组 nums ，请你找出数组中乘积最大的非空连续 子数组（该子数组中至少包含一个数字），并返回该子数组所对应的乘积。
 
 // 测试用例的答案是一个 32-位 整数。
@@ -51,3 +57,44 @@ var maxProduct = function(nums) {
     }
     return res;
 };
+
+/**
+ * 延伸 1：返回最大乘积区间
+ *
+ * 需求：返回最大乘积及对应的左右下标。
+ *
+ * 思路：同时维护以当前位置结尾的最大/最小乘积和各自起点；负数会让两者交换角色。
+ *
+ * ——— 示例 ———
+ * 示例：[2,3,-2,4] 返回 {product:6,start:0,end:1}。
+ *
+ * 复杂度：时间 O(n)，空间 O(1)。
+ */
+function maxProductWithRange(nums) {
+  if (nums.length === 0) return { product: 0, start: -1, end: -1 };
+  let maxEnding = nums[0];
+  let minEnding = nums[0];
+  let maxStart = 0;
+  let minStart = 0;
+  let answer = { product: nums[0], start: 0, end: 0 };
+  for (let i = 1; i < nums.length; i++) {
+    const candidates = [
+      { value: nums[i], start: i },
+      { value: maxEnding * nums[i], start: maxStart },
+      { value: minEnding * nums[i], start: minStart },
+    ];
+    const nextMax = candidates.reduce((best, item) => item.value > best.value ? item : best);
+    const nextMin = candidates.reduce((best, item) => item.value < best.value ? item : best);
+    maxEnding = nextMax.value;
+    maxStart = nextMax.start;
+    minEnding = nextMin.value;
+    minStart = nextMin.start;
+    if (maxEnding > answer.product) answer = { product: maxEnding, start: maxStart, end: i };
+  }
+  return answer;
+}
+
+// —— 自测 ——
+console.log(maxProduct([2, 3, -2, 4])); // 6
+
+module.exports = { maxProduct, maxProductWithRange };

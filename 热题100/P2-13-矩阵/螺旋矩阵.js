@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 螺旋矩阵
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 螺旋矩阵（LeetCode 54）
  *
  * 给定一个 m x n 的矩阵 matrix，请按照顺时针螺旋顺序，
@@ -64,10 +70,38 @@ function spiralOrder(matrix) {
     return res;
 }
 
+/**
+ * 延伸 1：生成螺旋矩阵（LeetCode 59）
+ *
+ * 需求：生成 n×n 矩阵，按顺时针螺旋填入 1 到 n²。
+ *
+ * 思路：维护 top/bottom/left/right 四条边，每填完一条边就收缩边界。
+ *
+ * ——— 示例 ———
+ * 示例：n=3 输出 [[1,2,3],[8,9,4],[7,6,5]]。
+ *
+ * 复杂度：时间 O(n²)，结果空间 O(n²)。
+ */
+function generateMatrix(n) {
+  const matrix = Array.from({ length: n }, () => new Array(n).fill(0));
+  let top = 0, bottom = n - 1, left = 0, right = n - 1, value = 1;
+  while (top <= bottom && left <= right) {
+    for (let col = left; col <= right; col++) matrix[top][col] = value++;
+    top++;
+    for (let row = top; row <= bottom; row++) matrix[row][right] = value++;
+    right--;
+    if (top <= bottom) for (let col = right; col >= left; col--) matrix[bottom][col] = value++;
+    bottom--;
+    if (left <= right) for (let row = bottom; row >= top; row--) matrix[row][left] = value++;
+    left++;
+  }
+  return matrix;
+}
+
 // —— 自测 ——
 console.log(spiralOrder([[1, 2, 3], [4, 5, 6], [7, 8, 9]]));
 // 期望： [1,2,3,6,9,8,7,4,5]
 console.log(spiralOrder([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]));
 // 期望： [1,2,3,4,8,12,11,10,9,5,6,7]
 
-module.exports = { spiralOrder };
+module.exports = { spiralOrder, generateMatrix };

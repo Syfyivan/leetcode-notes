@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 回文链表
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 回文链表（LeetCode 234）
  *
  * 给定单链表的头节点 head，判断该链表是否为回文链表（正着读和反着读一样）。
@@ -84,6 +90,27 @@ function isPalindrome(head) {
   return true;
 }
 
+/**
+ * 延伸 1：数组双指针版
+ *
+ * 需求：优先写出最容易验证的版本，再讨论 O(1) 空间优化。
+ *
+ * 思路：把节点值依次放进数组，左右指针向中间比较。
+ *
+ * ——— 示例 ———
+ * 示例：1→2→2→1 返回 true；1→2 返回 false。
+ *
+ * 复杂度：时间 O(n)，空间 O(n)。
+ */
+function isPalindromeWithArray(head) {
+  const values = [];
+  for (let node = head; node; node = node.next) values.push(node.val);
+  for (let left = 0, right = values.length - 1; left < right; left++, right--) {
+    if (values[left] !== values[right]) return false;
+  }
+  return true;
+}
+
 // —— 小工具：数组建链表 ——
 function build(arr) {
   const dummy = new ListNode(0);
@@ -99,4 +126,4 @@ console.log(isPalindrome(build([1, 2])));          // false
 console.log(isPalindrome(build([1])));             // true
 console.log(isPalindrome(build([])));              // true
 
-module.exports = { ListNode, isPalindrome, build };
+module.exports = { ListNode, isPalindrome, isPalindromeWithArray, build };

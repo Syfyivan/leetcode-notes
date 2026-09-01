@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 滑动窗口最大值
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 滑动窗口最大值（LeetCode 239）
  *
  * 给定一个整数数组 nums，有一个大小为 k 的窗口从数组最左侧移动到最右侧，每次只向右移动一位。
@@ -53,8 +59,34 @@ function maxSlidingWindow(nums, k) {
   return res;
 }
 
+/**
+ * 延伸 1：滑动窗口最小值
+ *
+ * 需求：每个长度为 k 的窗口返回最小值。
+ *
+ * 思路：维护单调递增的下标队列；队头过期就移除，新值更小则弹掉队尾。
+ *
+ * ——— 示例 ———
+ * 示例：[1,3,-1,-3,5,3,6,7]，k=3，输出 [-1,-3,-3,-3,3,3]。
+ *
+ * 复杂度：时间 O(n)，空间 O(k)。
+ */
+function minSlidingWindow(nums, k) {
+  if (k <= 0 || k > nums.length) return [];
+  const result = [];
+  const deque = [];
+  let head = 0;
+  for (let i = 0; i < nums.length; i++) {
+    while (head < deque.length && deque[head] <= i - k) head++;
+    while (deque.length > head && nums[deque.at(-1)] >= nums[i]) deque.pop();
+    deque.push(i);
+    if (i >= k - 1) result.push(nums[deque[head]]);
+  }
+  return result;
+}
+
 // —— 自测 ——
 console.log(maxSlidingWindow([1, 3, -1, -3, 5, 3, 6, 7], 3)); // [3, 3, 5, 5, 6, 7]
 console.log(maxSlidingWindow([1], 1));                        // [1]
 
-module.exports = { maxSlidingWindow };
+module.exports = { maxSlidingWindow, minSlidingWindow };

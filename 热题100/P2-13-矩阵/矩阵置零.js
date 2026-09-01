@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 矩阵置零
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 矩阵置零（LeetCode 73）
  *
  * 给定一个 m x n 的整数矩阵 matrix，如果某个元素为 0，
@@ -78,10 +84,38 @@ function setZeroes(matrix) {
     return matrix;
 }
 
+/**
+ * 延伸 1：行列集合版
+ *
+ * 需求：用更直观的额外空间记录哪些行、列需要清零。
+ *
+ * 思路：第一遍收集零所在行列，第二遍命中任一集合就写 0。
+ *
+ * ——— 示例 ———
+ * 示例：[[1,1,1],[1,0,1],[1,1,1]] 变为 [[1,0,1],[0,0,0],[1,0,1]]。
+ *
+ * 复杂度：时间 O(mn)，空间 O(m+n)。
+ */
+function setZeroesWithSets(matrix) {
+  const rows = new Set();
+  const cols = new Set();
+  for (let row = 0; row < matrix.length; row++) {
+    for (let col = 0; col < matrix[0].length; col++) {
+      if (matrix[row][col] === 0) { rows.add(row); cols.add(col); }
+    }
+  }
+  for (let row = 0; row < matrix.length; row++) {
+    for (let col = 0; col < matrix[0].length; col++) {
+      if (rows.has(row) || cols.has(col)) matrix[row][col] = 0;
+    }
+  }
+  return matrix;
+}
+
 // —— 自测 ——
 console.log(setZeroes([[1, 1, 1], [1, 0, 1], [1, 1, 1]]));
 // 期望： [[1,0,1],[0,0,0],[1,0,1]]
 console.log(setZeroes([[0, 1, 2, 0], [3, 4, 5, 2], [1, 3, 1, 5]]));
 // 期望： [[0,0,0,0],[0,4,5,0],[0,3,1,0]]
 
-module.exports = { setZeroes };
+module.exports = { setZeroes, setZeroesWithSets };

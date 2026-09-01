@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 前K个高频元素
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 前 K 个高频元素（LeetCode 347）
  *
  * 给你一个整数数组 nums 和一个整数 k，请你返回其中出现频率前 k 高的元素。
@@ -86,8 +92,38 @@ function topKFrequent(nums, k) {
     return heap.map((x) => x[1]);
 }
 
+/**
+ * 延伸 1：桶排序求前 K 个高频元素
+ *
+ * 需求：不使用堆，利用“元素出现次数不会超过数组长度”把平均时间降到 O(n)。
+ *
+ * 思路：先统计频率，再把数字放进下标等于频率的桶中，最后从高频桶向低频桶收集 k 个数字。
+ *
+ * ——— 示例 ———
+ * 示例：topKFrequentBucket([1,1,1,2,2,3], 2) => [1,2]
+ *
+ * 复杂度：时间 O(n)，空间 O(n)
+ */
+function topKFrequentBucket(nums, k) {
+    const freq = new Map();
+    for (const num of nums) freq.set(num, (freq.get(num) || 0) + 1);
+
+    const buckets = Array.from({ length: nums.length + 1 }, () => []);
+    for (const [num, count] of freq) buckets[count].push(num);
+
+    const result = [];
+    for (let count = buckets.length - 1; count >= 0 && result.length < k; count--) {
+        for (const num of buckets[count]) {
+            result.push(num);
+            if (result.length === k) break;
+        }
+    }
+    return result;
+}
+
 // —— 自测 ——
 console.log(topKFrequent([1, 1, 1, 2, 2, 3], 2)); // [1,2]
 console.log(topKFrequent([1], 1)); // [1]
+console.log(topKFrequentBucket([1, 1, 1, 2, 2, 3], 2)); // [1,2]
 
-module.exports = { topKFrequent };
+module.exports = { topKFrequent, topKFrequentBucket };

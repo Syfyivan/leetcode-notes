@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 环形链表II
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 环形链表 II（LeetCode 142）
  *
  * 给定一个链表的头节点 head，返回链表开始入环的第一个节点。
@@ -82,6 +88,27 @@ function detectCycle(head) {
   return null;
 }
 
+/**
+ * 延伸 1：哈希表找环入口
+ *
+ * 需求：用更直观的方法返回第一次重复访问的节点；无环返回 null。
+ *
+ * 思路：沿 next 前进并把节点引用放入 Set，再次命中的节点就是环入口。
+ *
+ * ——— 示例 ———
+ * 示例：3→2→0→-4，尾节点连回 2，返回值为 2 的节点。
+ *
+ * 复杂度：时间 O(n)，空间 O(n)。
+ */
+function detectCycleWithSet(head) {
+  const seen = new Set();
+  for (let node = head; node; node = node.next) {
+    if (seen.has(node)) return node;
+    seen.add(node);
+  }
+  return null;
+}
+
 // —— 小工具：建链表并让尾节点指向索引 pos 的节点造环；pos = -1 表示无环 ——
 function buildWithCycle(arr, pos) {
   const nodes = arr.map((v) => new ListNode(v));
@@ -95,4 +122,4 @@ console.log(detectCycle(buildWithCycle([3, 2, 0, -4], 1))?.val ?? null); // 期�
 console.log(detectCycle(buildWithCycle([1, 2], 0))?.val ?? null);        // 期望： 1
 console.log(detectCycle(buildWithCycle([1], -1)));                       // 期望： null
 
-module.exports = { ListNode, build, toArray, detectCycle, buildWithCycle };
+module.exports = { ListNode, build, toArray, detectCycle, detectCycleWithSet, buildWithCycle };

@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 完全平方数
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 思路：
  * 1. 和零钱兑换同构，物品换成 1、4、9... 这些完全平方数，可重复用。
  * 2. dp[i] = 凑出 i 的最少个数，dp[i] = min(dp[i - j*j] + 1)。
@@ -36,3 +42,46 @@ var numSquares = function(n) {
     }
     return dp[n];
 };
+
+/**
+ * 延伸 1：BFS 最短路径版
+ *
+ * 需求：把每个剩余值看成节点，每次减一个平方数，最少层数就是答案。
+ *
+ * 思路：从 n 开始逐层扩展 n-square；第一次到 0 时返回当前层数，Set 去重。
+ *
+ * ——— 示例 ———
+ * 示例：n=12 输出 3（4+4+4）。
+ *
+ * 复杂度：时间约 O(n√n)，空间 O(n)。
+ */
+function numSquaresBFS(n) {
+  const squares = [];
+  for (let value = 1; value * value <= n; value++) squares.push(value * value);
+  const queue = [n];
+  const seen = new Set([n]);
+  let head = 0;
+  let steps = 0;
+  while (head < queue.length) {
+    const size = queue.length - head;
+    steps++;
+    for (let i = 0; i < size; i++) {
+      const current = queue[head++];
+      for (const square of squares) {
+        if (square > current) break;
+        const next = current - square;
+        if (next === 0) return steps;
+        if (!seen.has(next)) {
+          seen.add(next);
+          queue.push(next);
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+// —— 自测 ——
+console.log(numSquares(12)); // 3
+
+module.exports = { numSquares, numSquaresBFS };

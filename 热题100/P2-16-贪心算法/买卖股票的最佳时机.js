@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 买卖股票的最佳时机
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * @param {number[]} prices
  * @return {number}
  *
@@ -36,3 +42,38 @@ var maxProfit = function (prices) {
     }
     return best;
 };
+
+/**
+ * 延伸 1：返回最佳买卖日期
+ *
+ * 需求：除最大利润外，给出完成该利润的买入日和卖出日；无盈利机会时日期均为 -1。
+ *
+ * 思路：扫描时同时记录历史最低价的下标；利润刷新时保存这一天和最低价所在天。
+ *
+ * ——— 示例 ———
+ * 示例：maxProfitWithDays([7,1,5,3,6,4]) => { profit:5, buyDay:1, sellDay:4 }
+ *
+ * 复杂度：时间 O(n)，空间 O(1)
+ */
+function maxProfitWithDays(prices) {
+    let minPrice = Infinity;
+    let minDay = -1;
+    let result = { profit: 0, buyDay: -1, sellDay: -1 };
+
+    for (let day = 0; day < prices.length; day++) {
+        const price = prices[day];
+        if (price < minPrice) {
+            minPrice = price;
+            minDay = day;
+        } else if (price - minPrice > result.profit) {
+            result = { profit: price - minPrice, buyDay: minDay, sellDay: day };
+        }
+    }
+    return result;
+}
+
+// —— 自测 ——
+console.log(maxProfit([7, 1, 5, 3, 6, 4]));         // 期望：5
+console.log(maxProfitWithDays([7, 1, 5, 3, 6, 4])); // 期望：买入日 1，卖出日 4
+
+module.exports = { maxProfit, maxProfitWithDays };

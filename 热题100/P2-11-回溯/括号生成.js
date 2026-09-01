@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 括号生成
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * @param {number} n
  * @return {string[]}
  *
@@ -51,3 +57,31 @@ var generateParenthesis = function(n) {
    dfs(0, 0)
    return res;
 };
+
+/**
+ * 延伸 1：只计算合法组合数量
+ *
+ * 需求：返回 n 对括号的方案数，不生成具体字符串。
+ *
+ * 思路：卡特兰递推 count[n] = Σ count[left] * count[n-1-left]。
+ *
+ * ——— 示例 ———
+ * 示例：n=3 输出 5。
+ *
+ * 复杂度：时间 O(n²)，空间 O(n)。
+ */
+function countParenthesis(n) {
+  const counts = new Array(n + 1).fill(0);
+  counts[0] = 1;
+  for (let pairs = 1; pairs <= n; pairs++) {
+    for (let left = 0; left < pairs; left++) {
+      counts[pairs] += counts[left] * counts[pairs - 1 - left];
+    }
+  }
+  return counts[n];
+}
+
+// —— 自测 ——
+console.log(generateParenthesis(3).length); // 5
+
+module.exports = { generateParenthesis, countParenthesis };

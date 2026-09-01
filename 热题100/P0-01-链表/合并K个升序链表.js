@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 合并K个升序链表
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 合并 K 个升序链表（LeetCode 23）
  *
  * 给定一个链表数组 lists，每个链表都已经按升序排列。
@@ -81,10 +87,43 @@ function mergeKLists(lists) {
   return merge(0, lists.length - 1);
 }
 
+/**
+ * 延伸 1：分治合并
+ *
+ * 需求：像归并排序一样两两合并 k 条链表，避免从左到右累计合并造成重复扫描。
+ *
+ * 思路：步长依次取 1、2、4；每轮把相距 step 的两条链表合成一条。
+ *
+ * ——— 示例 ———
+ * 示例：[[1,4,5],[1,3,4],[2,6]]，输出 1→1→2→3→4→4→5→6。
+ *
+ * 复杂度：总节点数 N，时间 O(N log k)，额外空间 O(1)。
+ */
+function mergeKListsDivideAndConquer(lists) {
+  const merge = (a, b) => {
+    const dummy = new ListNode(0);
+    let tail = dummy;
+    while (a && b) {
+      if (a.val <= b.val) [tail.next, a] = [a, a.next];
+      else [tail.next, b] = [b, b.next];
+      tail = tail.next;
+    }
+    tail.next = a || b;
+    return dummy.next;
+  };
+  const merged = lists.slice();
+  for (let step = 1; step < merged.length; step *= 2) {
+    for (let i = 0; i + step < merged.length; i += step * 2) {
+      merged[i] = merge(merged[i], merged[i + step]);
+    }
+  }
+  return merged[0] || null;
+}
+
 // —— 自测 ——
 console.log(toArray(mergeKLists([build([1, 4, 5]), build([1, 3, 4]), build([2, 6])])));
 // 期望： [1,1,2,3,4,4,5,6]
 console.log(toArray(mergeKLists([])));         // 期望： []
 console.log(toArray(mergeKLists([build([])]))); // 期望： []
 
-module.exports = { ListNode, build, toArray, mergeKLists };
+module.exports = { ListNode, build, toArray, mergeKLists, mergeKListsDivideAndConquer };

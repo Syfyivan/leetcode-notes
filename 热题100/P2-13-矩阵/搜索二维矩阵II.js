@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 搜索二维矩阵II
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 搜索二维矩阵 II（LeetCode 240）
  *
  * 编写一个高效的算法来搜索 m x n 矩阵 matrix 中的目标值 target。
@@ -58,6 +64,30 @@ function searchMatrix(matrix, target) {
     return false;
 }
 
+/**
+ * 延伸 1：返回目标坐标
+ *
+ * 需求：找到 target 时返回 [row,col]，不存在返回 [-1,-1]。
+ *
+ * 思路：仍从右上角出发；当前偏大向左，偏小向下。
+ *
+ * ——— 示例 ———
+ * 示例：示例矩阵中查找 5 返回 [1,1]。
+ *
+ * 复杂度：时间 O(rows+cols)，空间 O(1)。
+ */
+function searchMatrixPosition(matrix, target) {
+  if (!matrix.length || !matrix[0].length) return [-1, -1];
+  let row = 0;
+  let col = matrix[0].length - 1;
+  while (row < matrix.length && col >= 0) {
+    if (matrix[row][col] === target) return [row, col];
+    if (matrix[row][col] > target) col--;
+    else row++;
+  }
+  return [-1, -1];
+}
+
 // —— 自测 ——
 const m = [
   [1, 4, 7, 11, 15],
@@ -69,4 +99,4 @@ const m = [
 console.log(searchMatrix(m, 5));  // 期望： true
 console.log(searchMatrix(m, 20)); // 期望： false
 
-module.exports = { searchMatrix };
+module.exports = { searchMatrix, searchMatrixPosition };

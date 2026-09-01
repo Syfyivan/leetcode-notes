@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 找到字符串中所有字母异位词
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 找到字符串中所有字母异位词（LeetCode 438）
  *
  * 给定两个字符串 s 和 p，找到 s 中所有 p 的字母异位词的子串，返回这些子串的起始索引。
@@ -65,8 +71,24 @@ function findAnagrams(s, p) {
   return res;
 }
 
+/**
+ * 延伸 1：字符串排列（LeetCode 567）
+ *
+ * 需求：只判断 s2 是否包含 s1 的任意排列，找到第一个匹配窗口就返回 true。
+ *
+ * 思路：复用固定长度异位词窗口；结果数组非空即表示存在。
+ *
+ * ——— 示例 ———
+ * 示例：s1="ab"，s2="eidbaooo" 返回 true。
+ *
+ * 复杂度：时间 O(|s1|+|s2|)，空间 O(字符集大小)。
+ */
+function checkInclusion(s1, s2) {
+  return findAnagrams(s2, s1).length > 0;
+}
+
 // —— 自测 ——
 console.log(findAnagrams("cbaebabacd", "abc")); // [0, 6]
 console.log(findAnagrams("abab", "ab"));        // [0, 1, 2]
 
-module.exports = { findAnagrams };
+module.exports = { findAnagrams, checkInclusion };

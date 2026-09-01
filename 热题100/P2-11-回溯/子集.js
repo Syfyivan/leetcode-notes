@@ -1,3 +1,9 @@
+/**
+ * 热题 100 · 子集
+ *
+ * 优先级：Hot 100 · P2
+ */
+
 /*
 给你一个整数数组 nums ，数组中的元素 互不相同 。返回该数组所有可能的子集（幂集）。
 解集 不能 包含重复的子集。你可以按 任意顺序 返回解集。
@@ -50,3 +56,37 @@ var subsets = function(nums) {
     dfs(0);
     return res;
 };
+
+/**
+ * 延伸 1：含重复元素的子集（LeetCode 90）
+ *
+ * 需求：输入可能重复，输出不能有重复子集。
+ *
+ * 思路：排序后回溯；同一层遇到与前一项相同的值时跳过。
+ *
+ * ——— 示例 ———
+ * 示例：[1,2,2] 输出 6 个不同子集。
+ *
+ * 复杂度：结果规模 O(2^n)，空间 O(n)。
+ */
+function subsetsWithDup(nums) {
+  const sorted = nums.slice().sort((a, b) => a - b);
+  const result = [];
+  const path = [];
+  function backtrack(start) {
+    result.push(path.slice());
+    for (let i = start; i < sorted.length; i++) {
+      if (i > start && sorted[i] === sorted[i - 1]) continue;
+      path.push(sorted[i]);
+      backtrack(i + 1);
+      path.pop();
+    }
+  }
+  backtrack(0);
+  return result;
+}
+
+// —— 自测 ——
+console.log(subsets([1, 2, 3]).length); // 8
+
+module.exports = { subsets, subsetsWithDup };

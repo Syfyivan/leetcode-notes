@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 最长有效括号
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 最长有效括号（LeetCode 32）
  *
  * 给你一个只包含 '(' 和 ')' 的字符串，找出最长有效（格式正确且连续）括号子串的长度。
@@ -60,9 +66,35 @@ function longestValidParentheses(s) {
   return best;
 }
 
+/**
+ * 延伸 1：动态规划版
+ *
+ * 需求：dp[i] 表示以 i 结尾的最长有效括号长度。
+ *
+ * 思路：只在 s[i] 为 ')' 时转移；根据前一段长度找到可能与它匹配的左括号。
+ *
+ * ——— 示例 ———
+ * 示例：")()())" 输出 4。
+ *
+ * 复杂度：时间 O(n)，空间 O(n)。
+ */
+function longestValidParenthesesDP(s) {
+  const dp = new Array(s.length).fill(0);
+  let best = 0;
+  for (let i = 1; i < s.length; i++) {
+    if (s[i] !== ')') continue;
+    const left = i - dp[i - 1] - 1;
+    if (left >= 0 && s[left] === '(') {
+      dp[i] = dp[i - 1] + 2 + (left > 0 ? dp[left - 1] : 0);
+      best = Math.max(best, dp[i]);
+    }
+  }
+  return best;
+}
+
 // —— 自测 ——
 console.log(longestValidParentheses("(()")); // 2
 console.log(longestValidParentheses(")()())")); // 4
 console.log(longestValidParentheses("")); // 0
 
-module.exports = { longestValidParentheses };
+module.exports = { longestValidParentheses, longestValidParenthesesDP };

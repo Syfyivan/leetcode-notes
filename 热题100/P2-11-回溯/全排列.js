@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 全排列
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 全排列（LC46）
  *
  * 给定一个不含重复数字的数组 nums ，返回其 所有可能的全排列 。
@@ -64,9 +70,42 @@ function permute(nums) {
     return res;
 }
 
+/**
+ * 延伸 1：含重复元素的全排列（LeetCode 47）
+ *
+ * 需求：输入可能重复，返回不重复排列。
+ *
+ * 思路：先排序；同层中前一个相同数字尚未使用时跳过当前数字。
+ *
+ * ——— 示例 ———
+ * 示例：[1,1,2] 输出 3 种排列。
+ *
+ * 复杂度：结果规模 O(n*n!)，空间 O(n)。
+ */
+function permuteUnique(nums) {
+  const sorted = nums.slice().sort((a, b) => a - b);
+  const used = new Array(sorted.length).fill(false);
+  const result = [];
+  const path = [];
+  function backtrack() {
+    if (path.length === sorted.length) {
+      result.push(path.slice());
+      return;
+    }
+    for (let i = 0; i < sorted.length; i++) {
+      if (used[i] || (i > 0 && sorted[i] === sorted[i - 1] && !used[i - 1])) continue;
+      used[i] = true; path.push(sorted[i]);
+      backtrack();
+      path.pop(); used[i] = false;
+    }
+  }
+  backtrack();
+  return result;
+}
+
 // —— 自测 ——
 console.log(permute([1, 2, 3])); // 期望输出 [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
 console.log(permute([0, 1])); // 期望输出 [[0,1],[1,0]]
 console.log(permute([1])); // 期望输出 [[1]]
 
-module.exports = { permute };
+module.exports = { permute, permuteUnique };

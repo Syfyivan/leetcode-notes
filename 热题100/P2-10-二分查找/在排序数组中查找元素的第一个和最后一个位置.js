@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 在排序数组中查找元素的第一个和最后一个位置
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
 给你一个按照非递减顺序排列的整数数组 nums，和一个目标值 target。请你找出给定目标值在数组中的开始位置和结束位置。
 如果数组中不存在目标值 target，返回 [-1, -1]。
 你必须设计并实现时间复杂度为 O(log n) 的算法解决此问题。
@@ -51,6 +57,57 @@ var searchRange = function (nums, target) {
     const start = find(target); // 第一个 >= target = 第一个 target（若存在）
     // 顺序关键：先判越界，靠 || 短路，避免访问越界的 nums[start]
     if (start === nums.length || nums[start] !== target) return [-1, -1];
-    const end = find(target + 1) - 1; // (第一个 >= target+1) - 1 = 最后一个 target
+    const findUpper = () => {
+        let left = 0;
+        let right = nums.length;
+        while (left < right) {
+            const mid = left + ((right - left) >> 1);
+            if (nums[mid] <= target) left = mid + 1;
+            else right = mid;
+        }
+        return left;
+    };
+    const end = findUpper() - 1; // 第一个 > target 的位置减一
     return [start, end];
 };
+
+/**
+ * 延伸 1：统计目标出现次数
+ *
+ * 需求：不线性扫描，通过左右边界之差得到出现次数。
+ *
+ * 思路：lowerBound(target) 找首位，upperBound(target) 找末位后一格。
+ *
+ * ——— 示例 ———
+ * 示例：[5,7,7,8,8,10] 中 8 出现 2 次。
+ *
+ * 复杂度：时间 O(log n)，空间 O(1)。
+ */
+function countOccurrences(nums, target) {
+  const lowerBound = (value) => {
+    let left = 0;
+    let right = nums.length;
+    while (left < right) {
+      const middle = left + Math.floor((right - left) / 2);
+      if (nums[middle] < value) left = middle + 1;
+      else right = middle;
+    }
+    return left;
+  };
+  const upperBound = (value) => {
+    let left = 0;
+    let right = nums.length;
+    while (left < right) {
+      const middle = left + Math.floor((right - left) / 2);
+      if (nums[middle] <= value) left = middle + 1;
+      else right = middle;
+    }
+    return left;
+  };
+  return upperBound(target) - lowerBound(target);
+}
+
+// —— 自测 ——
+console.log(searchRange([5, 7, 7, 8, 8, 10], 8)); // [3,4]
+
+module.exports = { searchRange, countOccurrences };

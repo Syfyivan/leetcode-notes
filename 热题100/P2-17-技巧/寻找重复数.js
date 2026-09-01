@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 寻找重复数
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 寻找重复数（LeetCode 287）
  *
  * 给定一个包含 n + 1 个整数的数组 nums，其数字都在 [1, n] 范围内（包括 1 和 n），
@@ -59,9 +65,31 @@ function findDuplicate(nums) {
     return slow;
 }
 
+/**
+ * 延伸 1：哈希集合版查重
+ *
+ * 需求：在空间限制放宽时，用最直观的方式返回第一个再次出现的数字。
+ *
+ * 思路：顺序扫描；数字已在集合中时立即返回，否则加入集合。
+ *
+ * ——— 示例 ———
+ * 示例：findDuplicateWithSet([1,3,4,2,2]) => 2
+ *
+ * 复杂度：平均时间 O(n)，空间 O(n)
+ */
+function findDuplicateWithSet(nums) {
+    const seen = new Set();
+    for (const num of nums) {
+        if (seen.has(num)) return num;
+        seen.add(num);
+    }
+    return -1;
+}
+
 // —— 自测 ——
 console.log(findDuplicate([1, 3, 4, 2, 2])); // 2
 console.log(findDuplicate([3, 1, 3, 4, 2])); // 3
 console.log(findDuplicate([3, 3, 3, 3, 3])); // 3
+console.log(findDuplicateWithSet([1, 3, 4, 2, 2])); // 2
 
-module.exports = { findDuplicate };
+module.exports = { findDuplicate, findDuplicateWithSet };

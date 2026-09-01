@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 二叉树的右视图
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 二叉树的右视图（LC199）
  *
  * 给定一个二叉树的根节点 root ，想象自己站在它的右侧，
@@ -80,9 +86,33 @@ function rightSideView(root) {
   return res;
 }
 
+/**
+ * 延伸 1：DFS 右优先
+ *
+ * 需求：不用层序队列，仍收集每层最右侧节点。
+ *
+ * 思路：先右后左递归；第一次到达某个 depth 时，该节点就是这一层最右侧节点。
+ *
+ * ——— 示例 ———
+ * 示例：[1,2,3,null,5,null,4] 输出 [1,3,4]。
+ *
+ * 复杂度：时间 O(n)，递归栈 O(h)。
+ */
+function rightSideViewDFS(root) {
+  const result = [];
+  function visit(node, depth) {
+    if (!node) return;
+    if (depth === result.length) result.push(node.val);
+    visit(node.right, depth + 1);
+    visit(node.left, depth + 1);
+  }
+  visit(root, 0);
+  return result;
+}
+
 // —— 自测 ——
 console.log(rightSideView(build([1, 2, 3, null, 5, null, 4]))); // 期望输出 [1,3,4]
 console.log(rightSideView(build([1, null, 3]))); // 期望输出 [1,3]
 console.log(rightSideView(build([]))); // 期望输出 []
 
-module.exports = { rightSideView, TreeNode, build };
+module.exports = { rightSideView, rightSideViewDFS, TreeNode, build };

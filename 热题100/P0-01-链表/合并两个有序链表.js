@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 合并两个有序链表
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 合并两个有序链表（LeetCode 21）
  *
  * 给定两个升序排列的链表 list1 和 list2，合并成一个新的升序链表并返回。
@@ -67,6 +73,29 @@ function mergeTwoLists(list1, list2) {
   return dummy.next;
 }
 
+/**
+ * 延伸 1：递归合并
+ *
+ * 需求：不用 dummy 指针，递归决定每一位由哪条链表提供。
+ *
+ * 思路：较小节点作为当前头，它的 next 接“两条剩余链表”的合并结果。
+ *
+ * ——— 示例 ———
+ * 示例：1→2→4 与 1→3→4，输出 1→1→2→3→4→4。
+ *
+ * 复杂度：时间 O(m+n)，递归栈 O(m+n)。
+ */
+function mergeTwoListsRecursive(list1, list2) {
+  if (!list1) return list2;
+  if (!list2) return list1;
+  if (list1.val <= list2.val) {
+    list1.next = mergeTwoListsRecursive(list1.next, list2);
+    return list1;
+  }
+  list2.next = mergeTwoListsRecursive(list1, list2.next);
+  return list2;
+}
+
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——
 function build(arr) {
   const dummy = new ListNode(0);
@@ -85,4 +114,4 @@ console.log(toArray(mergeTwoLists(build([1, 2, 4]), build([1, 3, 4])))); // [1, 
 console.log(toArray(mergeTwoLists(build([]), build([]))));               // []
 console.log(toArray(mergeTwoLists(build([]), build([0]))));             // [0]
 
-module.exports = { ListNode, mergeTwoLists, build, toArray };
+module.exports = { ListNode, mergeTwoLists, mergeTwoListsRecursive, build, toArray };

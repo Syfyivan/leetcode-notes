@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 颜色分类
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 颜色分类（LeetCode 75）
  *
  * 给定一个包含红色、白色和蓝色、共 n 个元素的数组 nums，请原地对它们进行排序，
@@ -64,8 +70,37 @@ function sortColors(nums) {
     return nums;
 }
 
+/**
+ * 延伸 1：推广到 K 种颜色
+ *
+ * 需求：元素取值为 0 到 k-1，在不调用内置 sort 的前提下原地完成分类。
+ *
+ * 思路：先统计每种颜色出现次数，再按颜色编号依次覆盖回原数组。
+ *
+ * ——— 示例 ———
+ * 示例：sortKColors([2,0,3,1,2,0], 4) => [0,0,1,2,2,3]
+ *
+ * 复杂度：时间 O(n+k)，空间 O(k)
+ */
+function sortKColors(nums, k) {
+    const counts = new Array(k).fill(0);
+    for (const color of nums) {
+        if (!Number.isInteger(color) || color < 0 || color >= k) {
+            throw new RangeError("颜色编号必须是 0 到 k-1 的整数");
+        }
+        counts[color]++;
+    }
+
+    let index = 0;
+    for (let color = 0; color < k; color++) {
+        for (let count = 0; count < counts[color]; count++) nums[index++] = color;
+    }
+    return nums;
+}
+
 // —— 自测 ——
 console.log(sortColors([2, 0, 2, 1, 1, 0])); // [0,0,1,1,2,2]
 console.log(sortColors([2, 0, 1])); // [0,1,2]
+console.log(sortKColors([2, 0, 3, 1, 2, 0], 4)); // [0,0,1,2,2,3]
 
-module.exports = { sortColors };
+module.exports = { sortColors, sortKColors };

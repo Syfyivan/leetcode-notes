@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 反转链表
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 反转链表（LeetCode 206）
  *
  * 给定单链表的头节点 head，反转链表，返回反转后的头节点。
@@ -77,6 +83,33 @@ function reverseListIterative(head) {
   return prev;
 }
 
+/**
+ * 延伸 1：反转指定区间（LeetCode 92）
+ *
+ * 需求：只反转第 left 到 right 个节点，其余节点顺序不变。
+ *
+ * 思路：dummy 走到 left 前一位，把区间内后续节点依次抽出并插到区间头部。
+ *
+ * ——— 示例 ———
+ * 示例：1→2→3→4→5，left=2，right=4，输出 1→4→3→2→5。
+ *
+ * 复杂度：时间 O(n)，空间 O(1)。
+ */
+function reverseBetween(head, left, right) {
+  if (!head || left === right) return head;
+  const dummy = new ListNode(0, head);
+  let before = dummy;
+  for (let i = 1; i < left; i++) before = before.next;
+  const tail = before.next;
+  for (let i = 0; i < right - left; i++) {
+    const moved = tail.next;
+    tail.next = moved.next;
+    moved.next = before.next;
+    before.next = moved;
+  }
+  return dummy.next;
+}
+
 // —— 小工具：数组建链表 / 链表转数组，方便自测 ——
 function build(arr) {
   const dummy = new ListNode(0);
@@ -100,4 +133,4 @@ console.log(toArray(reverseListIterative(build([1, 2, 3, 4, 5])))); // [5, 4, 3,
 console.log(toArray(reverseListIterative(build([1, 2]))));          // [2, 1]
 console.log(toArray(reverseListIterative(build([]))));              // []
 
-module.exports = { ListNode, reverseList, reverseListIterative, build, toArray };
+module.exports = { ListNode, reverseList, reverseListIterative, reverseBetween, build, toArray };

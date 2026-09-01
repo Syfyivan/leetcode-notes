@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 随机链表的复制
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 随机链表的复制（LeetCode 138）
  *
  * 给定一个长度为 n 的链表，每个节点包含一个额外增加的随机指针 random，
@@ -77,6 +83,29 @@ function copyRandomList(head) {
   return dummy.next;
 }
 
+/**
+ * 延伸 1：哈希映射版
+ *
+ * 需求：用最直观的两遍扫描完成深拷贝，原链表保持不变。
+ *
+ * 思路：第一遍建立“原节点 → 新节点”；第二遍通过 Map 接好 next 和 random。
+ *
+ * ——— 示例 ———
+ * 示例：[[7,null],[13,0]] 拷贝后序列相同，但所有节点引用都不同。
+ *
+ * 复杂度：时间 O(n)，空间 O(n)。
+ */
+function copyRandomListWithMap(head) {
+  if (!head) return null;
+  const copies = new Map();
+  for (let node = head; node; node = node.next) copies.set(node, new Node(node.val));
+  for (let node = head; node; node = node.next) {
+    copies.get(node).next = copies.get(node.next) || null;
+    copies.get(node).random = copies.get(node.random) || null;
+  }
+  return copies.get(head);
+}
+
 // —— 小工具：由 [val, randomIndex] 数组构造带 random 的链表 ——
 function buildRandomList(arr) {
   const nodes = arr.map(([v]) => new Node(v));
@@ -101,4 +130,4 @@ console.log(serialize(copyRandomList(buildRandomList([[7, null], [13, 0], [11, 4
 console.log(serialize(copyRandomList(buildRandomList([[1, 1], [2, 1]]))));
 // 期望： [[1,1],[2,1]]
 
-module.exports = { Node, copyRandomList, buildRandomList, serialize };
+module.exports = { Node, copyRandomList, copyRandomListWithMap, buildRandomList, serialize };

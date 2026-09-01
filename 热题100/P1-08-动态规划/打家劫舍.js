@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 打家劫舍
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 思路：
  * 1. dp[i] = 偷到第 i 家为止能拿到的最大金额。
  * 2. 偷这家：dp[i-2] + nums[i]；不偷：dp[i-1]。取较大值。
@@ -38,3 +44,33 @@ var rob = function(nums) {
     }
     return res[n - 1];
 };
+
+/**
+ * 延伸 1：环形房屋（LeetCode 213）
+ *
+ * 需求：第一间和最后一间相邻，不能同时偷。
+ *
+ * 思路：答案分成“不偷最后一间”和“不偷第一间”两种线性区间，取较大值。
+ *
+ * ——— 示例 ———
+ * 示例：[2,3,2] 输出 3；[1,2,3,1] 输出 4。
+ *
+ * 复杂度：时间 O(n)，空间 O(1)。
+ */
+function robCircular(nums) {
+  if (nums.length === 1) return nums[0];
+  const robRange = (left, right) => {
+    let prev2 = 0;
+    let prev1 = 0;
+    for (let i = left; i <= right; i++) {
+      [prev2, prev1] = [prev1, Math.max(prev1, prev2 + nums[i])];
+    }
+    return prev1;
+  };
+  return Math.max(robRange(0, nums.length - 2), robRange(1, nums.length - 1));
+}
+
+// —— 自测 ——
+console.log(rob([1, 2, 3, 1])); // 4
+
+module.exports = { rob, robCircular };

@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 二叉树展开为链表
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 二叉树展开为链表（LC114）
  *
  * 给你二叉树的根结点 root ，请你将它展开为一个单链表：
@@ -90,6 +96,36 @@ function flatten(root) {
   dfs(root);
 }
 
+/**
+ * 延伸 1：显式栈先序展开
+ *
+ * 需求：按根、左、右顺序访问节点，并原地串成只有 right 的链表。
+ *
+ * 思路：栈中先压右再压左；每次把前一个节点的 right 指向当前，并清空 left。
+ *
+ * ——— 示例 ———
+ * 示例：[1,2,5,3,4,null,6] 展开为 1→2→3→4→5→6。
+ *
+ * 复杂度：时间 O(n)，空间 O(h)。
+ */
+function flattenWithStack(root) {
+  if (!root) return;
+  const stack = [root];
+  let previous = null;
+  while (stack.length) {
+    const node = stack.pop();
+    if (node.right) stack.push(node.right);
+    if (node.left) stack.push(node.left);
+    if (previous) {
+      previous.left = null;
+      previous.right = node;
+    }
+    previous = node;
+  }
+  previous.left = null;
+  previous.right = null;
+}
+
 // —— 自测 ——
 const t1 = build([1, 2, 5, 3, 4, null, 6]);
 flatten(t1);
@@ -99,4 +135,4 @@ const t2 = build([0]);
 flatten(t2);
 console.log(collectRight(t2)); // 期望输出 [0]
 
-module.exports = { flatten, TreeNode, build };
+module.exports = { flatten, flattenWithStack, TreeNode, build };

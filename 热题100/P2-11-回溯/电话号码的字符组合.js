@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 电话号码的字符组合
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * @param {string} digits
  * @return {string[]}
  *
@@ -48,3 +54,32 @@ var letterCombinations = function(digits) {
     dfs(0);
     return res;
 };
+
+/**
+ * 延伸 1：队列迭代生成
+ *
+ * 需求：不用递归，每读一个数字就把已有前缀与它的所有字母做笛卡尔积。
+ *
+ * 思路：结果从 [''] 起步；每轮创建 next，遍历 prefix 和当前数字对应字母。
+ *
+ * ——— 示例 ———
+ * 示例："23" 输出 ["ad","ae","af","bd","be","bf","cd","ce","cf"]。
+ *
+ * 复杂度：结果规模 O(4^n)，空间 O(4^n)。
+ */
+function letterCombinationsIterative(digits) {
+  if (!digits) return [];
+  const mapping = ['', '', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz'];
+  let result = [''];
+  for (const digit of digits) {
+    const next = [];
+    for (const prefix of result) for (const char of mapping[Number(digit)]) next.push(prefix + char);
+    result = next;
+  }
+  return result;
+}
+
+// —— 自测 ——
+console.log(letterCombinations('23').length); // 9
+
+module.exports = { letterCombinations, letterCombinationsIterative };

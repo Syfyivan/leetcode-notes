@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 三数之和
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 三数之和（LeetCode 15）
  *
  * 给定一个整数数组 nums，返回所有满足 i != j、i != k、j != k，
@@ -74,9 +80,41 @@ function threeSum(nums) {
   return res;
 }
 
+/**
+ * 延伸 1：三数之和为任意 target
+ *
+ * 需求：返回所有不重复三元组，使三数之和等于 target。
+ *
+ * 思路：排序后枚举第一个数，剩余区间双指针夹逼；三层位置都跳过重复值。
+ *
+ * ——— 示例 ———
+ * 示例：[1,2,-2,-1,0]，target=0，输出 [[-2,0,2],[-1,0,1]]。
+ *
+ * 复杂度：时间 O(n²)，排序额外空间视实现而定。
+ */
+function threeSumTarget(nums, target) {
+  const sorted = nums.slice().sort((a, b) => a - b);
+  const result = [];
+  for (let i = 0; i < sorted.length - 2; i++) {
+    if (i > 0 && sorted[i] === sorted[i - 1]) continue;
+    let left = i + 1;
+    let right = sorted.length - 1;
+    while (left < right) {
+      const sum = sorted[i] + sorted[left] + sorted[right];
+      if (sum === target) {
+        result.push([sorted[i], sorted[left], sorted[right]]);
+        while (left < right && sorted[left] === sorted[++left]);
+        while (left < right && sorted[right] === sorted[--right]);
+      } else if (sum < target) left++;
+      else right--;
+    }
+  }
+  return result;
+}
+
 // —— 自测 ——
 console.log(threeSum([-1, 0, 1, 2, -1, -4])); // [[-1, -1, 2], [-1, 0, 1]]
 console.log(threeSum([0, 1, 1]));             // []
 console.log(threeSum([0, 0, 0]));             // [[0, 0, 0]]
 
-module.exports = { threeSum };
+module.exports = { threeSum, threeSumTarget };

@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 相交链表
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 相交链表（LeetCode 160）
  *
  * 给定两个单链表的头节点 headA 和 headB，找出并返回两个链表相交的起始节点。
@@ -62,6 +68,27 @@ function getIntersectionNode(headA, headB) {
   return a; // 相遇是交点；都走到 null 就是不相交
 }
 
+/**
+ * 延伸 1：哈希表找交点
+ *
+ * 需求：用额外空间换取最直观的节点引用判断。
+ *
+ * 思路：先把 A 的全部节点放入 Set，再扫 B；第一次命中的节点就是公共起点。
+ *
+ * ——— 示例 ———
+ * 示例：A=4→1→8→4→5，B=5→6→1→8→4→5，返回共享的值 8 节点。
+ *
+ * 复杂度：时间 O(m+n)，空间 O(m)。
+ */
+function getIntersectionNodeWithSet(headA, headB) {
+  const nodes = new Set();
+  for (let node = headA; node; node = node.next) nodes.add(node);
+  for (let node = headB; node; node = node.next) {
+    if (nodes.has(node)) return node;
+  }
+  return null;
+}
+
 // —— 小工具：build 建普通链表；makeIntersect 造出真正共享尾部的两条链表 ——
 function build(arr) {
   const dummy = new ListNode(0);
@@ -91,4 +118,4 @@ const a2 = build([2, 6, 4]);
 const b2 = build([1, 5]);
 console.log(getIntersectionNode(a2, b2)); // null
 
-module.exports = { ListNode, getIntersectionNode, build, makeIntersect };
+module.exports = { ListNode, getIntersectionNode, getIntersectionNodeWithSet, build, makeIntersect };

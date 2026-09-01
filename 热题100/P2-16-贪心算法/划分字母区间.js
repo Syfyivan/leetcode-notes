@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 划分字母区间
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 763. 划分字母区间
  *
  * 给你一个字符串 s 。我们要把这个字符串划分为尽可能多的片段，
@@ -67,3 +73,38 @@ var partitionLabels = function (s) {
   }
   return res;
 };
+
+/**
+ * 延伸 1：返回每个分段的范围与内容
+ *
+ * 需求：除分段长度外，返回每段的起止下标和对应子串，方便还原实际划分结果。
+ *
+ * 思路：切分时不只记录长度，同时保存当前 start、end，并用 slice 取得片段内容。
+ *
+ * ——— 示例 ———
+ * 示例：partitionLabelRanges("abac") => [{start:0,end:2,text:"aba"},{start:3,end:3,text:"c"}]
+ *
+ * 复杂度：时间 O(n)，返回子串占用空间 O(n)
+ */
+function partitionLabelRanges(s) {
+  const last = new Map();
+  for (let i = 0; i < s.length; i++) last.set(s[i], i);
+
+  const result = [];
+  let start = 0;
+  let end = 0;
+  for (let i = 0; i < s.length; i++) {
+    end = Math.max(end, last.get(s[i]));
+    if (i === end) {
+      result.push({ start, end, text: s.slice(start, end + 1) });
+      start = i + 1;
+    }
+  }
+  return result;
+}
+
+// —— 自测 ——
+console.log(partitionLabels("ababcbacadefegdehijhklij")); // 期望：[9,7,8]
+console.log(partitionLabelRanges("abac")); // 期望：aba、c 两段
+
+module.exports = { partitionLabels, partitionLabelRanges };

@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 柱状图中最大的矩形
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 柱状图中最大的矩形（LeetCode 84）
  *
  * 给定 n 个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为 1。
@@ -55,8 +61,33 @@ function largestRectangleArea(heights) {
   return max;
 }
 
+/**
+ * 延伸 1：二维最大矩形（LeetCode 85）
+ *
+ * 需求：0/1 矩阵中求全为 1 的最大矩形面积。
+ *
+ * 思路：逐行累计每列连续 1 的高度，每一行都转化为一次柱状图最大矩形。
+ *
+ * ——— 示例 ———
+ * 示例：[[1,0,1,0,0],[1,0,1,1,1],[1,1,1,1,1]] 输出 6。
+ *
+ * 复杂度：时间 O(rows*cols)，空间 O(cols)。
+ */
+function maximalRectangle(matrix) {
+  if (matrix.length === 0) return 0;
+  const heights = new Array(matrix[0].length).fill(0);
+  let best = 0;
+  for (const row of matrix) {
+    for (let col = 0; col < row.length; col++) {
+      heights[col] = String(row[col]) === '1' ? heights[col] + 1 : 0;
+    }
+    best = Math.max(best, largestRectangleArea(heights));
+  }
+  return best;
+}
+
 // —— 自测 ——
 console.log(largestRectangleArea([2, 1, 5, 6, 2, 3])); // 10
 console.log(largestRectangleArea([2, 4])); // 4
 
-module.exports = { largestRectangleArea };
+module.exports = { largestRectangleArea, maximalRectangle };

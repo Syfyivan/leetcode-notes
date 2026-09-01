@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 腐烂的橘子
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 腐烂的橘子（LeetCode 994）
  *
  * 在给定的 m x n 网格 grid 中，每个单元格可以有以下三个值之一：
@@ -82,9 +88,60 @@ function orangesRotting(grid) {
     return fresh === 0 ? minutes : -1;
 }
 
+/**
+ * 延伸 1：记录每个橘子的腐烂时间
+ *
+ * 需求：除最短分钟数外，再返回每个非空格第一次腐烂的分钟，且不修改原网格。
+ *
+ * 思路：仍然使用多源 BFS；队列携带时间，首次访问新鲜橘子时写入 timeMap。
+ *
+ * ——— 示例 ———
+ * 示例：[[2,1],[1,1]] 的时间矩阵为 [[0,1],[1,2]]，总分钟数为 2。
+ *
+ * 复杂度：时间 O(mn)，空间 O(mn)
+ */
+function orangesRottingTimeMap(grid) {
+    if (grid.length === 0 || grid[0].length === 0) return { minutes: 0, times: [] };
+    const rows = grid.length;
+    const cols = grid[0].length;
+    const times = Array.from({ length: rows }, () => new Array(cols).fill(-1));
+    const queue = [];
+    let fresh = 0;
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            if (grid[row][col] === 2) {
+                times[row][col] = 0;
+                queue.push([row, col]);
+            } else if (grid[row][col] === 1) {
+                fresh++;
+            }
+        }
+    }
+
+    const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    let head = 0;
+    let minutes = 0;
+    while (head < queue.length) {
+        const [row, col] = queue[head++];
+        for (const [dr, dc] of dirs) {
+            const nr = row + dr;
+            const nc = col + dc;
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+            if (grid[nr][nc] !== 1 || times[nr][nc] !== -1) continue;
+            times[nr][nc] = times[row][col] + 1;
+            minutes = Math.max(minutes, times[nr][nc]);
+            fresh--;
+            queue.push([nr, nc]);
+        }
+    }
+    return { minutes: fresh === 0 ? minutes : -1, times };
+}
+
 // —— 自测 ——
 console.log(orangesRotting([[2, 1, 1], [1, 1, 0], [0, 1, 1]])); // 期望： 4
 console.log(orangesRotting([[2, 1, 1], [0, 1, 1], [1, 0, 1]])); // 期望： -1
 console.log(orangesRotting([[0, 2]]));                          // 期望： 0
+console.log(orangesRottingTimeMap([[2, 1], [1, 1]]));           // 期望：minutes 为 2
 
-module.exports = { orangesRotting };
+module.exports = { orangesRotting, orangesRottingTimeMap };

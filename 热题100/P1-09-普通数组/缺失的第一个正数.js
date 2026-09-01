@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 缺失的第一个正数
+ *
+ * 优先级：Hot 100 · P1
+ */
+
+/**
  * 缺失的第一个正数（LeetCode 41）
  *
  * 给定一个未排序的整数数组 nums，请找出其中没有出现的最小的正整数。
@@ -61,9 +67,28 @@ function firstMissingPositive(nums) {
   return n + 1;
 }
 
+/**
+ * 延伸 1：Set 基准版
+ *
+ * 需求：不修改输入，用额外空间写出易核对的答案。
+ *
+ * 思路：所有正数放入 Set，从 1 起找到第一个不存在的数。
+ *
+ * ——— 示例 ———
+ * 示例：[3,4,-1,1] 输出 2。
+ *
+ * 复杂度：时间 O(n)，空间 O(n)。
+ */
+function firstMissingPositiveWithSet(nums) {
+  const values = new Set(nums);
+  for (let candidate = 1; candidate <= nums.length + 1; candidate++) {
+    if (!values.has(candidate)) return candidate;
+  }
+}
+
 // —— 自测 ——
 console.log(firstMissingPositive([1, 2, 0]));           // 3
 console.log(firstMissingPositive([3, 4, -1, 1]));       // 2
 console.log(firstMissingPositive([7, 8, 9, 11, 12]));   // 1
 
-module.exports = { firstMissingPositive };
+module.exports = { firstMissingPositive, firstMissingPositiveWithSet };

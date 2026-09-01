@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 排序链表
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 排序链表（LeetCode 148）
  *
  * 给定链表的头节点 head，请将其按升序排列并返回排序后的链表。
@@ -90,9 +96,28 @@ function sortList(head) {
   return merge(sortList(head), sortList(mid));
 }
 
+/**
+ * 延伸 1：借助数组排序
+ *
+ * 需求：先写一个便于核对结果的基准版本，不追求 O(1) 额外空间。
+ *
+ * 思路：收集所有节点值，数值排序后重新建立链表；适合做归并版本的对拍答案。
+ *
+ * ——— 示例 ———
+ * 示例：4→2→1→3，输出 1→2→3→4。
+ *
+ * 复杂度：时间 O(n log n)，空间 O(n)。
+ */
+function sortListWithArray(head) {
+  const values = [];
+  for (let node = head; node; node = node.next) values.push(node.val);
+  values.sort((a, b) => a - b);
+  return build(values);
+}
+
 // —— 自测 ——
 console.log(toArray(sortList(build([4, 2, 1, 3]))));     // 期望： [1,2,3,4]
 console.log(toArray(sortList(build([-1, 5, 3, 4, 0])))); // 期望： [-1,0,3,4,5]
 console.log(toArray(sortList(build([]))));               // 期望： []
 
-module.exports = { ListNode, build, toArray, sortList };
+module.exports = { ListNode, build, toArray, sortList, sortListWithArray };

@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 字母异位词分组
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 字母异位词分组（LeetCode 49）
  *
  * 给定一个字符串数组 strs，将其中互为字母异位词的字符串组合在一起。
@@ -55,9 +61,33 @@ function groupAnagrams(strs) {
   return [...map.values()];
 }
 
+/**
+ * 延伸 1：字母计数作为 key
+ *
+ * 需求：避免对每个字符串排序，输入只含小写英文字母。
+ *
+ * 思路：统计 26 个字符次数，用分隔符拼成不会歧义的分组键。
+ *
+ * ——— 示例 ———
+ * 示例：["eat","tea","tan"] 中 eat 与 tea 进入同一组。
+ *
+ * 复杂度：总字符数为 C，时间 O(C)，空间 O(C)。
+ */
+function groupAnagramsByCount(strs) {
+  const groups = new Map();
+  for (const word of strs) {
+    const counts = new Array(26).fill(0);
+    for (const char of word) counts[char.charCodeAt(0) - 97]++;
+    const key = counts.join('#');
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(word);
+  }
+  return [...groups.values()];
+}
+
 // —— 自测 ——
 console.log(groupAnagrams(["eat", "tea", "tan", "ate", "nat", "bat"])); // [["bat"],["nat","tan"],["ate","eat","tea"]]（顺序不限）
 console.log(groupAnagrams([""]));                                       // [[""]]
 console.log(groupAnagrams(["a"]));                                      // [["a"]]
 
-module.exports = { groupAnagrams };
+module.exports = { groupAnagrams, groupAnagramsByCount };

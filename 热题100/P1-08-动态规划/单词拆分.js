@@ -1,3 +1,9 @@
+/**
+ * 热题 100 · 单词拆分
+ *
+ * 优先级：Hot 100 · P1
+ */
+
 // 给你一个字符串 s 和一个字符串列表 wordDict 作为字典。如果可以利用字典中出现的一个或多个单词拼接出 s 则返回 true。
 
 // 注意：不要求字典中出现的单词全部都使用，并且字典中的单词可以重复使用。
@@ -55,3 +61,41 @@ var wordBreak = function(s, wordDict) {
     }
     return dp[len];
 };
+
+/**
+ * 延伸 1：还原一种拆分方案
+ *
+ * 需求：若可拆分，返回实际单词数组；不可拆分返回 null。
+ *
+ * 思路：dp[i] 记录到位置 i 的前驱位置和本段单词，最后从 s.length 倒推。
+ *
+ * ——— 示例 ———
+ * 示例："leetcode" 与 ["leet","code"] 输出 ["leet","code"]。
+ *
+ * 复杂度：时间 O(n²)，空间 O(n)。
+ */
+function wordBreakPath(s, wordDict) {
+  const words = new Set(wordDict);
+  const previous = new Array(s.length + 1).fill(null);
+  previous[0] = { index: -1, word: '' };
+  for (let end = 1; end <= s.length; end++) {
+    for (let start = 0; start < end; start++) {
+      const word = s.slice(start, end);
+      if (previous[start] && words.has(word)) {
+        previous[end] = { index: start, word };
+        break;
+      }
+    }
+  }
+  if (!previous[s.length]) return null;
+  const result = [];
+  for (let index = s.length; index > 0; index = previous[index].index) {
+    result.push(previous[index].word);
+  }
+  return result.reverse();
+}
+
+// —— 自测 ——
+console.log(wordBreak('leetcode', ['leet', 'code'])); // true
+
+module.exports = { wordBreak, wordBreakPath };

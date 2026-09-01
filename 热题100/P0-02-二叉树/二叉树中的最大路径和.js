@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 二叉树中的最大路径和
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * 二叉树中的最大路径和（LC124）
  *
  * 二叉树中的 路径 被定义为一条节点序列，序列中每对相邻节点之间都存在一条边。
@@ -75,8 +81,29 @@ function maxPathSum(root) {
   return ans;
 }
 
+/**
+ * 延伸 1：只计算必须经过根节点的最大路径
+ *
+ * 需求：路径必须经过 root，可从左子树某节点走到右子树某节点。
+ *
+ * 思路：左右各取一条最大向下贡献，负贡献按 0 丢弃，再加根值。
+ *
+ * ——— 示例 ———
+ * 示例：[-10,9,20,null,null,15,7]，必须过根时结果为 34。
+ *
+ * 复杂度：时间 O(n)，递归栈 O(h)。
+ */
+function maxPathSumThroughRoot(root) {
+  if (!root) return -Infinity;
+  function gain(node) {
+    if (!node) return 0;
+    return node.val + Math.max(0, gain(node.left), gain(node.right));
+  }
+  return root.val + Math.max(0, gain(root.left)) + Math.max(0, gain(root.right));
+}
+
 // —— 自测 ——
 console.log(maxPathSum(build([1, 2, 3]))); // 期望输出 6
 console.log(maxPathSum(build([-10, 9, 20, null, null, 15, 7]))); // 期望输出 42
 
-module.exports = { maxPathSum, TreeNode, build };
+module.exports = { maxPathSum, maxPathSumThroughRoot, TreeNode, build };

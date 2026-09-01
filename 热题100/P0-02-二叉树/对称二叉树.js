@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 对称二叉树
+ *
+ * 优先级：Hot 100 · P0
+ */
+
+/**
  * Definition for a binary tree node.
  * function TreeNode(val, left, right) {
  *     this.val = (val===undefined ? 0 : val)
@@ -11,6 +17,10 @@
  * 2. 递归比两棵子树：左的左对右的右，左的右对右的左。
  * 3. 都空为真，一个空或值不同为假。
  * 复杂度：时间 O(n)，空间 O(h)
+ *
+ * ——— 示例 ———
+ * 输入：[1,2,2,3,4,4,3]  输出：true
+ * 输入：[1,2,2,null,3,null,3]  输出：false
  *
  * ——— 延伸 ———
  * - 迭代：队列每次拿一对，外侧和外侧比、内侧和内侧比。
@@ -54,3 +64,34 @@ var isSymmetric = function(root) {
 
     return isMirror(root.left, root.right);
 };
+
+/**
+ * 延伸 1：队列迭代版
+ *
+ * 需求：不用递归，每次成对比较镜像位置。
+ *
+ * 思路：依次放入 left.left/right.right 和 left.right/right.left；一空一非空立即失败。
+ *
+ * ——— 示例 ———
+ * 示例：[1,2,2,3,4,4,3] 返回 true。
+ *
+ * 复杂度：时间 O(n)，空间 O(n)。
+ */
+function isSymmetricIterative(root) {
+  if (!root) return true;
+  const queue = [root.left, root.right];
+  for (let head = 0; head < queue.length; head += 2) {
+    const left = queue[head];
+    const right = queue[head + 1];
+    if (!left && !right) continue;
+    if (!left || !right || left.val !== right.val) return false;
+    queue.push(left.left, right.right, left.right, right.left);
+  }
+  return true;
+}
+
+// —— 自测 ——
+const symmetricTree = { val: 1, left: { val: 2 }, right: { val: 2 } };
+console.log(isSymmetric(symmetricTree)); // true
+
+module.exports = { isSymmetric, isSymmetricIterative };

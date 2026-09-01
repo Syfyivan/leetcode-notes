@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 跳跃游戏 2
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 给定一个长度为 n 的 0 索引整数数组 nums。初始位置在下标 0。
 每个元素 nums[i] 表示从索引 i 向后跳转的最大长度。换句话说，如果你在索引 i 处，你可以跳转到任意 (i + j) 处：
 0 <= j <= nums[i] 且 i + j < n
@@ -52,3 +58,51 @@ var jump = function(nums) {
     }
     return count;
 };
+
+/**
+ * 延伸 1：还原一条最少跳跃路径
+ *
+ * 需求：返回一条从下标 0 到末尾的最少跳跃下标序列；不可达时返回空数组。
+ *
+ * 思路：把每一跳的可达区间看作 BFS 一层，在当前层选出能把下一层右边界推得最远的下标。
+ *
+ * ——— 示例 ———
+ * 示例：jumpPath([2,3,1,1,4]) => [0,1,4]
+ *
+ * 复杂度：时间 O(n)，路径空间 O(n)
+ */
+function jumpPath(nums) {
+    const n = nums.length;
+    if (n === 0) return [];
+    if (n === 1) return [0];
+
+    const path = [0];
+    let layerStart = 0;
+    let layerEnd = 0;
+    while (layerEnd < n - 1) {
+        let nextEnd = layerEnd;
+        let bestIndex = -1;
+        for (let i = layerStart; i <= layerEnd; i++) {
+            const reach = Math.min(n - 1, i + nums[i]);
+            if (reach > nextEnd) {
+                nextEnd = reach;
+                bestIndex = i;
+            }
+        }
+        if (bestIndex === -1) return [];
+        if (path[path.length - 1] !== bestIndex) path.push(bestIndex);
+        if (nextEnd === n - 1) {
+            path.push(n - 1);
+            break;
+        }
+        layerStart = layerEnd + 1;
+        layerEnd = nextEnd;
+    }
+    return path;
+}
+
+// —— 自测 ——
+console.log(jump([2, 3, 1, 1, 4]));     // 期望：2
+console.log(jumpPath([2, 3, 1, 1, 4])); // 期望：[0,1,4]
+
+module.exports = { jump, jumpPath };

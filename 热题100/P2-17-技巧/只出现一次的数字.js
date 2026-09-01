@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 只出现一次的数字
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 只出现一次的数字（LeetCode 136）
  *
  * 给你一个非空整数数组 nums，除了某个元素只出现一次以外，其余每个元素均出现两次。
@@ -50,9 +56,32 @@ function singleNumber(nums) {
     return x;
 }
 
+/**
+ * 延伸 1：其余数字都出现三次
+ *
+ * 需求：除一个数字出现一次外，其余数字都恰好出现三次，要求线性时间和常量空间。
+ *
+ * 思路：ones、twos 记录每一位出现次数模 3 的状态；第三次出现时该位会同时从两者中清除。
+ *
+ * ——— 示例 ———
+ * 示例：singleNumberAmongTriples([2,2,3,2]) => 3
+ *
+ * 复杂度：时间 O(n)，空间 O(1)
+ */
+function singleNumberAmongTriples(nums) {
+    let ones = 0;
+    let twos = 0;
+    for (const num of nums) {
+        ones = (ones ^ num) & ~twos;
+        twos = (twos ^ num) & ~ones;
+    }
+    return ones;
+}
+
 // —— 自测 ——
 console.log(singleNumber([2, 2, 1])); // 1
 console.log(singleNumber([4, 1, 2, 1, 2])); // 4
 console.log(singleNumber([1])); // 1
+console.log(singleNumberAmongTriples([2, 2, 3, 2])); // 3
 
-module.exports = { singleNumber };
+module.exports = { singleNumber, singleNumberAmongTriples };

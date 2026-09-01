@@ -1,4 +1,10 @@
 /**
+ * 热题 100 · 寻找两个正序数组的中位数
+ *
+ * 优先级：Hot 100 · P2
+ */
+
+/**
  * 寻找两个正序数组的中位数（LC4）
  *
  * 给定两个大小分别为 m 和 n 的正序（从小到大）数组 nums1 和 nums2 。
@@ -70,8 +76,32 @@ function findMedianSortedArrays(nums1, nums2) {
     return 0;
 }
 
+/**
+ * 延伸 1：归并基准版
+ *
+ * 需求：用 O(m+n) 方法写出易验证答案，方便和 O(log(min(m,n))) 主解法对拍。
+ *
+ * 思路：双指针归并两个有序数组，再读取中间一项或中间两项平均值。
+ *
+ * ——— 示例 ———
+ * 示例：[1,3] 与 [2] 输出 2。
+ *
+ * 复杂度：时间 O(m+n)，空间 O(m+n)。
+ */
+function findMedianSortedArraysMerge(nums1, nums2) {
+  const merged = [];
+  let i = 0;
+  let j = 0;
+  while (i < nums1.length || j < nums2.length) {
+    if (j >= nums2.length || (i < nums1.length && nums1[i] <= nums2[j])) merged.push(nums1[i++]);
+    else merged.push(nums2[j++]);
+  }
+  const middle = Math.floor(merged.length / 2);
+  return merged.length % 2 ? merged[middle] : (merged[middle - 1] + merged[middle]) / 2;
+}
+
 // —— 自测 ——
 console.log(findMedianSortedArrays([1, 3], [2])); // 期望输出 2
 console.log(findMedianSortedArrays([1, 2], [3, 4])); // 期望输出 2.5
 
-module.exports = { findMedianSortedArrays };
+module.exports = { findMedianSortedArrays, findMedianSortedArraysMerge };
