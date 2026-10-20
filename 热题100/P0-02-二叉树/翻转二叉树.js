@@ -21,24 +21,6 @@
  * ——— 示例 ———
  * 输入：[4,2,7,1,3,6,9]
  * 输出：[4,7,2,9,6,3,1]
- *
- * ——— 延伸 ———
- * - 迭代：队列/栈把节点扔进去，弹出就交换左右孩子。
- * - 只翻值不换指针过不了，结构也要镜像。
- * - 对称二叉树就是「左树翻转后跟右树一样」。
- *
- * ——— 常见追问 ———
- * Q: 为什么空节点要 return null，写成 return 不行？
- * A: return 是 undefined。父节点会把孩子写成 undefined，后面再访 left 会炸。
- *
- * Q: 先翻再换，能不能先换再翻？
- * A: 能。先交换指针，再 invert(left)、invert(right)。别用已经改过的指针翻错边。
- *
- * Q: 时间？
- * A: 每个节点换一次 O(n)，栈 O(h)。
- *
- * Q: 单节点 / 空树？
- * A: 空返回 null。单节点左右都空，换完还是自己。
  */
 /**
  * @param {TreeNode} root
@@ -77,6 +59,21 @@ function invertTreeIterative(root) {
   }
   return root;
 }
+
+/**
+ * ——— 常见追问 ———
+ * Q: 为什么空节点要 return null，写成 return 不行？
+ * A: return 是 undefined。父节点会把孩子写成 undefined，后面再访 left 会炸。
+ *
+ * Q: 先翻再换，能不能先换再翻？
+ * A: 能。先交换指针，再 invert(left)、invert(right)。别用已经改过的指针翻错边。
+ *
+ * Q: 时间？
+ * A: 每个节点换一次 O(n)，栈 O(h)。
+ *
+ * Q: 单节点 / 空树？
+ * A: 空返回 null。单节点左右都空，换完还是自己。
+ */
 
 // —— 自测 ——
 const invertSample = { val: 2, left: { val: 1 }, right: { val: 3 } };

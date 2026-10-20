@@ -30,24 +30,6 @@
  * 2. mid 落在左段（nums[mid] > nums[right]）则断点在右侧，left = mid + 1。
  * 3. 边界：nums[mid] < nums[right] 时 mid 可能就是最小，right = mid，不能 mid-1。
  * 复杂度：时间 O(log n)，空间 O(1)
- *
- * ——— 延伸 ———
- * - 有重复（LC154）：nums[mid] == nums[right] 时 right--，最坏退到 O(n)。
- * - 最小值下标就是旋转次数。
- * - 先找最小再普通二分：搜索旋转数组的另一种写法。
- *
- * ——— 常见追问 ———
- * Q: 为什么跟 right 比，不跟 left 比？
- * A: 没旋转时 left 就是最小，nums[mid] > nums[left] 会误判整段有序。跟右端比能分清「断点在右」还是「mid 已在右段」。
- *
- * Q: 为什么 right = mid 不能减 1？
- * A: mid 可能正好是最小值。减 1 会把答案扔出去。
- *
- * Q: 没旋转呢？
- * A: 全程 nums[mid] < nums[right]，right 一直缩到 left，停在 0。
- *
- * Q: 循环条件为什么是 left < right？
- * A: 退出时 left == right，指向唯一剩下的最小值。写成 <= 还要单独处理重合。
  */
 /**
  * @param {number[]} nums
@@ -90,6 +72,21 @@ function findMinWithDuplicates(nums) {
   }
   return nums[left];
 }
+
+/**
+ * ——— 常见追问 ———
+ * Q: 为什么跟 right 比，不跟 left 比？
+ * A: 没旋转时 left 就是最小，nums[mid] > nums[left] 会误判整段有序。跟右端比能分清「断点在右」还是「mid 已在右段」。
+ *
+ * Q: 为什么 right = mid 不能减 1？
+ * A: mid 可能正好是最小值。减 1 会把答案扔出去。
+ *
+ * Q: 没旋转呢？
+ * A: 全程 nums[mid] < nums[right]，right 一直缩到 left，停在 0。
+ *
+ * Q: 循环条件为什么是 left < right？
+ * A: 退出时 left == right，指向唯一剩下的最小值。写成 <= 还要单独处理重合。
+ */
 
 // —— 自测 ——
 console.log(findMin([3, 4, 5, 1, 2])); // 期望输出 1

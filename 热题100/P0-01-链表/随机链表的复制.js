@@ -5,48 +5,49 @@
  */
 
 /**
- * 随机链表的复制（LeetCode 138）
+ * 随机链表的复制（LeetCode 138 · 中等）
  *
- * 给定一个长度为 n 的链表，每个节点包含一个额外增加的随机指针 random，
- * 该指针可以指向链表中的任何节点或空节点。
- * 请构造这个链表的深拷贝。深拷贝应该正好由 n 个全新节点组成，
- * 其中每个新节点的值都设为其对应原节点的值。新节点的 next 和 random
- * 指针也都应指向复制链表中的新节点，并使原链表和复制链表中的这些指针
- * 能够表示相同的链表状态。复制链表中的指针都不应指向原链表中的节点。
+ * 【题目描述】
+ * 给你一个长度为 n 的链表，每个节点包含一个额外增加的随机指针 random ，该指针可以指向链表中的任何节点或空节点。
+ * 构造这个链表的 深拷贝。 深拷贝应该正好由 n 个 全新 节点组成，其中每个新节点的值都设为其对应原节点的值。
+ * 新节点的 next 和 random 指针也都应指向复制链表中的新节点，并使原链表和复制链表中的这些指针能够表示相同的链表状态。
+ * 复制链表中的指针都不应指向原链表中的节点 。
  *
- * 每个节点用 [val, random_index] 表示，random_index 为 random 指向节点的下标
- * （从 0 开始），若不指向任何节点则为 null。
+ * 进阶：你能否不使用额外的哈希表，实现 O(1) 辅助空间的算法？
  *
- * 思路：
- * 1. 深拷贝带 random 指针的链表。
- * 2. 三步：原节点后穿插拷贝、按原 random 接拷贝的 random、把拷贝拆出来。
- * 3. 空链表返回 null。拆的时候要把原链表 next 复原。
- * 复杂度：时间 O(n)，空间 O(1) 不计新链表
+ * ——— 解法一：节点穿插交织法（原地三步法，推荐，O(1) 空间） ———
  *
- * ——— 示例 ———
- * 输入： head = [[7,null],[13,0],[11,4],[10,2],[1,0]]
- * 输出： [[7,null],[13,0],[11,4],[10,2],[1,0]]
+ * 【核心思维模型】
+ * 复制带 random 指针链表的核心难点在于：当创建新节点 A' 时，A 的 random 指针所指向的节点可能尚未被创建，无法建立映射。
+ * 穿插法通过将每个克隆节点直接插入在原节点之后，巧妙利用物理相邻关系实现了 O(1) 的原节点与新节点映射！
  *
- * 输入： head = [[1,1],[2,1]]
- * 输出： [[1,1],[2,1]]
+ * 1. 第一步：复制每个节点，并穿插在其原节点之后
+ *    原始：A ──────────> B ──────────> C
+ *    穿插：A ──> A' ──> B ──> B' ──> C ──> C'
+ *    代码：
+ *      const copy = new Node(p.val, p.next, null);
+ *      p.next = copy;
  *
- * ——— 延伸 ———
- * - 哈希：先扫一遍建 old -> new，再扫一遍接 next / random。空间 O(n)，好写。
- * - 本题穿插法省掉哈希，面试常要这版。
- * - 图的深拷贝（LC133）同一套路：map 记「原节点 -> 拷贝」。
+ * 2. 第二步：构建克隆节点的 random 指向
+ *    若原节点 p 的 random 指向 nodeR，则 p 的克隆节点 (p.next) 的 random 必然指向 nodeR 的克隆节点 (nodeR.next)！
+ *    即：`copy.random = orig.random.next`。
+ *    代码：
+ *      if (p.random) p.next.random = p.random.next;
  *
- * ——— 常见追问 ———
- * Q: 为什么先穿插再接 random？
- * A: 拷贝就在原节点后面，orig.random.next 就是拷贝的 random。不用哈希也能点到。
+ * 3. 第三步：拆分分离两条链表（原链表必须完全复原）
+ *    将穿插在一起的交织链表拆分为原链表和克隆链表两串独立链表。
+ *    原链表：A ──> B ──> C
+ *    新链表：A' ──> B' ──> C'
  *
- * Q: 拆的时候为什么要复原原链表？
- * A: 题目没说能改原链表。p.next = cur.next 把原节点接回原来的下一个。
+ * ——— 解法二：哈希表映射法（直观，空间 O(n)） ———
+ * 1. 第一遍遍历：建立 Map<Node, Node>，根据原节点 new 出同值的克隆节点。
+ * 2. 第二遍遍历：通过 Map 映射接好 `map.get(node).next` 与 `map.get(node).random`。
  *
- * Q: random 是 null？
- * A: if (p.random) 挡一下，拷贝的 random 保持 null。
- *
- * Q: 空间真 O(1)？
- * A: 不计新链表的话只用几个指针。哈希版额外 O(n)。
+ * ——— 复杂度分析 ———
+ * 时间复杂度：O(n)，三步穿插法共遍历链表 3 遍，总时间 3n = O(n)。
+ * 空间复杂度：
+ *   - 解法一（穿插法）：O(1) 额外空间（不计存放结果链表本身）。
+ *   - 解法二（哈希法）：O(n)，Map 需存储 n 个映射项。
  */
 
 // —— 带 random 的节点定义 ——
@@ -57,53 +58,68 @@ function Node(val, next, random) {
 }
 
 /**
+ * 节点穿插交织法（O(1) 额外空间）
  * @param {Node} head
- * @return {Node}
+ * @return {Node|null}
  */
 function copyRandomList(head) {
   if (!head) return null;
-  // 1. A -> A' -> B -> B'
+
+  // 第一步：克隆节点并插入原节点后方 (A -> A' -> B -> B')
   for (let p = head; p; p = p.next.next) {
     p.next = new Node(p.val, p.next, null);
   }
-  // 2. copy.random = orig.random 的后一个（拷贝）
+
+  // 第二步：连接克隆节点的 random 指针
   for (let p = head; p; p = p.next.next) {
-    if (p.random) p.next.random = p.random.next; // 原 random 后面就是它的拷贝
+    if (p.random) {
+      p.next.random = p.random.next; // 原 random 节点的下一个就是克隆 random
+    }
   }
-  // 3. 拆开，原链表 next 复原
+
+  // 第三步：拆分两条链表，并恢复原链表
   const dummy = new Node(0);
   let cur = dummy;
   let p = head;
+
   while (p) {
-    cur.next = p.next;
+    const copy = p.next;
+    cur.next = copy;      // 接入克隆链表
     cur = cur.next;
-    p.next = cur.next; // 原节点跳过拷贝，接回原来的下一个
+
+    p.next = copy.next;   // 原节点跳过克隆体，接回原下一个节点（复原原链表）
     p = p.next;
   }
+
   return dummy.next;
 }
 
 /**
- * 延伸 1：哈希映射版
- *
- * 需求：用最直观的两遍扫描完成深拷贝，原链表保持不变。
- *
- * 思路：第一遍建立“原节点 → 新节点”；第二遍通过 Map 接好 next 和 random。
- *
- * ——— 示例 ———
- * 示例：[[7,null],[13,0]] 拷贝后序列相同，但所有节点引用都不同。
+ * 延伸 1：哈希表映射法
  *
  * 复杂度：时间 O(n)，空间 O(n)。
+ *
+ * @param {Node} head
+ * @return {Node|null}
  */
 function copyRandomListWithMap(head) {
   if (!head) return null;
-  const copies = new Map();
-  for (let node = head; node; node = node.next) copies.set(node, new Node(node.val));
+
+  const map = new Map();
+
+  // 第一遍：创建所有新节点
   for (let node = head; node; node = node.next) {
-    copies.get(node).next = copies.get(node.next) || null;
-    copies.get(node).random = copies.get(node.random) || null;
+    map.set(node, new Node(node.val));
   }
-  return copies.get(head);
+
+  // 第二遍：连接 next 和 random
+  for (let node = head; node; node = node.next) {
+    const copyNode = map.get(node);
+    copyNode.next = map.get(node.next) || null;
+    copyNode.random = map.get(node.random) || null;
+  }
+
+  return map.get(head);
 }
 
 // —— 小工具：由 [val, randomIndex] 数组构造带 random 的链表 ——
@@ -124,10 +140,24 @@ function serialize(head) {
   return list.map((n) => [n.val, n.random === null ? null : indexOf.get(n.random)]);
 }
 
+/**
+ * ——— 常见面试追问 ———
+ * Q1: 拆分链表时为什么要严格把原链表的 next 复原？
+ * A1: 在工程规范中，只读/拷贝性质的函数不应该产生外部不可预期的副作用（Side Effect）。如果破坏了传入的原链表结构，调用方后续使用原链表会出现异常。
+ *
+ * Q2: 为什么 `p.next.random = p.random.next` 就能准确找到克隆节点？
+ * A2: 因为在第一步完成后，每一个原节点的克隆体都精确紧贴在其正后方（`p.next`）。因此 `p.random` 这个原节点对应的克隆体，也必然紧贴在 `p.random.next` 上。
+ */
+
 // —— 自测 ——
 console.log(serialize(copyRandomList(buildRandomList([[7, null], [13, 0], [11, 4], [10, 2], [1, 0]]))));
-// 期望： [[7,null],[13,0],[11,4],[10,2],[1,0]]
+// 期望： [[7, null], [13, 0], [11, 4], [10, 2], [1, 0]]
+
 console.log(serialize(copyRandomList(buildRandomList([[1, 1], [2, 1]]))));
-// 期望： [[1,1],[2,1]]
+// 期望： [[1, 1], [2, 1]]
+
+// —— 哈希版自测 ——
+console.log(serialize(copyRandomListWithMap(buildRandomList([[1, 1], [2, 1]]))));
+// 期望： [[1, 1], [2, 1]]
 
 module.exports = { Node, copyRandomList, copyRandomListWithMap, buildRandomList, serialize };

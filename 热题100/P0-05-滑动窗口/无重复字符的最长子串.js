@@ -25,24 +25,6 @@
  *
  * 输入： s = "pwwkew"
  * 输出： 3        （最长子串是 "wke"）
- *
- * ——— 延伸 ———
- * - 最多 k 个不同字符：哈希计数，超 k 就缩左端。
- * - 至多两个不同字符的最长子串（LC 159）：k = 2 特化。
- * - 返回子串本身：记下 best 时的 left、i，最后 slice。
- *
- * ——— 常见追问 ———
- * Q: 为什么 left = last + 1，不是 left++？
- * A: 重复字符上次出现在 left 右边，中间那段已经脏了，必须直接跳过。
- *
- * Q: last.get(s[i]) >= left 这个判断？
- * A: 上次出现已经在窗口外，不算重复。abba 扫到第二个 a 时，第一个 a 的下标 < left。
- *
- * Q: 用 Set 行不行？
- * A: 行，右扩左缩，窗口里保证唯一。Map 记下标能一次跳到位。
- *
- * Q: 空串、单字符？
- * A: 空串循环不进，best = 0。单字符窗口长度 1。
  */
 
 /**
@@ -91,6 +73,21 @@ function lengthOfLongestSubstringKDistinct(s, k) {
   }
   return best;
 }
+
+/**
+ * ——— 常见追问 ———
+ * Q: 为什么 left = last + 1，不是 left++？
+ * A: 重复字符上次出现在 left 右边，中间那段已经脏了，必须直接跳过。
+ *
+ * Q: last.get(s[i]) >= left 这个判断？
+ * A: 上次出现已经在窗口外，不算重复。abba 扫到第二个 a 时，第一个 a 的下标 < left。
+ *
+ * Q: 用 Set 行不行？
+ * A: 行，右扩左缩，窗口里保证唯一。Map 记下标能一次跳到位。
+ *
+ * Q: 空串、单字符？
+ * A: 空串循环不进，best = 0。单字符窗口长度 1。
+ */
 
 // —— 自测 ——
 console.log(lengthOfLongestSubstring("abcabcbb")); // 3

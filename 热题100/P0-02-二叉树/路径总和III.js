@@ -24,24 +24,6 @@
  *
  * 输入： root = [5,4,8,11,null,13,4,7,2,null,null,5,1], targetSum = 22
  * 输出： 3
- *
- * ——— 延伸 ———
- * - 路径总和 I：只能从根到叶。dfs 减目标值，到叶子刚好 0。
- * - 路径总和 II：把路径数组带下去，回溯 push/pop。
- * - 前缀和这招跟「和为 K 的子数组」同一思路，只是树要回溯。
- *
- * ——— 常见追问 ———
- * Q: 为什么 map 先放 0:1？
- * A: 从根到当前刚好等于 target 时，prefix - target = 0。没有 0 这条会漏。
- *
- * Q: 回溯为什么减回去？
- * A: 前缀和只对当前路径有效。不删会算到兄弟分支上，多算。
- *
- * Q: 路径能拐弯吗？
- * A: 不能。只能向下。所以前缀和沿一条根到当前的链。
- *
- * Q: 节点有负数？
- * A: 前缀和照样能用。同一前缀可能出现多次，map 记次数。
  */
 
 function TreeNode(val, left, right) {
@@ -103,6 +85,21 @@ function hasPathSum(root, targetSum) {
   const rest = targetSum - root.val;
   return hasPathSum(root.left, rest) || hasPathSum(root.right, rest);
 }
+
+/**
+ * ——— 常见追问 ———
+ * Q: 为什么 map 先放 0:1？
+ * A: 从根到当前刚好等于 target 时，prefix - target = 0。没有 0 这条会漏。
+ *
+ * Q: 回溯为什么减回去？
+ * A: 前缀和只对当前路径有效。不删会算到兄弟分支上，多算。
+ *
+ * Q: 路径能拐弯吗？
+ * A: 不能。只能向下。所以前缀和沿一条根到当前的链。
+ *
+ * Q: 节点有负数？
+ * A: 前缀和照样能用。同一前缀可能出现多次，map 记次数。
+ */
 
 // —— 自测 ——
 console.log(pathSum(build([10, 5, -3, 3, 2, null, 11, 3, -2, null, 1]), 8)); // 期望输出 3

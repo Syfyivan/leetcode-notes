@@ -1,78 +1,113 @@
 /**
- * 热题 100 · 搜索插入位置
+ * 搜索插入位置（LeetCode 35）
  *
  * 优先级：Hot 100 · P2
- */
-
-/**
+ *
+ * 需求：给定一个升序、无重复元素的数组 nums 和目标值 target：
+ * 1. target 存在时，返回它的下标。
+ * 2. target 不存在时，返回按顺序插入它的位置。
+ * 3. 要求时间复杂度为 O(log n)。
+ *
+ * 思路：
+ * 1. 问题等价于寻找第一个大于或等于 target 的位置，也就是 lower_bound。
+ * 2. 使用左闭右开区间 [left, right)，所以 right 初始化为 nums.length。
+ * 3. nums[middle] < target 时，middle 不可能是答案，令 left = middle + 1。
+ * 4. nums[middle] >= target 时，middle 可能是答案，令 right = middle 继续向左查找。
+ * 5. 循环结束时 left === right，该位置就是答案，也可能等于 nums.length。
+ *
+ * ——— 示例 ———
+ * 输入：nums = [1,3,5,6], target = 5
+ * 输出：2
+ *
+ * 输入：nums = [1,3,5,6], target = 2
+ * 输出：1
+ *
+ * 复杂度：时间 O(log n)，空间 O(1)
+ *
  * @param {number[]} nums
  * @param {number} target
  * @return {number}
- *
- * 思路：
- * 1. 找第一个 >= target 的下标，即 lower_bound。
- * 2. 区间 [left, right) 左闭右开，right 取 nums.length。
- * 3. 边界：nums[mid] < target 才 left = mid + 1，相等时 right = mid 继续往左。
- * 复杂度：时间 O(log n)，空间 O(1)
- *
- * ——— 延伸 ———
- * - upper_bound：第一个 > target，判断改成 nums[mid] <= target 才丢左半。
- * - 有重复找左端：就是本题 lower_bound。
- * - 闭区间写法：right = n-1，相等时 right = mid-1，最后返回 left。
- *
- * ——— 常见追问 ———
- * Q: 找不到为什么返回 left？
- * A: left 停在第一个 >= target 的位置，插在这里仍有序。比全部大时 left 等于 n。
- *
- * Q: 为什么 right 取 n 不是 n-1？
- * A: 左闭右开，插入位可以是末尾。right 取 n-1 还要单独处理「插到最后」。
- *
- * Q: 死循环怎么来的？
- * A: 左闭右闭却写成 right = mid，区间不缩。或者 mid 用了向零取整且 left = mid。
- *
- * Q: 相等为什么还往左缩？
- * A: 要的是插入位，也是最左的 target。相等说明 mid 仍可能偏右，right = mid 接着找。
  */
-var searchInsert = function(nums, target) {
-    let left = 0;
-    let right = nums.length; // 左闭右开，right 允许取到 n
-
-    while(left < right) {
-        let mid = Math.floor((left + right) / 2)
-        if(nums[mid] < target) {
-            left = mid + 1;
-        }
-        else {
-            right = mid; // 不能 mid-1，mid 可能就是插入位
-        }
-    }
-    return left
-};
-
-/**
- * 延伸 1：支持对象数组的 lowerBound
- *
- * 需求：按 key(item) 找到第一个不小于 target 的位置。
- *
- * 思路：搜索区间使用 [left,right)，key(array[mid]) < target 时排除左半段。
- *
- * ——— 示例 ———
- * 示例：[{x:1},{x:3}] 中 target=2、key=item.x，返回 1。
- *
- * 复杂度：时间 O(log n)，空间 O(1)。
- */
-function lowerBoundBy(array, target, key = (value) => value) {
+function searchInsert(nums, target) {
   let left = 0;
-  let right = array.length;
+  let right = nums.length;
+
   while (left < right) {
     const middle = left + Math.floor((right - left) / 2);
-    if (key(array[middle]) < target) left = middle + 1;
-    else right = middle;
+    if (nums[middle] < target) {
+      left = middle + 1;
+    } else {
+      right = middle;
+    }
   }
   return left;
 }
 
+/**
+ * 延伸 1：支持对象数组的 lowerBound
+ *
+ * 需求：数组元素不再是数字，而是对象；调用方通过 key 函数指定用于比较的字段。
+ *
+ * 思路：
+ * 1. 二分框架仍使用左闭右开区间 [left, right)。
+ * 2. 比较时把 nums[middle] 替换为 key(array[middle])。
+ * 3. 第一个 key(item) >= target 的位置就是插入位置。
+ *
+ * ——— 示例 ———
+ * 输入：array = [{ score: 60 }, { score: 80 }], target = 70
+ *      key = item => item.score
+ * 输出：1
+ *
+ * 复杂度：时间 O(log n)，空间 O(1)
+ *
+ * @template T
+ * @param {T[]} array
+ * @param {number} target
+ * @param {(item: T) => number} [key]
+ * @return {number}
+ */
+function lowerBoundBy(array, target, key = (value) => value) {
+  let left = 0;
+  let right = array.length;
+
+  while (left < right) {
+    const middle = left + Math.floor((right - left) / 2);
+    if (key(array[middle]) < target) {
+      left = middle + 1;
+    } else {
+      right = middle;
+    }
+  }
+  return left;
+}
+
+/**
+ * ——— 常见追问 ———
+ *
+ * Q: target 不存在时，为什么可以直接返回 left？
+ * A: 循环结束时，left 左侧都小于 target，left 及其右侧都大于或等于 target，
+ *    因此 left 正是保持数组有序的插入位置。
+ *
+ * Q: 为什么 right 初始化为 nums.length，而不是 nums.length - 1？
+ * A: 使用的是左闭右开区间 [left, right)，而且答案可能位于数组末尾的 nums.length。
+ *
+ * Q: nums 中存在重复值时会返回哪个位置？
+ * A: 返回最左侧的 target，因为遇到相等值时仍执行 right = middle，继续向左收缩。
+ *
+ * Q: 如何改成查找第一个严格大于 target 的位置？
+ * A: 改为 nums[middle] <= target 时令 left = middle + 1，其余结构不变，
+ *    这就是 upper_bound。
+ *
+ * Q: 左闭右闭区间可以写吗？
+ * A: 可以。把 right 初始化为 nums.length - 1，相等时令 right = middle - 1，
+ *    循环使用 left <= right，结束后同样返回 left。两种区间定义不要混用。
+ */
+
 // —— 自测 ——
-console.log(searchInsert([1, 3, 5, 6], 2)); // 1
+console.log(searchInsert([1, 3, 5, 6], 5)); // 期望：2
+console.log(searchInsert([1, 3, 5, 6], 2)); // 期望：1
+console.log(searchInsert([1, 3, 5, 6], 7)); // 期望：4
+console.log(searchInsert([1, 3, 5, 6], 0)); // 期望：0
+console.log(lowerBoundBy([{ score: 60 }, { score: 80 }], 70, (item) => item.score)); // 期望：1
 
 module.exports = { searchInsert, lowerBoundBy };

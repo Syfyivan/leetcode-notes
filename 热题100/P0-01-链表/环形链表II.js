@@ -5,106 +5,110 @@
  */
 
 /**
- * 环形链表 II（LeetCode 142）
+ * 环形链表 II（LeetCode 142 · 中等）
  *
- * 给定一个链表的头节点 head，返回链表开始入环的第一个节点。
- * 如果链表无环，则返回 null。
- * 为了表示给定链表中的环，用整数 pos 表示链表尾连接到链表中的位置（索引从 0 开始）；
- * 如果 pos 是 -1，则该链表中没有环。注意：pos 不作为参数传递，仅用于说明链表结构。
+ * 【题目描述】
+ * 给定一个链表的头节点 head ，返回链表开始入环的第一个节点。 如果链表无环，则返回 null。
+ * 如果链表中有某个节点，可以通过连续跟踪 next 指针再次到达，则链表中存在环。
+ * 不允许修改 链表。
  *
- * 进阶：能否只用常量额外空间完成？
+ * 进阶：是否可以使用 O(1) 空间解决此题？
  *
- * 思路：
- * 1. 找环的入口节点，无环返回 null。
- * 2. Floyd 相遇后，一个指针回到头，两个再各走 1 步，再次相遇就是入口。
- * 3. 空链表或无环返回 null。
- * 复杂度：时间 O(n)，空间 O(1)
+ * ——— 解法一：Floyd 双指针相遇 + 双路同速汇合（推荐，O(1) 空间） ———
  *
- * ——— 示例 ———
- * 输入： head = [3,2,0,-4], pos = 1
- * 输出： 返回索引为 1 的节点（值为 2）
+ * 【核心数学推导（面试必问）】
+ * 设各段距离定义如下：
+ *   - 从链表头节点 (head) 到入环节点 (entrance) 的距离为：a
+ *   - 从入环节点 (entrance) 到快慢指针首次相遇点 (meet) 的顺时针距离为：b
+ *   - 从相遇点 (meet) 顺时针继续走到入环节点 (entrance) 的剩余距离为：c
+ *   - 环的总周长 L = b + c
  *
- * 输入： head = [1,2], pos = 0
- * 输出： 返回索引为 0 的节点（值为 1）
+ * ┌────────── a ──────────┐┌───────── b ─────────┐
+ * head ──────────────────> entrance ────────────> meet ──┐
+ *                            ▲                          │
+ *                            └────────── c ─────────────┘
  *
- * 输入： head = [1], pos = -1
- * 输出： null
+ * 1. 计算两指针相遇时的总路程：
+ *    - 慢指针 slow 走过的路程：S_slow = a + b
+ *    - 快指针 fast 走过的路程：S_fast = a + n·L + b（其中 n >= 1 为 fast 在环内转过的圈数）
  *
- * ——— 延伸 ———
- * - 只判有没有环就是 LC141，相遇即可，不用找入口。
- * - 头到入口 a、环长 c、相遇时慢走了 a+x：2(a+x)=a+x+kc → a=kc-x，
- *   所以从头和从相遇点再走，会在入口碰上。
- * - 哈希记下第一次重复的节点，就是入口。
+ * 2. 根据速度关系（fast 速度是 slow 的 2 倍）：
+ *    S_fast = 2 · S_slow
+ *    a + n·L + b = 2(a + b)
+ *    a + n·L + b = 2a + 2b
+ *    a = n·L - b
+ *    a = (n - 1)·L + (L - b)
+ *    由于 L = b + c，即 L - b = c，因此得出决定性公式：
+ *    【 a = (n - 1)·L + c 】
  *
- * ——— 常见追问 ———
- * Q: 为什么相遇后一个要回到头？
- * A: 慢指针在环里已经走了 x。从头再走 a 步，刚好等于从相遇点走到入口。
+ * 3. 物理含义解读：
+ *    “从链表头 head 出发走到入环点（距离 a）”，在步数上完全等价于：
+ *    “从相遇点 meet 出发绕环转 (n - 1) 圈后，再走距离 c 到达入环点”！
  *
- * Q: 入口就是头怎么办？
- * A: p 和 slow 一开始就相等，while 不进，直接返回头。
+ * 4. 算法执行步骤：
+ *    - 第一阶段：fast 走 2 步，slow 走 1 步，直到二者首次相遇；若 fast 到达 null 则无环返回 null。
+ *    - 第二阶段：让一个指针 p 从 head 出发，slow 留在相遇点。二者每次都只走 1 步。
+ *    - 当 p 与 slow 再次相遇时，当前相遇的节点就是【入环点】！
  *
- * Q: 无环？
- * A: fast 走到空，循环结束返回 null。
- *
- * Q: 空间？
- * A: 几个指针 O(1)。哈希 O(n)。
+ * ——— 复杂度分析 ———
+ * 时间复杂度：O(n)
+ *   - 第一阶段找相遇点耗时 <= n；
+ *   - 第二阶段同步走 a 步耗时 <= n；
+ *   - 总时间复杂度严格为 O(n)。
+ * 空间复杂度：O(1)，仅使用常数个辅助指针。
  */
 
+// —— 链表节点定义（模板，别改）——
 function ListNode(val, next) {
   this.val = val === undefined ? 0 : val;
   this.next = next === undefined ? null : next;
 }
-function build(arr) {
-  const dummy = new ListNode(0);
-  let cur = dummy;
-  for (const v of arr) { cur.next = new ListNode(v); cur = cur.next; }
-  return dummy.next;
-}
-function toArray(head) {
-  const res = [];
-  for (let p = head; p; p = p.next) res.push(p.val);
-  return res;
-}
 
 /**
+ * 快慢指针找入环点（O(1) 空间最优解）
  * @param {ListNode} head
- * @return {ListNode}
+ * @return {ListNode|null}
  */
 function detectCycle(head) {
   let slow = head;
   let fast = head;
+
+  // 第一阶段：寻找相遇点
   while (fast && fast.next) {
     slow = slow.next;
     fast = fast.next.next;
+
     if (slow === fast) {
-      let p = head; // 一个放回头，两个再各走 1
-      while (p !== slow) { // 头到入口 = 相遇点到入口
+      // 第二阶段：一指针从 head 起步，一指针从相遇点起步，同速前进
+      let p = head;
+      while (p !== slow) {
         p = p.next;
         slow = slow.next;
       }
-      return p;
+      return p; // 二者再次相遇处即为入环节点
     }
   }
-  return null;
+
+  return null; // 无环
 }
 
 /**
- * 延伸 1：哈希表找环入口
+ * 延伸 1：哈希表找入环点（空间换时间）
  *
- * 需求：用更直观的方法返回第一次重复访问的节点；无环返回 null。
- *
- * 思路：沿 next 前进并把节点引用放入 Set，再次命中的节点就是环入口。
- *
- * ——— 示例 ———
- * 示例：3→2→0→-4，尾节点连回 2，返回值为 2 的节点。
+ * 思路：遍历链表并将访问过的节点存入 Set 中，第一次在 Set 中查到的重复节点即为入环点。
  *
  * 复杂度：时间 O(n)，空间 O(n)。
+ *
+ * @param {ListNode} head
+ * @return {ListNode|null}
  */
 function detectCycleWithSet(head) {
-  const seen = new Set();
-  for (let node = head; node; node = node.next) {
-    if (seen.has(node)) return node;
-    seen.add(node);
+  const visited = new Set();
+  let cur = head;
+  while (cur) {
+    if (visited.has(cur)) return cur;
+    visited.add(cur);
+    cur = cur.next;
   }
   return null;
 }
@@ -117,9 +121,26 @@ function buildWithCycle(arr, pos) {
   return nodes[0] || null;
 }
 
-// —— 自测（返回节点可能在环内，勿用 toArray 打印，判断 val 或 null 即可）——
-console.log(detectCycle(buildWithCycle([3, 2, 0, -4], 1))?.val ?? null); // 期望： 2
-console.log(detectCycle(buildWithCycle([1, 2], 0))?.val ?? null);        // 期望： 1
-console.log(detectCycle(buildWithCycle([1], -1)));                       // 期望： null
+/**
+ * ——— 常见面试追问 ———
+ * Q1: slow 在进入环后的第一圈内必定会被 fast 追上吗？
+ * A1: 必定会在第一圈内被追上。因为当 slow 刚踏入入环点时，fast 已经在环内某个位置；fast 距离 slow 的最大距离不会超过环长 L，而 fast 相对 slow 的追及速度是 1 步/轮，因此在 slow 走完一圈（L 步）之前，fast 必定已经追上 slow。
+ *
+ * Q2: 如果入环节点就是 head（例如整个链表是一个大圆环，a = 0），代码能正常处理吗？
+ * A2: 可以。当 a = 0 时，首次相遇点就在 head 处。第二阶段中 `let p = head` 且 `slow = head`，`while (p !== slow)` 条件直接为 false，循环不进，直接返回 head，完全符合逻辑。
+ */
 
-module.exports = { ListNode, build, toArray, detectCycle, detectCycleWithSet, buildWithCycle };
+// —— 自测 ——
+const case1 = buildWithCycle([3, 2, 0, -4], 1);
+console.log(detectCycle(case1)?.val ?? null); // 期望： 2 (入环点值是 2)
+
+const case2 = buildWithCycle([1, 2], 0);
+console.log(detectCycle(case2)?.val ?? null); // 期望： 1 (入环点值是 1)
+
+const case3 = buildWithCycle([1], -1);
+console.log(detectCycle(case3));             // 期望： null (无环)
+
+// —— 哈希表自测 ——
+console.log(detectCycleWithSet(case1)?.val ?? null); // 期望： 2
+
+module.exports = { ListNode, detectCycle, detectCycleWithSet, buildWithCycle };

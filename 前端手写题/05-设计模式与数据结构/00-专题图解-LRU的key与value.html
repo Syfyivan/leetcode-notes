@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LRU 的钥匙与包裹</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* ——— 纸墨登记簿 · 色彩令牌（亮色为基准） ——— */
+  :root {
+    --bg: #F5F2EA;
+    --surface: #FFFDF7;
+    --surface-2: #EDE8DC;
+    --ink: #26313B;
+    --ink-2: #46545F;
+    --muted: #6E7982;
+    --line: #DCD5C4;
+    --line-strong: #C4BCA8;
+
+    --key: #2F5788;        /* key：靛蓝墨 */
+    --key-soft: #E2EAF4;
+    --key-strong: #2F5788;
+    --value: #8A5A11;      /* value：琥珀 */
+    --value-soft: #F4E9D2;
+    --hit: #2E7D4F;        /* 命中：竹绿 */
+    --hit-soft: #E0EEE5;
+    --evict: #B93A26;      /* 淘汰：印章红 */
+    --evict-soft: #F6E1DC;
+
+    --code-bg: #1E252E;
+    --code-head: #1A2027;
+    --code-ink: #D9E0E8;
+    --auto-bg: #26313B;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171B21;
+      --surface: #1F252D;
+      --surface-2: #28303A;
+      --ink: #E5E8EB;
+      --ink-2: #BDC5CD;
+      --muted: #8D98A2;
+      --line: #38424D;
+      --line-strong: #4B5662;
+
+      --key: #8FB5E8;
+      --key-soft: #243850;
+      --key-strong: #39648F;
+      --value: #D9A95E;
+      --value-soft: #3B2F1B;
+      --hit: #79C49A;
+      --hit-soft: #20372B;
+      --evict: #E2725B;
+      --evict-soft: #43251E;
+
+      --code-bg: #141A21;
+      --code-head: #11161C;
+      --code-ink: #D5DCE4;
+      --auto-bg: #39434E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171B21;
+    --surface: #1F252D;
+    --surface-2: #28303A;
+    --ink: #E5E8EB;
+    --ink-2: #BDC5CD;
+    --muted: #8D98A2;
+    --line: #38424D;
+    --line-strong: #4B5662;
+
+    --key: #8FB5E8;
+    --key-soft: #243850;
+    --key-strong: #39648F;
+    --value: #D9A95E;
+    --value-soft: #3B2F1B;
+    --hit: #79C49A;
+    --hit-soft: #20372B;
+    --evict: #E2725B;
+    --evict-soft: #43251E;
+
+    --code-bg: #141A21;
+    --code-head: #11161C;
+    --code-ink: #D5DCE4;
+    --auto-bg: #39434E;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.8;
+  }
+  ::selection { background: var(--key-soft); }
+  :focus-visible { outline: 2px solid var(--key); outline-offset: 2px; border-radius: 4px; }
+  .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+
+  .wrap { max-width: 780px; margin: 0 auto; padding: 0 22px 72px; }
+
+  /* ——— 页眉 ——— */
+  .masthead { padding-top: 60px; }
+  .crumb {
+    font-size: 12.5px; letter-spacing: .22em; color: var(--muted);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .crumb::before { content: ""; width: 28px; height: 1px; background: var(--line-strong); }
+  h1 {
+    margin-top: 16px;
+    font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
+    font-weight: 700;
+    font-size: clamp(30px, 5.4vw, 42px);
+    line-height: 1.22;
+    text-wrap: balance;
+  }
+  .lede { margin-top: 14px; font-size: 16.5px; color: var(--ink-2); max-width: 640px; }
+
+  /* ——— 一句话答案 ——— */
+  .tldr { margin-top: 34px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .tldr-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-top: 3px solid var(--key); border-radius: 0 0 12px 12px;
+    padding: 16px 18px 14px;
+  }
+  .tldr-card.v { border-top-color: var(--value); }
+  .tldr-k { font-size: 12.5px; letter-spacing: .16em; font-weight: 700; color: var(--key); margin-bottom: 6px; }
+  .tldr-card.v .tldr-k { color: var(--value); }
+  .tldr-card p { font-size: 15px; color: var(--ink-2); }
+  .tldr-card strong { color: var(--ink); }
+
+  /* ——— 章节 ——— */
+  .sec { margin-top: 62px; }
+  .sec-head {
+    display: flex; align-items: baseline; gap: 14px;
+    border-bottom: 1px solid var(--line-strong);
+    padding-bottom: 12px; margin-bottom: 26px;
+  }
+  .sec-no { font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--key); letter-spacing: .06em; }
+  .sec-head h2 {
+    font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
+    font-size: 23px; font-weight: 700; text-wrap: balance;
+  }
+  .sec p + p { margin-top: 12px; }
+  .sec p { color: var(--ink-2); }
+  .sec p strong, .sec li strong { color: var(--ink); }
+  .sec em { font-style: normal; color: var(--key); font-weight: 600; }
+  .sec em.v { color: var(--value); }
+
+  /* ——— 类比区 ——— */
+  .api { margin-top: 20px; display: grid; gap: 10px; }
+  .api-row { display: flex; gap: 14px; align-items: baseline; }
+  .api-code {
+    font-family: "JetBrains Mono", monospace; font-size: 13.5px;
+    background: var(--key-soft); color: var(--key);
+    padding: 3px 10px; border-radius: 6px; white-space: nowrap; flex: 0 0 auto;
+  }
+  .api-text { font-size: 15px; color: var(--ink-2); }
+  .punch {
+    margin-top: 22px; padding: 16px 20px;
+    background: var(--surface-2); border: 1px dashed var(--line-strong); border-radius: 12px;
+    font-size: 16.5px; font-weight: 600; text-align: center; color: var(--ink);
+  }
+  .punch .k { color: var(--key); }
+  .punch .v { color: var(--value); }
+
+  /* ——— 表格 ——— */
+  .tbl-wrap { overflow-x: auto; margin-top: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  th {
+    font-size: 12.5px; letter-spacing: .1em; color: var(--muted); font-weight: 600;
+    text-align: left; padding: 12px 14px; border-bottom: 2px solid var(--line-strong);
+    white-space: nowrap;
+  }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 14.5px; vertical-align: top; color: var(--ink-2); }
+  tr:last-child td { border-bottom: none; }
+  .td-scene { color: var(--ink); font-weight: 500; }
+  .td-key { font-family: "JetBrains Mono", monospace; color: var(--key); font-size: 13.5px; }
+  .td-val { font-family: "JetBrains Mono", monospace; color: var(--value); font-size: 13.5px; }
+  .note {
+    margin-top: 18px; border-left: 3px solid var(--key); background: var(--surface);
+    padding: 13px 18px; border-radius: 0 10px 10px 0; font-size: 15px; color: var(--ink-2);
+  }
+  .note.amber { border-left-color: var(--value); }
+  .note strong { color: var(--ink); }
+
+  /* ——— 结构图 ——— */
+  .diagram {
+    margin-top: 20px; border: 1px solid var(--line); background: var(--surface);
+    border-radius: 14px; padding: 22px 20px 20px;
+  }
+  .diagram-cap { font-size: 12px; letter-spacing: .16em; color: var(--muted); text-align: center; margin-bottom: 12px; }
+  .roster-ledger { max-width: 420px; margin: 0 auto; }
+  .rl-row {
+    display: flex; align-items: center; gap: 12px; padding: 8px 4px;
+    border-bottom: 1px dashed var(--line); font-size: 14px; color: var(--ink-2);
+  }
+  .rl-row:last-child { border-bottom: none; }
+  .rl-arrow { color: var(--muted); font-family: "JetBrains Mono", monospace; font-size: 13px; }
+  .chip-key {
+    font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 600;
+    background: var(--key-soft); color: var(--key);
+    padding: 1px 9px; border-radius: 6px; min-width: 34px; text-align: center;
+  }
+  .diagram-link {
+    margin: 20px auto 16px; max-width: 460px; text-align: center;
+    font-size: 13.5px; color: var(--muted);
+    border-top: 1px dashed var(--line-strong); padding-top: 12px;
+  }
+
+  /* ——— 节点 / 门岗 / 队伍（静态图与模拟器共用） ——— */
+  .board {
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; padding: 16px 8px 20px;
+  }
+  .node {
+    position: relative; flex: 0 0 auto;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    min-width: 88px; padding: 13px 14px 11px;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px;
+  }
+  .nkey {
+    font-family: "JetBrains Mono", monospace; font-size: 12.5px; font-weight: 600;
+    background: var(--key-soft); color: var(--key);
+    padding: 2px 9px; border-radius: 6px; white-space: nowrap;
+  }
+  .nval {
+    font-size: 15px; font-weight: 500; color: var(--value);
+    max-width: 118px; text-align: center; overflow-wrap: break-word;
+  }
+  .nno {
+    position: absolute; top: -9px; left: -9px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--ink); color: var(--surface);
+    font-family: "JetBrains Mono", monospace; font-size: 11px;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+  }
+  .nbadge {
+    position: absolute; top: -11px; font-size: 11px; line-height: 18px;
+    padding: 0 8px; border-radius: 999px; border: 1px solid; background: var(--surface);
+  }
+  .b-old { left: -4px; color: var(--evict); border-color: var(--evict); }
+  .b-new { right: -4px; color: var(--hit); border-color: var(--hit); }
+  .guard {
+    flex: 0 0 auto; text-align: center; padding: 10px 12px;
+    border: 1.5px dashed var(--line-strong); border-radius: 10px; color: var(--muted);
+  }
+  .guard b { display: block; font-size: 13px; font-weight: 600; }
+  .guard i { display: block; font-style: normal; font-family: "JetBrains Mono", monospace; font-size: 11px; margin-top: 2px; }
+  .sep { color: var(--muted); font-size: 15px; flex: 0 0 auto; }
+  .node.is-hit { border-color: var(--hit); box-shadow: 0 0 0 2px var(--hit-soft), 0 0 0 3.5px var(--hit); }
+  .node.is-new { border-color: var(--key); box-shadow: 0 0 0 2px var(--key-soft), 0 0 0 3.5px var(--key); }
+  .node.is-evict { border-color: var(--evict); animation: shake .55s ease; }
+  .node.is-evict .nkey, .node.is-evict .nval { text-decoration: line-through; opacity: .7; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-4px); } 30% { transform: translateX(4px); }
+    45% { transform: translateX(-3px); } 60% { transform: translateX(2px); }
+    75% { transform: translateX(-1px); }
+  }
+  .board-empty { color: var(--muted); font-size: 14px; font-style: italic; padding: 20px 0; }
+
+  /* key/value 住在哪：三张小卡 */
+  .lives { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 20px; }
+  .live { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 13px 15px; font-size: 14.5px; color: var(--ink-2); }
+  .live b { display: block; font-size: 12.5px; letter-spacing: .1em; color: var(--muted); font-weight: 600; margin-bottom: 5px; }
+
+  /* ——— 两个为什么 ——— */
+  .why { margin-top: 20px; display: grid; gap: 14px; }
+  .why-item { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .why-q { font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 9px; }
+  .qmark {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 6px;
+    background: var(--key-soft); color: var(--key);
+    font-size: 12.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .why-a { margin-top: 8px; font-size: 15px; color: var(--ink-2); }
+  .why-a code, .note code, .api-text code, td code {
+    font-family: "JetBrains Mono", monospace; font-size: .9em;
+    background: var(--surface-2); border-radius: 5px; padding: 1px 6px; color: var(--ink);
+  }
+
+  /* ——— 模拟器 ——— */
+  .sim { margin-top: 24px; border: 1px solid var(--line-strong); border-radius: 16px; background: var(--surface); overflow: hidden; }
+  .sim-head {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 13px 20px; border-bottom: 1px solid var(--line); background: var(--surface-2);
+  }
+  .sim-title { font-weight: 700; font-size: 15px; }
+  .counter {
+    font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px 12px;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .sim-controls {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    padding: 14px 20px; border-bottom: 1px dashed var(--line);
+  }
+  .sim-controls label { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+  .sim-controls input {
+    font: inherit; font-size: 14px; padding: 8px 12px;
+    border: 1px solid var(--line-strong); border-radius: 8px;
+    background: var(--bg); color: var(--ink); width: 108px;
+  }
+  .sim-controls input.mono { font-family: "JetBrains Mono", monospace; }
+  .sim-controls input::placeholder { color: var(--muted); opacity: .8; }
+  .btn {
+    font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+    padding: 8px 16px; border-radius: 8px; border: 1px solid transparent;
+    transition: filter .15s ease;
+  }
+  .btn:hover:not(:disabled) { filter: brightness(1.1); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-put { background: var(--key-strong); border-color: var(--key-strong); color: #fff; }
+  .btn-get { background: transparent; border-color: var(--key); color: var(--key); }
+  .btn-auto { background: var(--auto-bg); border-color: var(--auto-bg); color: #fff; margin-left: auto; }
+  .btn-reset { background: transparent; border-color: var(--line-strong); color: var(--muted); }
+  .sim-stage { padding: 20px 20px 4px; }
+  .stage-label { font-size: 12px; letter-spacing: .16em; color: var(--muted); margin-bottom: 8px; }
+  .roster-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 24px; min-height: 34px; }
+  .rpill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 4px 12px 4px 5px; border: 1px solid var(--line); border-radius: 999px;
+    font-size: 13px; background: var(--surface);
+  }
+  .rpill .chip-key { font-size: 12px; min-width: 30px; }
+  .rpill i { font-style: normal; color: var(--muted); font-size: 12.5px; }
+  .rpill.is-evict { border-color: var(--evict); color: var(--evict); text-decoration: line-through; opacity: .7; }
+  .roster-empty { color: var(--muted); font-size: 13.5px; font-style: italic; }
+  .sim .board { padding: 6px 8px 24px; }
+  .sim-log {
+    border-top: 1px solid var(--line); background: var(--surface-2);
+    padding: 12px 20px 14px; max-height: 224px; overflow-y: auto;
+  }
+  .log-entry {
+    display: flex; gap: 10px; align-items: baseline;
+    padding: 6px 2px; border-bottom: 1px dashed var(--line); font-size: 14px; color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-tag {
+    flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 600;
+    padding: 1px 9px; border-radius: 999px; letter-spacing: .04em;
+  }
+  .t-put   { background: var(--key-soft); color: var(--key); }
+  .t-get   { background: var(--value-soft); color: var(--value); }
+  .t-hit   { background: var(--hit-soft); color: var(--hit); }
+  .t-miss  { background: var(--evict-soft); color: var(--evict); }
+  .t-evict { background: var(--evict); color: #fff; }
+  .t-info  { background: var(--surface); color: var(--muted); border: 1px solid var(--line-strong); }
+  .t-warn  { background: var(--evict-soft); color: var(--evict); }
+
+  /* ——— 代码 ——— */
+  .codewrap { margin-top: 20px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line-strong); }
+  .codehead {
+    background: var(--code-head); padding: 10px 18px;
+    font-family: "JetBrains Mono", monospace; font-size: 12px; color: #93A0AE;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  pre.code {
+    margin: 0; padding: 18px 20px; overflow-x: auto;
+    background: var(--code-bg); color: var(--code-ink);
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 13.5px; line-height: 1.78;
+  }
+  pre.code .c  { color: #7C8798; }
+  pre.code .kw { color: #85B0E8; }
+  pre.code .st { color: #DCA85F; }
+  pre.code .nu { color: #D28C7E; }
+  pre.code .hl { display: block; background: rgba(133,176,232,.12); margin: 0 -20px; padding: 0 20px; border-left: 3px solid #85B0E8; }
+
+  /* ——— FAQ ——— */
+  .faq { margin-top: 20px; display: grid; gap: 10px; }
+  details { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 0 18px; }
+  summary {
+    padding: 14px 0; font-weight: 600; cursor: pointer; list-style: none;
+    display: flex; align-items: center; gap: 9px; font-size: 15.5px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: "+"; margin-left: auto; color: var(--muted);
+    font-family: "JetBrains Mono", monospace; font-size: 16px;
+    transition: transform .2s ease;
+  }
+  details[open] summary::after { transform: rotate(45deg); }
+  details[open] summary { border-bottom: 1px dashed var(--line); }
+  .faq-a { padding: 12px 0 16px; color: var(--ink-2); font-size: 15px; }
+  .faq-a code { font-family: "JetBrains Mono", monospace; font-size: .9em; background: var(--surface-2); border-radius: 5px; padding: 1px 6px; color: var(--ink); }
+
+  /* ——— 页脚 ——— */
+  .foot {
+    margin-top: 68px; border-top: 3px double var(--line-strong);
+    padding-top: 18px; font-size: 14px; color: var(--muted);
+  }
+  .foot .mono { font-size: 12.5px; }
+
+  @media (max-width: 640px) {
+    .tldr { grid-template-columns: 1fr; }
+    .api-row { flex-direction: column; gap: 4px; }
+    .btn-auto { margin-left: 0; }
+    .sim-controls input { width: 100%; }
+    .sim-controls label { flex: 1 1 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .node.is-evict { animation: none; }
+    .btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="crumb">手写题专题图解 · LRU 缓存</div>
+    <h1>LRU 的钥匙与包裹</h1>
+    <p class="lede">key 和 value 到底各存什么？一句话：<strong>key 是「怎么找」，value 是「找到了给你什么」</strong>。下面用一个快递柜、一张名册、一条会动的队伍，把它彻底讲透。</p>
+    <div class="tldr">
+      <div class="tldr-card">
+        <div class="tldr-k">KEY 存的是</div>
+        <p><strong>查询编号</strong>——取包裹的取件码、查人的身份证号。它<strong>唯一</strong>，是你下次来认领数据的凭证。</p>
+      </div>
+      <div class="tldr-card v">
+        <div class="tldr-k">VALUE 存的是</div>
+        <p><strong>数据本身</strong>——柜子里的包裹、字典里的释义。<code>get(key)</code> 最终还到你手里的就是它。</p>
+      </div>
+    </div>
+  </header>
+
+  <section class="sec">
+    <div class="sec-head"><span class="sec-no">01</span><h2>先想一个快递柜</h2></div>
+    <p>LRU 缓存就是一个<strong>容量有限的快递柜</strong>：格子就那么多（容量 capacity），存满了必须清一格才能放进新包裹。清哪格？LRU 的规矩很现实——<strong>谁最久没人碰，就清谁</strong>（Least Recently Used，最久未使用）。</p>
+    <div class="api">
+      <div class="api-row"><span class="api-code">put(key, value)</span><span class="api-text">存包裹：把 <em>value</em>（包裹）塞进柜子，登记一个 <em>key</em>（取件码）。key 已存在就是<strong>换新包裹</strong>。</span></div>
+      <div class="api-row"><span class="api-code">get(key)</span><span class="api-text">报取件码取包裹：包裹<strong>只是被看了一眼，并不搬走</strong>（下次还能 get），但这一格立刻被标记成「刚用过」。</span></div>
+      <div class="api-row"><span class="api-code">柜子满了</span><span class="api-text">把<strong>最久没人 get 也没人 put</strong> 的那格清空，腾给新包裹，名册上同步划掉它。</span></div>
+    </div>
+    <div class="punch"><span class="k">key 是取件码</span>，<span class="v">value 是包裹</span>。码必须唯一，包裹随便多大。</div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="sec-no">02</span><h2>真实项目里，它们各是什么</h2></div>
+    <p>脱离题目，工程里缓存无处不在——但不管什么场景，<em>key 永远是「能唯一锁定一条数据的东西」</em>，<em class="v">value 永远是「重新获取很贵，所以存下来的结果」</em>：</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>缓存场景</th><th>key 存什么</th><th>value 存什么</th></tr></thead>
+        <tbody>
+          <tr><td class="td-scene">用户信息缓存</td><td class="td-key">用户 ID："10086"</td><td class="td-val">{ name: "小明", level: 3 }</td></tr>
+          <tr><td class="td-scene">接口结果缓存</td><td class="td-key">"page=1&amp;size=20"</td><td class="td-val">接口返回的那份 JSON</td></tr>
+          <tr><td class="td-scene">图片 / 资源缓存</td><td class="td-key">"/img/logo.png"</td><td class="td-val">图片的二进制内容</td></tr>
+          <tr><td class="td-scene">函数记忆化 memoize</td><td class="td-key">"fib(10)"（参数转的串）</td><td class="td-val">算好的结果 55</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">两条规律：<strong>key 要短、要唯一</strong>——它每次都要被拿去哈希计算；<strong>value 是大块头</strong>——它就是你缓存它的全部理由（重新算 / 重新请求太贵）。你笔记里的 <code>memoize缓存.js</code> 就是表格最后一行。</div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="sec-no">03</span><h2>翻开实现：key 和 value 住在哪</h2></div>
+    <p>上面是<strong>使用者视角</strong>。翻开标准实现（哈希表 + 双向链表），你会发现一件反直觉的事：<em>key 存了两份</em>，而<em class="v">名册的 value 位置住的根本不是包裹</em>。</p>
+
+    <div class="diagram">
+      <div class="diagram-cap">名册（哈希表 MAP）——只管「按 key 秒找到人」</div>
+      <div class="roster-ledger">
+        <div class="rl-row"><span class="chip-key">1</span><span class="rl-arrow">──▶</span><span>① 的小纸条（指向节点的引用）</span></div>
+        <div class="rl-row"><span class="chip-key">2</span><span class="rl-arrow">──▶</span><span>② 的小纸条（指向节点的引用）</span></div>
+        <div class="rl-row"><span class="chip-key">3</span><span class="rl-arrow">──▶</span><span>③ 的小纸条（指向节点的引用）</span></div>
+      </div>
+      <div class="diagram-link">名册每行的「小纸条」，都拽着队伍里对应的那个节点 ↓</div>
+      <div class="diagram-cap">队伍（双向链表）——只管「记住谁旧谁新」，左旧右新</div>
+      <div class="board" aria-hidden="true">
+        <div class="guard"><b>门岗</b><i>head</i></div>
+        <span class="sep">⇄</span>
+        <div class="node">
+          <span class="nbadge b-old">最旧</span>
+          <span class="nno">1</span>
+          <span class="nkey">key 1</span>
+          <span class="nval">苹果</span>
+        </div>
+        <span class="sep">⇄</span>
+        <div class="node">
+          <span class="nno">2</span>
+          <span class="nkey">key 2</span>
+          <span class="nval">笔记本</span>
+        </div>
+        <span class="sep">⇄</span>
+        <div class="node">
+          <span class="nbadge b-new">最新</span>
+          <span class="nno">3</span>
+          <span class="nkey">key 3</span>
+          <span class="nval">充电宝</span>
+        </div>
+        <span class="sep">⇄</span>
+        <div class="guard"><b>门岗</b><i>tail</i></div>
+      </div>
+    </div>
+
+    <div class="lives">
+      <div class="live"><b>KEY 住两处</b>名册的键 + 节点身上的「工牌」字段</div>
+      <div class="live"><b>VALUE 住一处</b>真正的包裹，只住在链表节点怀里</div>
+      <div class="live"><b>名册的 VALUE</b>不是包裹！是「节点的小纸条」（引用）</div>
+    </div>
+
+    <div class="why">
+      <div class="why-item">
+        <div class="why-q"><span class="qmark">问</span>名册的 value 为什么存「节点」，不直接存包裹？</div>
+        <p class="why-a"><code>get(key)</code> 要一口气办两件事：①把包裹还给你；②把这格标记成「最新」。如果名册只存包裹，第②件事就得沿链表一格一格找节点，O(1) 秒变 O(n)。存节点引用，一张纸条两件事全办完。</p>
+      </div>
+      <div class="why-item">
+        <div class="why-q"><span class="qmark">问</span>链表节点为什么还要「再」存一份 key？</div>
+        <p class="why-a">淘汰是从 head 门岗右边踢人的，踢的时候<strong>手里只有节点</strong>；可名册划名<strong>只认 key</strong>。所以取件码必须当成工牌戴在节点身上，最后一刀才能落下去：<code>map.delete(oldest.key)</code>。</p>
+      </div>
+    </div>
+
+    <div class="note amber">顺带一提：你笔记里的<strong>方案一（纯 Map 版）</strong>，名册的 value 存的就是老老实实的包裹本身——因为「谁旧谁新」外包给了 Map 自己的插入顺序；<strong>方案二</strong>把顺序外包给手写链表，名册的 value 才变成「节点纸条」。两版对用户的 key / value 语义完全一样。</div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="sec-no">04</span><h2>亲手玩一遍</h2></div>
+    <p>容量 3 的柜子。自己填 key 和包裹试，或先点「自动演示」跟着经典面试流程走一遍——重点看：get 之后谁跳队尾、柜子满时谁出局、名册怎么跟着划掉。</p>
+
+    <div class="sim" id="sim">
+      <div class="sim-head">
+        <span class="sim-title">容量 3 的快递柜</span>
+        <span class="counter" id="counter">0 / 3 格已用</span>
+      </div>
+      <div class="sim-controls">
+        <label>key <input class="mono" id="key-in" placeholder="如 1" aria-label="key"></label>
+        <label>包裹 value <input id="val-in" placeholder="如 奶茶" aria-label="value"></label>
+        <button class="btn btn-put" id="btn-put">存包裹 put</button>
+        <button class="btn btn-get" id="btn-get">取包裹 get</button>
+        <button class="btn btn-auto" id="btn-auto">自动演示</button>
+        <button class="btn btn-reset" id="btn-reset">重置</button>
+      </div>
+      <div class="sim-stage">
+        <div class="stage-label">名册 MAP（KEY → 节点纸条）</div>
+        <div class="roster-row" id="roster"></div>
+        <div class="stage-label">队伍 · 双向链表（左旧右新，门岗不存数据）</div>
+        <div class="board" id="board"></div>
+      </div>
+      <div class="sim-log" id="log"></div>
+    </div>
+
+    <div class="note">注意队伍方向：这里是<strong>左旧右新</strong>，和你笔记里 <code>LRUCacheLinked</code> 的方向一致（head 门岗守最旧端）。有些题解反过来排（tail 端最旧），逻辑完全等价，别慌。</div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="sec-no">05</span><h2>对照代码看</h2></div>
+    <p>下面是你笔记里 <code>LRUCacheLinked</code> 的节选，标了 ①②③ 的地方就是 key / value 的安身之处：</p>
+    <div class="codewrap">
+      <div class="codehead">LRUCacheLinked.js · 节选（注释略有改动）</div>
+      <pre class="code"><span class="kw">class</span> Node {
+  <span class="kw">constructor</span>(key, value) {
+    <span class="kw">this</span>.key = key;      <span class="c">// ① 工牌：被淘汰时拿去名册划名字用的</span>
+    <span class="kw">this</span>.value = value;  <span class="c">// ② 包裹：get 时真正还给用户的东西</span>
+    <span class="kw">this</span>.prev = <span class="kw">null</span>;
+    <span class="kw">this</span>.next = <span class="kw">null</span>;
+  }
+}
+
+<span class="kw">class</span> LRUCacheLinked {
+  <span class="kw">constructor</span>(capacity) {
+    <span class="kw">this</span>.map = <span class="kw">new</span> Map();  <span class="c">// ③ 名册：key → 节点的小纸条（不是包裹！）</span>
+    <span class="kw">this</span>.head = <span class="kw">new</span> Node(<span class="nu">0</span>, <span class="nu">0</span>); <span class="c">// 空门岗，不存数据</span>
+    <span class="kw">this</span>.tail = <span class="kw">new</span> Node(<span class="nu">0</span>, <span class="nu">0</span>);
+  }
+
+  <span class="kw">get</span>(key) {
+    <span class="kw">if</span> (!<span class="kw">this</span>.map.has(key)) <span class="kw">return</span> -<span class="nu">1</span>;
+    <span class="kw">const</span> node = <span class="kw">this</span>.map.get(key); <span class="c">// 名册 O(1) 点名</span>
+    <span class="kw">this</span>._moveToTail(node);        <span class="c">// 用过 = 抽出来接到队尾（变最新）</span>
+    <span class="kw">return</span> node.value;             <span class="c">// 还给用户的是 value</span>
+  }
+
+  <span class="kw">put</span>(key, value) {
+    <span class="kw">if</span> (<span class="kw">this</span>.map.has(key)) {         <span class="c">// 已有这号 → 换包裹 + 搬到队尾</span>
+      <span class="kw">const</span> node = <span class="kw">this</span>.map.get(key);
+      node.value = value;
+      <span class="kw">this</span>._moveToTail(node);
+      <span class="kw">return</span>;
+    }
+    <span class="kw">const</span> node = <span class="kw">new</span> Node(key, value); <span class="c">// 节点身上 key、value 各带一份</span>
+    <span class="kw">this</span>.map.set(key, node);          <span class="c">// 名册登记：key → 节点</span>
+    <span class="kw">this</span>._addToTail(node);
+    <span class="kw">if</span> (<span class="kw">this</span>.map.size &gt; <span class="kw">this</span>.capacity) {
+<span class="hl">      <span class="kw">const</span> oldest = <span class="kw">this</span>.head.next;  <span class="c">// 门岗右边 = 最久没用</span></span>
+<span class="hl">      <span class="kw">this</span>._remove(oldest);</span>
+<span class="hl">      <span class="kw">this</span>.map.delete(oldest.key);  <span class="c">// ★ 节点身上那份 key 在这里用上了</span></span>
+    }
+  }
+}</pre>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="sec-no">06</span><h2>常见追问</h2></div>
+    <div class="faq">
+      <details open>
+        <summary>纯 Map 版为什么 delete 再 set 就算「变最新」？</summary>
+        <div class="faq-a">JS 的 Map 按<strong>插入顺序</strong>排列。delete 再 set 等于把这条记录抽出来重新排到队尾——队尾就是最新。所以那版名册里 value 直接存包裹就够了，顺序由 Map 自己的白送功能管。</div>
+      </details>
+      <details>
+        <summary>get 之后包裹会被「拿走」吗？</summary>
+        <div class="faq-a">不会。缓存不是租借处——get 只是<strong>看了一眼并刷新新鲜度</strong>，包裹还在柜里，下次 get 还是它。这也是缓存和「队列消费」的本质区别。</div>
+      </details>
+      <details>
+        <summary>两次 put 用同一个 key 会怎样？</summary>
+        <div class="faq-a">算<strong>更新</strong>：包裹换新，这条记录跳到最新，总条数不变（不会占两格）。因为名册按 key 点名，一个 key 只能对应一条记录。</div>
+      </details>
+      <details>
+        <summary>容量满了先踢谁？</summary>
+        <div class="faq-a">head 门岗右边第一个——它是<strong>最久没被 get / put 碰过</strong>的。注意 LRU 只认「最近」，不认「资历」：存得早但最近被摸过的，照样活得好好的。</div>
+      </details>
+      <details>
+        <summary>面试官问「为什么 get / put 都是 O(1)」，怎么答？</summary>
+        <div class="faq-a">两套结构各干一件 O(1) 的事：哈希名册<strong>按 key 秒找到节点</strong>；双向链表<strong>摘下 / 接上一个节点只改几个指针</strong>。谁也不需要遍历，合起来每步操作都是常数级。</div>
+      </details>
+      <details>
+        <summary>真实项目里 LRU 用在哪？</summary>
+        <div class="faq-a">Redis 内存满了的淘汰策略之一、浏览器的资源缓存、Vue 的 keep-alive、图片库的内存缓存、HTTP/2 连接池……凡是「内存有限、又想让常用地数据留得久一点」的地方，都有它。</div>
+      </details>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p><strong>一句话带走：</strong>key 是「怎么找」，value 是「找到了给你什么」；名册按 key 秒定位，队伍按新旧排座次——两份 key（名册的键 + 节点的工牌）缺一不可。</p>
+    <p class="mono">对应笔记：前端手写题/05-设计模式与数据结构/LRU缓存.js（方案一 Map 版 · 方案二 哈希+链表版）</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var CAP = 3;
+  var order = [];          // 队伍：旧 → 新，元素 { key, value }
+  var map = new Map();     // 名册：key → 节点
+  var busy = false;
+  var autoRunning = false;
+
+  var boardEl = document.getElementById('board');
+  var rosterEl = document.getElementById('roster');
+  var logEl = document.getElementById('log');
+  var counterEl = document.getElementById('counter');
+  var keyIn = document.getElementById('key-in');
+  var valIn = document.getElementById('val-in');
+  var putBtn = document.getElementById('btn-put');
+  var getBtn = document.getElementById('btn-get');
+  var autoBtn = document.getElementById('btn-auto');
+  var resetBtn = document.getElementById('btn-reset');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  function snapshot() {
+    var m = new Map();
+    boardEl.querySelectorAll('.node').forEach(function (el) {
+      m.set(el.dataset.key, el.getBoundingClientRect().left);
+    });
+    return m;
+  }
+  function flip(prev) {
+    if (reduceMotion) return;
+    boardEl.querySelectorAll('.node').forEach(function (el) {
+      var before = prev.get(el.dataset.key);
+      if (before === undefined) {
+        el.animate(
+          [{ opacity: 0, transform: 'scale(.55)' }, { opacity: 1, transform: 'scale(1)' }],
+          { duration: 320, easing: 'ease-out' }
+        );
+        return;
+      }
+      var dx = before - el.getBoundingClientRect().left;
+      if (Math.abs(dx) < 2) return;
+      el.animate(
+        [{ transform: 'translateX(' + dx + 'px)' }, { transform: 'translateX(0)' }],
+        { duration: 420, easing: 'cubic-bezier(.22,.9,.28,1)' }
+      );
+    });
+  }
+
+  function render() {
+    if (order.length) {
+      var html = '<div class="guard"><b>门岗</b><i>head</i></div>';
+      order.forEach(function (n, i) {
+        html += '<span class="sep" aria-hidden="true">⇄</span>';
+        html += '<div class="node" data-key="' + esc(n.key) + '">';
+        if (order.length > 1 && i === 0) html += '<span class="nbadge b-old">最旧</span>';
+        if (i === order.length - 1) html += '<span class="nbadge b-new">最新</span>';
+        html += '<span class="nno">' + (i + 1) + '</span>';
+        html += '<span class="nkey">key ' + esc(n.key) + '</span>';
+        html += '<span class="nval">' + esc(n.value) + '</span>';
+        html += '</div>';
+      });
+      html += '<span class="sep" aria-hidden="true">⇄</span><div class="guard"><b>门岗</b><i>tail</i></div>';
+      boardEl.innerHTML = html;
+
+      rosterEl.innerHTML = order.map(function (n, i) {
+        return '<span class="rpill" data-key="' + esc(n.key) + '">' +
+          '<span class="chip-key">' + esc(n.key) + '</span><i>→ 节点 ' + (i + 1) + '</i></span>';
+      }).join('');
+    } else {
+      boardEl.innerHTML = '<div class="board-empty">队伍空空——先存一个包裹试试</div>';
+      rosterEl.innerHTML = '<span class="roster-empty">（名册还没登记任何人）</span>';
+    }
+    counterEl.textContent = order.length + ' / ' + CAP + ' 格已用';
+  }
+
+  function highlight(key, cls, ms) {
+    var el = boardEl.querySelector('.node[data-key="' + CSS.escape(String(key)) + '"]');
+    if (!el) return;
+    el.classList.add(cls);
+    setTimeout(function () { el.classList.remove(cls); }, ms || 950);
+  }
+
+  var TAGS = { put: 'PUT', get: 'GET', hit: '命中', miss: '未命中', evict: '淘汰', info: '说明', warn: '注意' };
+  function log(type, text) {
+    var div = document.createElement('div');
+    div.className = 'log-entry';
+    div.innerHTML = '<span class="log-tag t-' + type + '">' + TAGS[type] + '</span><span>' + esc(text) + '</span>';
+    logEl.prepend(div);
+    while (logEl.children.length > 40) logEl.lastChild.remove();
+  }
+
+  function moveToEnd(node) {
+    var i = order.indexOf(node);
+    if (i > -1) order.splice(i, 1);
+    order.push(node);
+  }
+
+  function evictVisual(node) {
+    var k = CSS.escape(String(node.key));
+    var el = boardEl.querySelector('.node[data-key="' + k + '"]');
+    var pill = rosterEl.querySelector('.rpill[data-key="' + k + '"]');
+    if (el) el.classList.add('is-evict');
+    if (pill) pill.classList.add('is-evict');
+    return sleep(reduceMotion ? 160 : 720);
+  }
+
+  function setButtons() {
+    [putBtn, getBtn, autoBtn].forEach(function (b) { b.disabled = busy; });
+  }
+
+  function doPut(key, value) {
+    if (key === '') { log('warn', 'key 不能为空——先有取件码，才能存包裹'); return Promise.resolve(); }
+    var existing = map.get(key);
+    if (existing) {
+      existing.value = value;
+      var prev = snapshot();
+      moveToEnd(existing);
+      render(); flip(prev); highlight(key, 'is-hit');
+      log('put', 'put(' + key + ', ' + value + ') — 已有这号：包裹换新，人挪到最新');
+      return Promise.resolve();
+    }
+    var p = Promise.resolve();
+    if (order.length >= CAP) {
+      var oldest = order[0];
+      p = p.then(function () {
+        if (!autoRunning) { busy = true; setButtons(); }
+        return evictVisual(oldest);
+      }).then(function () {
+        order.shift(); map.delete(oldest.key);
+        log('evict', '柜子满了：' + oldest.key + '（' + oldest.value + '）最久没人碰 → 出局，名册同步划掉');
+        if (!autoRunning) { busy = false; setButtons(); }
+      });
+    }
+    return p.then(function () {
+      var node = { key: key, value: value };
+      map.set(key, node);
+      var prev2 = snapshot();
+      order.push(node);
+      render(); flip(prev2); highlight(key, 'is-new');
+      log('put', 'put(' + key + ', ' + value + ') — 登记入册' + (order.length >= CAP ? '，柜子满了' : ''));
+    });
+  }
+
+  function doGet(key) {
+    if (key === '') { log('warn', 'key 不能为空——报个取件码才能取'); return; }
+    var node = map.get(key);
+    if (!node) { log('miss', 'get(' + key + ') → -1：名册里没有这位（从没存过，或已被淘汰）'); return; }
+    var prev = snapshot();
+    moveToEnd(node);
+    render(); flip(prev); highlight(key, 'is-hit');
+    log('hit', 'get(' + key + ') → ' + node.value + '：被摸了一下，跳到最新');
+  }
+
+  var DEMO = [
+    ['put', '1', '苹果'],
+    ['put', '2', '笔记本'],
+    ['put', '3', '充电宝'],
+    ['get', '1'],
+    ['put', '4', '耳机'],
+    ['get', '2'],
+    ['get', '3'],
+    ['get', '4']
+  ];
+  function auto() {
+    if (busy) return;
+    autoRunning = true; busy = true; setButtons();
+    autoBtn.textContent = '演示中…';
+    order = []; map.clear(); render();
+    log('info', '自动演示开始：容量 3，跟着经典面试流程走一遍');
+    var chain = Promise.resolve();
+    DEMO.forEach(function (step) {
+      chain = chain.then(function () {
+        keyIn.value = step[1];
+        if (step[2] !== undefined) valIn.value = step[2];
+        return sleep(reduceMotion ? 120 : 420);
+      }).then(function () {
+        if (step[0] === 'put') return doPut(step[1], step[2]);
+        doGet(step[1]);
+      }).then(function () { return sleep(reduceMotion ? 120 : 1000); });
+    });
+    return chain.then(function () {
+      log('info', '演示结束。留意：1 号是最早存进来的，却活到了最后——因为第 4 步 get(1) 把它「摸新」了。LRU 只认最近，不认资历。');
+      busy = false; autoRunning = false; setButtons();
+      autoBtn.textContent = '自动演示';
+    });
+  }
+
+  function reset() {
+    if (autoRunning) return;
+    order = []; map.clear();
+    render();
+    log('info', '已重置：名册清空，队伍清空');
+  }
+
+  putBtn.addEventListener('click', function () { if (!busy) doPut(keyIn.value.trim(), valIn.value.trim()); });
+  getBtn.addEventListener('click', function () { if (!busy) doGet(keyIn.value.trim()); });
+  autoBtn.addEventListener('click', function () { if (!busy) auto(); });
+  resetBtn.addEventListener('click', reset);
+  keyIn.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !busy) doGet(keyIn.value.trim()); });
+  valIn.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !busy) doPut(keyIn.value.trim(), valIn.value.trim()); });
+
+  render();
+  log('info', '先点「自动演示」看完整流程，或自己填 key 和包裹玩。方向提示：队伍左旧右新，和笔记里 LRUCacheLinked 一致。');
+})();
+</script>
+</body>
+</html>
